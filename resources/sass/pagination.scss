@@ -1,0 +1,21 @@
+.pagination {
+  @apply flex justify-center text-sm mt-10;
+}
+.page-item .d-none .d-md-block {
+  @apply px-4 py-3 text-gray-500 block border border-r-0 border-gray-300;
+}
+.page-link {
+  @apply px-4 py-3 block text-blue-900 border border-r-0 border-gray-300;
+}
+.page-link:hover {
+  @apply bg-blue-600 text-white;
+}
+.page-item:first-child {
+  @apply rounded-l;
+}
+.page-item:last-child {
+  @apply border-r;
+}
+.page-item.active .page-link {
+  @apply text-white bg-blue-900;
+}

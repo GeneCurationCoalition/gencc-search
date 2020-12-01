@@ -1,0 +1,79 @@
+@extends('layouts.app')
+
+@section('headline')
+  @include("shared/gene-headline")
+@endsection
+@section('banner')
+  @include("shared/gene-banner")
+@endsection
+@section('content')
+<div class="grid grid-cols-12 mt-10 gap-0">
+    {{-- <div class="col-span-2 pr-4">
+
+      <div class="border-b border-gray-300 text-gray-600">Diseases Display </div>
+      <div class='text-sm col-12 my-2 text-gray-700'><span class='float-right text-gray-600 px-1 rounded-full border text-xs border-gray-300 bg-gray-200'>1</span><i class='far fa-square text-gray-300'></i> Submitted </div>
+      <div class='text-sm col-12 my-2'><i class="far fa-check-square text-green-700"></i> Equivalents <span class='float-right text-gray-600 px-1 rounded-full border text-xs border-gray-300 bg-gray-200'>1</span></div>
+
+      <div class="border-b border-gray-300 text-gray-600 mt-8">Classification Types</div>
+      @foreach ($classifications as $classification)
+      {!! $gene->displayCurationLabelPill($classification, count($gene->displayGroupSubmissionsByClassification($gene->submissions, $classification)), 'filter') !!}
+      @endforeach
+
+      <div class="border-b border-gray-300 text-gray-600 mt-8">Filter Diseases</div>
+            <input class="input input-text" wire:model="title" type="text" value="" placeholder="Disease...">
+
+      <div class="border-b border-gray-300 text-gray-600 mt-8">Submitters</div>
+      <div class='text-sm col-12 my-2 text-gray-700'><i class='far fa-check-square  text-green-700'></i> ClinGen <span class='float-right text-gray-600 px-1 rounded-full border text-xs border-gray-300 bg-gray-200'>1</span></div>
+      <div class='text-sm col-12 my-2 text-gray-700'><i class='far fa-check-square  text-green-700'></i> Placeholder <span class='float-right text-gray-600 px-1 rounded-full border text-xs border-gray-300 bg-gray-200'>1</span></div>
+
+
+
+    </div> --}}
+    <div class="col-span-12">
+        @foreach ($classifications as $classification)
+        @if($gene->displayGroupSubmissionsByClassification($gene->submissions, $classification)->count())
+          <div class="grid grid-cols-12 gap-2 mb-6">
+            <div class="col-span-12">
+            <h3 class="m-0 p-0 leading-none">{{ $classification->title }} classifications
+              {{-- {!! $gene->displayCurationLabelPill($classification, count($gene->displayGroupSubmissionsByClassification($gene->submissions, $classification)), 'count') !!}  --}}
+            </h3>
+              @foreach($gene->displayGroupSubmissionsByClassification($gene->submissions, $classification) as $item)
+                  <div class="border-t border-t-gray-200 border-t-solid pt-0 mt-2 text-sm">
+                      <div class="grid grid-cols-12 gap-2 my-3 ">
+
+                          <div class="col-span-7  ml-0 mr-3">
+                            <div class="flex">
+                              <div class="flex-initial mr-1 leading-tight">
+                                <i class="fas fa-dna text-gray-400"></i>
+                              </div>
+                              <div class="flex-initial leading-tight">
+                                <a class="font-medium" href="{{ route('gene-show', $gene->curie) }}"> {{ $gene->title }}</a>
+                                <div class="text-sm text-gray-600">{{ $gene->curie }}</div>
+                              </div>
+                              <div class="flex-initial ml-4 mr-1">
+                                <i class="far fa-disease text-gray-400"></i>
+                              </div>
+                              <div class="flex-initial break-words leading-tight">
+                                <a class="font-medium" href="{{ route('disease-show', $gene->displayMondoDisease($item->diseases)->first()->curie) }}"> {{ $gene->displayMondoDisease($item->diseases)->first()->title }}</a>
+                                <div class="text-sm text-gray-600">{{ $gene->displayMondoDisease($item->diseases)->first()->curie }}</div>
+                                <div class="mt-1 text-sm text-gray-600 hover:text-black break-words"> Submitted as {{ $item->disease->title }} ({{ $item->disease->curie }})</div>
+                              </div>
+                            </div>
+
+                          </div>
+                          <div class="col-span-1"><i class="far fa-question-circle text-gray-400"></i> {{ $item->inheritance->title }}</div>
+                          <div class="col-span-2"><i class="far fa-building text-gray-400"></i> {{ $item->submitter->title }}<div class="text-sm text-gray-600">Submitted XX/XX/XXXX</div></div>
+                          <div class="col-span-2 -mt-1">{!!  $gene->displayCurationLabelPill($item->classification) !!}<div class="text-sm text-gray-600">Evaluated XX/XX/XXXX</div></div>
+                          <div class="col-span-1 text-right"><i class="fas fa-book-open mx-2"></i> <i class="fas fa-external-link-alt"></i></div>
+                      </div>
+                  </div>
+              @endforeach
+            </div>
+          </div>
+          @endif
+        @endforeach
+      </div>
+</div>
+
+
+@endsection

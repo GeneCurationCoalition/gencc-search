@@ -1,0 +1,6 @@
+.row-stripes .row-stripe:nth-child(even){
+  background: none;
+}
+.row-stripes .row-stripe:nth-child(odd){
+  background-color: $row-stripe-bg;
+}

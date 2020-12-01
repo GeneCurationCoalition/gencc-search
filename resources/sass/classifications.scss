@@ -1,0 +1,110 @@
+
+.gencc-zero {
+  @apply bg-gray-200 font-bold;
+}
+.text-gencc-zero {
+  @apply text-gray-200;
+}
+.border-gencc-zero {
+  @apply border-gray-200;
+}
+
+.gencc-supportive {
+  @apply bg-blue-400 font-bold;
+}
+.text-gencc-supportive {
+  @apply text-blue-400;
+}
+.border-gencc-supportive {
+  @apply border-blue-400;
+}
+
+.gencc-nul, .gencc-undefined {
+  @apply bg-gray-500 font-bold;
+}
+.text-gencc-nul, .text-gencc-undefined {
+  @apply text-gray-500;
+}
+.border-gencc-nul, .border-gencc-undefined {
+  @apply border-gray-500;
+}
+
+.gencc-definitive {
+  @apply bg-green-800 font-bold;
+}
+.text-gencc-definitive {
+  @apply text-green-800;
+}
+.border-gencc-definitive {
+  @apply border-green-800;
+}
+
+.gencc-strong {
+  @apply bg-green-600 font-bold;
+}
+.text-gencc-strong {
+  @apply text-green-600;
+}
+.border-gencc-strong {
+  @apply border-green-600;
+}
+
+.gencc-moderate {
+  @apply bg-green-400 font-bold;
+}
+.text-gencc-moderate {
+  @apply text-green-400;
+}
+.border-gencc-moderate {
+  @apply border-green-400;
+}
+
+.gencc-limited {
+  @apply bg-red-400 font-bold;
+}
+.text-gencc-limited {
+  @apply text-red-400 ;
+}
+.border-gencc-limited {
+  @apply border-red-400 ;
+}
+
+.gencc-disputedevidence, .gencc-disputed {
+  @apply bg-red-600 font-bold;
+}
+.text-gencc-disputedevidence, .text-gencc-disputed {
+  @apply text-red-600 ;
+}
+.border-gencc-disputedevidence, .border-gencc-disputed {
+  @apply border-red-600 ;
+}
+
+.gencc-refutedevidence, .gencc-refute, .gencc-refuted {
+  @apply bg-red-800 font-bold;
+}
+.text-gencc-refutedevidence, .text-gencc-refute, .text-gencc-refuted {
+  @apply text-red-800;
+}
+.border-gencc-refutedevidence, .border-gencc-refute, .border-gencc-refuted {
+  @apply border-red-800;
+}
+
+.gencc-animalmodelonly, .gencc-animal {
+  @apply bg-orange-400 font-bold;
+}
+.text-gencc-animalmodelonly, .text-gencc-animal {
+  @apply text-orange-400;
+}
+.border-gencc-animalmodelonly, .border-gencc-animal {
+  @apply border-orange-400;
+}
+
+.gencc-noknowndiseaserelationship, .gencc-noknown {
+  @apply bg-gray-600 font-bold;
+}
+.text-gencc-noknowndiseaserelationship, .text-gencc-noknown {
+  @apply text-gray-600;
+}
+.border-gencc-noknowndiseaserelationship, .border-gencc-noknown {
+  @apply border-gray-600;
+}

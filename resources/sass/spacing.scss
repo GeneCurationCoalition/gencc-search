@@ -1,0 +1,30 @@
+$pyhalf-normal: 0.13rem;
+$pyhalf-short: 0.13rem;
+$pyhalf-tall: 0.13rem;
+
+.py-half
+{
+  padding-top: $pyhalf-short;
+  padding-bottom: $pyhalf-tall;
+}
+.px-half
+{
+  padding-left: $pyhalf-normal;
+  padding-right: $pyhalf-normal;
+}
+.pt-half
+{
+  padding-top: $pyhalf-normal;
+}
+.pb-half
+{
+  padding-bottom: $pyhalf-normal;
+}
+.pl-half
+{
+  padding-left: $pyhalf-normal;
+}
+.pr-half
+{
+  padding-right: $pyhalf-normal;
+}

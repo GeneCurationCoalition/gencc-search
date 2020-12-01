@@ -1,0 +1,10 @@
+.list-text-label {
+  font-size: 1rem;
+  @apply leading-tight font-medium text-gray-900
+}
+.list-text-label.list-link:hover {
+  @apply text-blue-700 underline cursor-pointer
+}
+.list-text-desc {
+  @apply text-gray-500 font-normal text-sm;
+}

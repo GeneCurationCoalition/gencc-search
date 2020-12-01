@@ -1,0 +1,15 @@
+@extends('layouts.app')
+
+@section('content')
+<h1>Importer Tools</h1>
+<hr/>
+<div class="mt-4">
+  @livewire('import.submissions')
+  <div class="mt-5 pt-5"></div>
+  @livewire('import.count')
+  <div class="mt-5 pt-5"></div>
+  @livewire('import.genes')
+  <div class="mt-5 pt-5"></div>
+  @livewire('import.diseases')
+</div>
+@endsection

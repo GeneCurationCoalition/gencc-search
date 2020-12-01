@@ -1,0 +1,70 @@
+// Fonts
+@import 'variables';
+
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+@import "node_modules/@fortawesome/fontawesome-free/scss/fontawesome.scss";
+@import "node_modules/@fortawesome/fontawesome-free/scss/solid.scss";
+@import "node_modules/@fortawesome/fontawesome-free/scss/regular.scss";
+
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+@import 'headings';
+@import 'form';
+@import 'pagination';
+@import 'input';
+@import 'alert';
+@import 'classifications';
+@import 'bootstrap';
+@import 'text';
+@import 'spacing';
+@import 'rows';
+@import 'tabs';
+
+
+.row-detail-button {
+    transition: opacity .2s, transform .4s, border-color .2s;
+    opacity: 0;
+    transform: translateX(-15px);
+    transition-timing-function:ease-in-out
+}
+
+.row-detail:hover .row-detail-button{
+    opacity: 1;
+    transform:translateX(0)
+}
+
+.flex-inline-list {
+    // position: relative;
+    // margin: 1em;
+    // overflow: hidden;
+}
+.flex-inline-list ul {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-left: -1px;
+}
+.flex-inline-list li {
+    flex-grow: 1;
+    flex-basis: auto;
+    padding: 0;
+    padding-left: .5rem;
+    margin-right: .5rem;
+    text-align: center;
+    border-left: 1px solid #ccc;
+    // background-color: #fff;
+}
+.flex-inline-list li:first-child {
+    flex-grow: 1;
+    flex-basis: auto;
+    padding: 0;
+    margin-left: 0;
+    text-align: center;
+    border-left: 0px solid #ccc;
+    // background-color: #fff;
+}
