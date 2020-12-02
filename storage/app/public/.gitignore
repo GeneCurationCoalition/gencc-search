@@ -1,2 +1,7 @@
 *
 !.gitignore
+!/webfonts/
+!/webfonts/*
+!/brand/
+!/brand/*
+!/brand/*/*
