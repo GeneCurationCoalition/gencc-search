@@ -17,7 +17,7 @@ class DiseaseController extends Controller
     {
         //
         //dd("sdfsdfdsf");
-        $items = Disease::has('submissions')->orderBy('title')->paginate(500);
+        $items = Disease::has('submissions')->orderBy('title')->paginate(25);
         //dd($items);
         //$items = Disease::where('children_sync')->get();
         //dd(count($items));
