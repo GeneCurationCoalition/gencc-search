@@ -107,13 +107,14 @@ class updateCounts extends Command
                 }
 
                 if (isset($val->disease)) {
-                    //dd($val->disease->curie);
+                    dd($val->disease->curie);
                     $list['count_unique_diseases']
                         [$val->disease->curie]
                     = $list[$val->classification->slug]
-                        [$val->disease->curie] + 1;
+                        [$val->disease->curie]
+                         + 1;
                 }
-                //dd($list);
+                dd($list);
             }
 
 
