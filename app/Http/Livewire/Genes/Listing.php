@@ -296,7 +296,7 @@ class Listing extends Component
             // ->orwhere('curations_animal', '>=', $query['or_curations_animal'])
             // ->orwhere('curations_noknown', '>=', $query['or_curations_noknown'])
 
-            ->whereHas('submissions')->orderBy('title')->paginate(25);
+            ->whereHas('submissions')->orderBy('title')->paginate(50);
 
         //dd(count($this->return));
 

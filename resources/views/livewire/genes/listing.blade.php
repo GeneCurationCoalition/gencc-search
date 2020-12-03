@@ -1,4 +1,11 @@
-<div>
+<div class="relative">
+        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-10">
+                <div class="text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
+                    <div>Loading...</div>
+                </div>
+        </div>
+
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
         <div class="col-span-4 xl:col-span-2 mt-3">
