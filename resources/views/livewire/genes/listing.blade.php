@@ -1,10 +1,5 @@
-<div class="relative">
-        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
-                <div class="text-center">
-                    <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
-                    <div>Loading...</div>
-                </div>
-        </div>
+<div class="">
+
 
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
@@ -31,7 +26,7 @@
                 </button>
                 </span>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-10 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg">
+            <div x-show="open" @click.away="open = false" class="z-20 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg">
                 <div class="rounded-md bg-white shadow-xs">
                 <div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                     @foreach ($submitters as $submitter)
@@ -166,7 +161,13 @@
             <div class="hidden xl:inline-block xl:visible text-blue-800 pl-0 text-xs mt-6 leading-tight"> <i class="far fa-question-circle"></i> About GenCC <div class="ml-4">Classifications</div></div>
     </div>
     {{-- <div class="row bg-gray-100"> --}}
-    <div class="row bg-white">
+    <div class="relative row bg-white">
+        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-10">
+                <div class="text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
+                    <div>Loading...</div>
+                </div>
+        </div>
     @forelse ($genes as $item)
 
         <div class="row-stripe row-detail border-t-4 border-t-gray-200 border-t-solid py-4"  x-data="{ open: false }">

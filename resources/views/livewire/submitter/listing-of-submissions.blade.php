@@ -1,10 +1,5 @@
-<div class="relative">
-        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
-                <div class="text-center">
-                    <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
-                    <div>Loading...</div>
-                </div>
-        </div>
+<div class="">
+
       <div class="col-span-12 mb-4"><h2>Submissions </h2>
         <span class="font-bold"> {{ $records->total() }} </span>
         @if($filter_enabled == true)
@@ -170,10 +165,17 @@
 
       </div>
 
-  <hr class="mb-6 mt-4" />
-
+  <hr class="  mb-6 mt-4" />
+    <div class="relative">
+              <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
+                      <div class="text-center">
+                          <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
+                          <div>Loading...</div>
+                      </div>
+              </div>
               @foreach($records as $item)
                   @include('partials.genes.submission-row-common')
               @endforeach
       {{ $records->links() }}
+    </div>
 </div>
