@@ -63,4 +63,4 @@ Route::get('/statistics', 'StatController@index')->name('statistics');
 Route::get('/reset/modal', function (Request $request) {
   $request->session()->forget('modal.welcome.dismiss');
   return redirect('/');
-});
+})->name('reset-modal');

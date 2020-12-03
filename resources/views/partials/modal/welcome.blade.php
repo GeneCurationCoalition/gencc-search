@@ -16,7 +16,7 @@
     </div>
 
     <!-- This element is to trick the browser into centering the modal contents. -->
-    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <span class="hidden inline-block align-middle h-screen" aria-hidden="true">&#8203;</span>
     <!--
       Modal panel, show/hide based on modal state.
 
@@ -28,7 +28,7 @@
         To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
     -->
     <div class="inline-block align-middle transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-      <div class="bg-white rounded-lg px-10 pt-5 text-left overflow-hidden shadow-xl  sm:mt-8 sm:align-middle sm:max-w-3xl sm:w-full p-6">
+      <div class="bg-white rounded-lg px-10 pt-5 text-left overflow-hidden shadow-xl mt-8 align-middle max-w-4xl p-6">
         <div>
         <div class="mx-auto flex items-center justify-center">
           <!-- Heroicon name: check -->
@@ -39,12 +39,23 @@
           <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
             A global effort to harmonize gene-level resources.
           </h3>
-          <div class="mt-2">
-            <p class="text-sm text-gray-900">
-              This GenCC resource provides information pertaining to the validity of gene-disease relationships ipsum, dolor sit amet consectetur adipisicing elit. Eius aliquam laudantium explicabo pariatur iste dolorem animi vitae error totam. At sapiente aliquam accusamus facere veritatis.
+          <div class="mt-2 text-left">
+            <p class="text-sm pb-2 text-gray-900">
+              All data here are released under a <a class="text-blue-700 underline"  href='https://web.archive.org/web/20141107034939/http://www.wellcome.ac.uk/stellent/groups/corporatesite/@policy_communications/documents/web_document/wtd003207.pdf' target="_Fort_Lauderdale_Agreement">Fort Lauderdale Agreement</a> for the benefit of the wider biomedical community. You can freely download and search the data, and we encourage the use and publications of validity data for specific targeted sets of genes. However, we ask that you not publish global (site-wide) analyses of these data, or of large gene sets, until after the GenCC flagship paper has been published (estimated to be spring 2021).
+            </p>
+            <p class="text-sm pb-2 text-gray-900">
+The GenCC maintains this database to provide information pertaining to the validity of gene-disease relationships. The GenCC comprises organizations that currently provide online resources (e.g. ClinGen, DECIPHER, Genetics Home Reference, Genomics England PanelApp, OMIM, Orphanet, PanelApp Australia, TGMI’s G2P), as well diagnostic laboratories that have committed to sharing their internal curated gene-level knowledge (e.g. Ambry, Illumina, Invitae, Myriad Women’s Health, Partners Laboratory for Molecular Medicine).
+            </p>
+ <p class="text-sm pb-2 text-gray-900">
+Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Different displays within the database group assertions by submitter, by disease, by gene, and by clinical validity.
+ </p>
+ <p class="text-sm pb-2 text-gray-900">
+To harmonize terms describing gene-disease validity, the GenCC used a Delphi method to survey both members of our GenCC organizations and the international genetics community. Terms that were agreed upon are “Definitive, Strong, Moderate, Limited, Disputed Evidence, Refuted Evidence, Animal Model Only, and No Known Disease Relationship”. <a class="text-blue-700 underline" href='https://thegencc.org/resources/faq' target="_gencc">Please see this page for more information on these terms.</a>
+ </p>
+
             </p>
             <hr class="mt-4 mb-4" />
-            <div class="text-left text-sm">
+            <div class="text-left text-xs">
               <p>@include("partials.terms.general-disclaimer")</p>
             </div>
           </div>
@@ -56,7 +67,7 @@
         </button>
       </div>
       </div>
-      <div class="pt-0 pb-4 text-left overflow-hidden shadow-xl sm:mb-8 sm:align-middle sm:max-w-3xl sm:w-full sm:px-10">
+      <div class="pt-0 pb-4 text-left overflow-hidden shadow-xl mb-8 align-middle max-w-4xl w-full px-10">
         <div class=" bg-blue-800 shadow-inner rounded-lg rounded-t-none px-4 py-3 bg-opacity-75 border-gray-100 border-4 border-t-0">
           <p class="text-gray-100 text-center font-medium"><i class="fas fa-mail-bulk"></i> Sign-up and stay informed when new data and features are available.</p>
           <div class="flex">

@@ -241,7 +241,7 @@
                     <div class="col-span-12">
                         <div class='grid grid-cols-12 my-1'>
                             <div class="col-span-3 pl-4">
-                                <span class="text-xs"><i class="far fa-building text-gray-400"></i> <strong>{{ $submitter }}'s </strong> submissions</span>
+                                <span class=""><i class="far fa-building text-gray-400"></i> <strong>{{ $submitter }}'s </strong> submissions</span>
                             </div>
                             <div class="col-span-9">
                                 <div class='grid grid-cols-10'>
@@ -249,11 +249,11 @@
                                     <div class="col-span-10 py-1">
                                         <div class="flex">
                                             <div class="flex-none">
-                                                <span class="rounded-full py-1 text-xs px-2 text-center text-white  whitespace-no-wrap gencc-{{ Str::slug($classification , '') }}">{{ $classification }}</span>
+                                                <span class="rounded-full py-1 px-2 text-center text-white  whitespace-no-wrap gencc-{{ Str::slug($classification , '') }}">{{ $classification }}</span>
                                             </div>
                                             <div class="flex-grow pl-1">
                                                 @foreach ($classification_diseases as $disease)
-                                                    <span class="p-1 border rounded-full border-gray-300 m-2 mx-0 bg-white text-xs px-2 whitespace-no-wrap">{{ $disease['diseases'][0]['title'] }}</span>
+                                                    <span class="p-1 border rounded-full border-gray-300 m-2 mx-0 bg-white px-2 whitespace-no-wrap">{{ $disease['diseases'][0]['title'] }}</span>
                                                 @endforeach
                                             </div>
                                         </div>

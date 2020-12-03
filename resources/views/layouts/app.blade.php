@@ -72,6 +72,7 @@
 			<div class="pb-5">
 				<hr class="border-1 border-gray-200 my-6" />
 				&copy; 2020 <a href="https://thegencc.org/" class="underline">The GenCC</a> - All rights reserved.
+							<a href="{{ route('reset-modal') }}" class="float-right text-sm text-muted px-2 underline"> GenCC Welcome Statement</a>
 							<a href="https://thegencc.org/privacy.html" target="_gencc" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
 							<a href="https://thegencc.org/terms.html" target="_gencc" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
 			</div>
