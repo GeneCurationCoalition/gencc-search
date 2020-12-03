@@ -184,7 +184,11 @@ class updateCounts extends Command
                 }
 
                 if (isset($val->disease)) {
-                    $list['count_unique_diseases'][$val->disease->curie]    = $list[$val->classification->slug][$val->disease->curie] + 1;
+                    if (isset($list['count_unique_diseases'][$val->disease->curie])) {
+                        $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                    } else {
+                        $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                    }
                 }
                 //dd($list);
             }
@@ -258,9 +262,13 @@ class updateCounts extends Command
                     $list['count_unique_submitters'][$val->submitter->curie]    = 1;
                 }
 
-                if (isset($val->disease)) {
-                    $list['count_unique_genes'][$val->disease->curie]       = $list[$val->classification->slug][$val->disease->curie] + 1;
-                }
+                // if (isset($val->disease)) {
+                //     if(isset($list['count_unique_diseases'][$val->disease->curie])) {
+                //         $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                //     } else {
+                //         $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                //     }
+                // }
             }
             //dd($list);
 
