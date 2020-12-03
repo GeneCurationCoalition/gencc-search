@@ -16,9 +16,9 @@ class SubmissionController extends Controller
     {
         //
         return redirect('home');
-        $items = Submission::with('gene', 'disease')->paginate(5);
-        $page_meta['seo']['title'] = "GenCC Submitters";
-        return view('submissions.index', ['submissions' => $items, 'page_meta' => $page_meta]);
+        //$items = Submission::with('gene', 'disease')->paginate(5);
+        //$page_meta['seo']['title'] = "GenCC Submitters";
+        //return view('submissions.index', ['submissions' => $items, 'page_meta' => $page_meta]);
     }
 
     /**
