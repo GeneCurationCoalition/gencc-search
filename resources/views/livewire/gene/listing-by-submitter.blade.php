@@ -17,7 +17,7 @@
                 <i class="fas fa-angle-down ml-1"></i>
               </button>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white  ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white  ring-1 ring-black ring-opacity-5 divide-y divide-gray-100" style="display: none;">
               <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                 @foreach ($filter['classifications'] as $item)
                     <button wire:click="filterByClassifications(['{{ $item['ref'] }}'])"
@@ -46,7 +46,7 @@
                 <i class="fas fa-angle-down ml-1"></i>
               </button>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white  ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white  ring-1 ring-black ring-opacity-5 divide-y divide-gray-100" style="display: none;">
               <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                 @foreach ($filter['diseases'] as $item)
                     <button wire:click="filterByDiseases(['{{ $item['ref'] }}'])"
@@ -75,7 +75,7 @@
                 <i class="fas fa-angle-down ml-1"></i>
               </button>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100" style="display: none;">
               <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                 @foreach ($filter['inheritances'] as $item)
                     <button wire:click="filterByInheritances(['{{ $item['ref'] }}'])"
@@ -104,7 +104,7 @@
                 <i class="fas fa-angle-down ml-1"></i>
               </button>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+            <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100" style="display: none;">
               <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                 @foreach ($filter['submitters'] as $item)
                     <button wire:click="filterBySubmitters(['{{ $item['ref'] }}'])"

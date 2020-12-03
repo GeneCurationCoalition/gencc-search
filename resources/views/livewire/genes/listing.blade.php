@@ -26,7 +26,7 @@
                 </button>
                 </span>
             </div>
-            <div x-show="open" @click.away="open = false" class="z-20 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg">
+            <div x-show="open" @click.away="open = false" class="z-20 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg" style="display: none;">
                 <div class="rounded-md bg-white shadow-xs">
                 <div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                     @foreach ($submitters as $submitter)
@@ -230,7 +230,7 @@
         </div>
 
         {{-- TOGGLE OPEN --}}
-        <div class="col-span-12" id="ref-{{ $item->curie }}"  x-show="open" @click.away="open = false">
+        <div class="col-span-12" id="ref-{{ $item->curie }}"  x-show="open" @click.away="open = false" style="display: none;">
             <div class='grid grid-cols-12 ml-10 mb-5 border-l-8'>
 
 

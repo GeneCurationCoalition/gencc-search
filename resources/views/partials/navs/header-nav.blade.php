@@ -86,7 +86,7 @@
 							</svg>
 						</button>
 						</div>
-						<div x-show="open" @click.away="open = false" class="z-10 origin-top-right absolute right-0 mt-2 rounded-md shadow-lg">
+						<div x-show="open" @click.away="open = false" class="z-10 origin-top-right absolute right-0 mt-2 rounded-md shadow-lg" style="display: none;">
                 <div class="rounded-md bg-white shadow-xs">
                 	<div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
 
