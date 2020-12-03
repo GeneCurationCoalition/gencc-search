@@ -41,6 +41,48 @@ return [
 
     'debug' => env('APP_DEBUG', false),
 
+    'debug_blacklist' => [
+        '_ENV' => [
+            'APP_KEY',
+            'DB_PASSWORD',
+            'DB_USERNAME',
+            'REDIS_PASSWORD',
+            'MAIL_PASSWORD',
+            'PUSHER_APP_KEY',
+            'PUSHER_APP_SECRET',
+            'MIX_PUSHER_APP_KEY',
+            'MIX_PUSHER_APP_CLUSTER',
+            'USER_TEST_1_PASS',
+            'USER_TEST_1_EMAIL',
+            'USER_TEST_2_PASS',
+            'USER_TEST_2_EMAIL',
+            'USER_TEST_3_PASS',
+            'USER_TEST_3_EMAIL',
+            'LOG_SLACK_WEBHOOK_URL'
+        ],
+        '_SERVER' => [
+            'APP_KEY',
+            'DB_PASSWORD',
+            'DB_USERNAME',
+            'REDIS_PASSWORD',
+            'MAIL_PASSWORD',
+            'PUSHER_APP_KEY',
+            'PUSHER_APP_SECRET',
+            'MIX_PUSHER_APP_KEY',
+            'MIX_PUSHER_APP_CLUSTER',
+            'USER_TEST_1_PASS',
+            'USER_TEST_1_EMAIL',
+            'USER_TEST_2_PASS',
+            'USER_TEST_2_EMAIL',
+            'USER_TEST_3_PASS',
+            'USER_TEST_3_EMAIL',
+            'LOG_SLACK_WEBHOOK_URL'
+        ],
+        '_POST' => [
+            'password',
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application URL
