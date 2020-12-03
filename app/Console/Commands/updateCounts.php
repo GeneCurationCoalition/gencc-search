@@ -108,7 +108,7 @@ class updateCounts extends Command
 
                 if (isset($val->disease)) {
                     if(isset($list['count_unique_diseases'][$val->disease->curie])) {
-                        $list['count_unique_diseases'][$val->disease->curie]    = $list[$val->classification->slug][$val->disease->curie] + 1;
+                        $list['count_unique_diseases'][$val->disease->curie]    = $list[$val->disease->slug][$val->disease->curie] + 1;
                     } else {
                         $list['count_unique_diseases'][$val->disease->curie]    = 1;
                     }
