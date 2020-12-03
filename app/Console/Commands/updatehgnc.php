@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Gene;
 use Illuminate\Support\Facades\Storage;
 
+// check the name change
 class updateHgnc extends Command
 {
     /**
