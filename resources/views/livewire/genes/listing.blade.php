@@ -1,5 +1,5 @@
 <div class="relative">
-        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-10">
+        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
                 <div class="text-center">
                     <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>
                     <div>Loading...</div>
@@ -12,7 +12,7 @@
             <input class="input input-text" wire:model.debounce.500ms="title" type="text" value="{{ $title }}" placeholder="Filter by gene symbol...">
         </div>
         <div class="col-span-4 xl:col-span-3 mt-3">
-            <input class="input input-text" wire:model="hasDisease" type="text" value="{{ $hasDisease }}" placeholder="Filter by submitted disease...">
+            <input class="input input-text" wire:model.debounce.500ms="hasDisease" type="text" value="{{ $hasDisease }}" placeholder="Filter by submitted disease...">
         </div>
         <div class="col-span-4 xl:col-span-2 mt-3">
             <!--
