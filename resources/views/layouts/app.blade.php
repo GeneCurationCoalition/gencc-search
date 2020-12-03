@@ -18,7 +18,6 @@
 	<!-- Styles -->
 	<link href="{{ asset('css/app.css') }}" rel="stylesheet">
 	@livewireStyles
-	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.7.x/dist/alpine.min.js" defer></script>
 
 </head>
 
@@ -151,6 +150,7 @@ function toggle_visibility(id) {
   </script>
 
 	@livewireScripts
+	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.7.x/dist/alpine.min.js" defer></script>
 </body>
 
 </html>
