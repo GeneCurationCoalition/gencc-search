@@ -45,7 +45,7 @@ Route::group(['prefix' => 'disease'], function () {
   Route::get('/{id}/submitters', 'DiseaseController@submitter')->name('disease-show-submitter');
 });
 
-Route::group(['prefix' => 'dashboard'], function () {
+Route::group(['prefix' => 'dashboard', 'middleware' => ['auth']], function () {
   Route::get('/', 'DashboardController@index')->name('dashboard');
 
   Route::group(['prefix' => 'admin'], function () {
