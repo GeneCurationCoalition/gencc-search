@@ -83,8 +83,12 @@ class updateSubmissions extends Command
             //$data = Storage::disk('local')->path('public/private/official/PanelAppAus.xlsx');
             $data = Storage::disk('local')->path($submission->path);
             //dd($data);
-
-            $import = Excel::import(new SubmissionsImport, $data);
+            if($submission->submitted_run_date){
+                $submitted_run_date = $submission->submitted_run_date->format('Y/m/d');
+            } else {
+                $submitted_run_date = $submission->created_by->format('Y/m/d');
+            }
+            $import = Excel::import(new SubmissionsImport($submitted_run_date), $data);
             //$this->line($import);
         }
         $this->line('Loading completed');

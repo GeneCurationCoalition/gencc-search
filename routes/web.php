@@ -59,6 +59,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['auth']], function () {
 Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');
+Route::get('/download', 'DownloadController@index')->name('download');
 
 Route::get('/reset/modal', function (Request $request) {
   $request->session()->forget('modal.welcome.dismiss');
