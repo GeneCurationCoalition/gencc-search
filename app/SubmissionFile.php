@@ -49,6 +49,10 @@ class SubmissionFile extends Model
         'file_name',
         'file_type',
         'status',
-        'file_size'
+        'file_size',
+        'submitted_run_date'
+    ];
+    protected $casts = [
+        'submitted_run_date' => 'date:Y-m-d'
     ];
 }

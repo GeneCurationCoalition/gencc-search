@@ -9,13 +9,13 @@
 
             </th>
             <th class="hidden md:table-cell px-6 py-3 border-b border-gray-200 bg-gray-50 text-right text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                Creator
+                Submitter Run Date
             </th>
             <th class="hidden md:table-cell px-6 py-3 border-b border-gray-200 bg-gray-50 text-right text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                Updated
+                File Added By
             </th>
             <th class="pr-6 py-3 border-b border-gray-200 bg-gray-50 text-right text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                Created</th>
+                Date Uploaded</th>
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
@@ -34,13 +34,14 @@
                 {{ $file->file_name }}
             </td>
             <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-right">
+                @if($file->submitted_run_date){{ $file->submitted_run_date->format('m/d/Y') }}@endif
+            </td>
+            <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-right">
                 {{ $file->created_by->name ?? ''}}
             </td>
             <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-right">
-                {{ $file->updated_at->diffForHumans() }}
-            </td>
-            <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-right">
                 {{ $file->updated_at->format('m/d/Y') }}
+                {{-- {{ $file->updated_at->diffForHumans() }} --}}
             </td>
             </tr>
 

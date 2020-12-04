@@ -24,10 +24,19 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
     * @return \Illuminate\Database\Eloquent\Model|null
     */
 
+    public function  __construct($submitted_run_date)
+    {
+        $this->submitted_run_date = $submitted_run_date;
+            //dd("ddsadsad");
+            //dd($submitted_run_date);
+    }
+
     public function onRow(Row $row)
     {
         $rowIndex = $row->getIndex();
         $row      = $row->toArray();
+
+        //dd($this->submitted_run_date);
 
         //dd($rowIndex);
         if($rowIndex > 12) {
@@ -158,9 +167,11 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     $submission = Submission::updateOrCreate(
                         [
                         'uuid'                          => $uuid,
+                        'submitted_run_date'                     => $this->submitted_run_date,
                         ],
                         [
                         'uuid'                          => $uuid,
+                        'submitted_run_date'                     => $this->submitted_run_date,
                         'submitted_as_submission_id'             => $row["submission_id"] ?? '',
                         'submitted_as_hgnc_id'                   => $row['hgnc_id'] ?? '',
                         'submitted_as_hgnc_symbol'               => $row['hgnc_symbol'] ?? '',

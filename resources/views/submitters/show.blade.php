@@ -98,7 +98,7 @@
                           </div>
                           <div class="col-span-1"><span class="list-text-label"> {{ $item->inheritance->abbreviation }} <i class="far fa-question-circle text-gray-400" title="{{ $item->inheritance->title }} Mode Of Inheritance " data-toggle="tooltip" data-placement="top" \></i></div>
                           <div class="col-span-1"><i class="far fa-calendar text-gray-400"></i> <span class="list-text-label">{{ Carbon\Carbon::parse($item->submitted_as_date)->format('m/d/Y') }}</span><div class="text-sm text-gray-600 ml-4">Evaluated</div>
-                        <div class="text-sm mt-3 text-gray-600 ml-4 font-semibold leading-snug">{{ $item->created_at->format('m/d/Y') }}<div class=" font-normal">Submitted</div></div>
+                        <div class="text-sm mt-3 text-gray-600 ml-4 font-semibold leading-snug">{{ $item->submitted_run_date->format('m/d/Y') }}<div class=" font-normal">Submitted</div></div>
                       </div>
                           <div class="col-span-4">
 

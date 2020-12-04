@@ -16,6 +16,7 @@ class SubmissionUpload extends Component
     public $file;
     public $upload;
     public $size;
+    public $submitted_run_date;
     public $submitter;
 
     public function mount($submitter)
@@ -34,6 +35,7 @@ class SubmissionUpload extends Component
     {
         $this->validate([
             'file' => 'required|mimes:xls,xlsx|max:1024', // 1MB Max
+            'submitted_run_date' => 'date|required'
         ]);
 
         if(isset($this->file)){
@@ -49,11 +51,12 @@ class SubmissionUpload extends Component
 
         $file = SubmissionFile::create(
             [
-                'path'          => $this->upload,
-                'file_name'     => $file_name,
-                'file_type'     => $file_type,
-                'file_size'     => $file_size,
-                'status'        => 1
+                'path'                  => $this->upload,
+                'file_name'             => $file_name,
+                'file_type'             => $file_type,
+                'file_size'             => $file_size,
+                'submitted_run_date'    => $this->submitted_run_date,
+                'status'                => 1
             ]
         );
 

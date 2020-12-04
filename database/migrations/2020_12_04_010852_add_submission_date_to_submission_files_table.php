@@ -15,7 +15,7 @@ class AddSubmissionDateToSubmissionFilesTable extends Migration
     {
         Schema::table('submission_files', function (Blueprint $table) {
             //
-            $table->date('submitted_as_run_date')->nullable();
+            $table->date('submitted_run_date')->nullable();
         });
     }
 

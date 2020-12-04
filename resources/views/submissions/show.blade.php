@@ -81,7 +81,7 @@
 
         <div class="col-span-2 pt-3 text-right pr-3">Public Report:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @isset($submission->submitted_as_public_report_url)
+          @if(strlen($submission->submitted_as_public_report_url)>2)
             <div class="font-normal"><a class="underline" target="assertion_criteria_url" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
             <div class="text-xs"><a class="" target="assertion_criteria_url" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
           @else
@@ -91,7 +91,7 @@
 
         <div class="col-span-2 pt-3 text-right pr-3">Assertion Criteria:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @isset($submission->submitted_as_assertion_criteria_url)
+          @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
             <div class="font-normal"><a class="underline" target="assertion_criteria_url" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
             <div class="text-xs"><a class="" target="assertion_criteria_url" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
           @else
@@ -99,9 +99,14 @@
           @endif
         </div>
 
-        <div class="col-span-2 pt-3 text-right pr-3">Submitter submission ID:</div>
+        <div class="col-span-2 pt-3 text-right pr-3 pb-3">Submission ID from Submitter:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="">{{ $submission->submitted_as_submission_id }}</a></div>
+            <div class="">{{ $submission->submitted_as_submission_id }}</div>
+
+        </div>
+        <div class="col-span-2 pt-3 text-right pr-3">Submitter Submitted Date:</div>
+        <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
+            <div class="">@if($submission->submitted_run_date) {{ Carbon\Carbon::parse($submission->submitted_run_date)->format('m/d/Y') }} @else N/A @endif</div>
 
         </div>
 

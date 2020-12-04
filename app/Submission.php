@@ -96,6 +96,7 @@ class Submission extends Model
         'submitted_as_notes',
         'submitted_as_date',
         'submitted_as_pmids',
-        'submitted_as_assertion_criteria_url'
+        'submitted_as_assertion_criteria_url',
+        'submitted_run_date'
     ];
 }
