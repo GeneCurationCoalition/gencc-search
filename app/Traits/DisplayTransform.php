@@ -126,6 +126,14 @@ trait DisplayTransform
   }
 
 
+  public function displayDiseaseMondo($item,  $var = null)
+  {
+    $item = collect($item);
+    $item = $item->where('type', 'MONDO')->first();
+    return $item;
+  }
+
+
 
   /**
    * Return a displayable string of date parameter

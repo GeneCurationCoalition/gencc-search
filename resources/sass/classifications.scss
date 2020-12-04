@@ -10,7 +10,7 @@
 }
 
 .gencc-supportive {
-  @apply bg-blue-400 font-bold;
+  @apply bg-blue-400 font-semibold;
 }
 .text-gencc-supportive {
   @apply text-blue-400;
@@ -20,7 +20,7 @@
 }
 
 .gencc-nul, .gencc-undefined {
-  @apply bg-gray-500 font-bold;
+  @apply bg-gray-500 font-semibold;
 }
 .text-gencc-nul, .text-gencc-undefined {
   @apply text-gray-500;
@@ -30,7 +30,7 @@
 }
 
 .gencc-definitive {
-  @apply bg-green-800 font-bold;
+  @apply bg-green-800 font-semibold;
 }
 .text-gencc-definitive {
   @apply text-green-800;
@@ -40,7 +40,7 @@
 }
 
 .gencc-strong {
-  @apply bg-green-600 font-bold;
+  @apply bg-green-600 font-semibold;
 }
 .text-gencc-strong {
   @apply text-green-600;
@@ -50,7 +50,7 @@
 }
 
 .gencc-moderate {
-  @apply bg-green-400 font-bold;
+  @apply bg-green-400 font-semibold;
 }
 .text-gencc-moderate {
   @apply text-green-400;
@@ -60,7 +60,7 @@
 }
 
 .gencc-limited {
-  @apply bg-red-400 font-bold;
+  @apply bg-red-400 font-semibold;
 }
 .text-gencc-limited {
   @apply text-red-400 ;
@@ -70,7 +70,7 @@
 }
 
 .gencc-disputedevidence, .gencc-disputed {
-  @apply bg-red-600 font-bold;
+  @apply bg-red-600 font-semibold;
 }
 .text-gencc-disputedevidence, .text-gencc-disputed {
   @apply text-red-600 ;
@@ -80,7 +80,7 @@
 }
 
 .gencc-refutedevidence, .gencc-refute, .gencc-refuted {
-  @apply bg-red-800 font-bold;
+  @apply bg-red-800 font-semibold;
 }
 .text-gencc-refutedevidence, .text-gencc-refute, .text-gencc-refuted {
   @apply text-red-800;
@@ -90,7 +90,7 @@
 }
 
 .gencc-animalmodelonly, .gencc-animal {
-  @apply bg-orange-400 font-bold;
+  @apply bg-orange-400 font-semibold;
 }
 .text-gencc-animalmodelonly, .text-gencc-animal {
   @apply text-orange-400;
@@ -100,7 +100,7 @@
 }
 
 .gencc-noknowndiseaserelationship, .gencc-noknown {
-  @apply bg-gray-600 font-bold;
+  @apply bg-gray-600 font-semibold;
 }
 .text-gencc-noknowndiseaserelationship, .text-gencc-noknown {
   @apply text-gray-600;
