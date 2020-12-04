@@ -17,7 +17,7 @@
 <div class="mt-10 text-center">
     <img src="/brand/errors/gencc-error-artwork.gif" class=" w-64 mx-auto" />
     <h2>An unitended 500 mutation occurred!</h2>
-    <p><a class="text-blue-500 underline" href="{{ route('home') }}">We're very sorry, click here to go back to the home page...</a></p>
+    <p>The information has moved or unavailable at this time. <br /><a class="text-blue-500 underline" href="{{ route('home') }}">Please click here to the home page.</a></p>
 </div>
 
 @endsection
