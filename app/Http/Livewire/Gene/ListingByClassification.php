@@ -118,7 +118,7 @@ class ListingByClassification extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->get();
+        $records = Submission::where('gene_id', '=', $gene_id)->get()->sortBy('classification.order');
 
         $count_submissions = $records->count();
         $this->filter = [];
