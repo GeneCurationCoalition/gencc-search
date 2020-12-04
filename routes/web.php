@@ -60,6 +60,10 @@ Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');
 Route::get('/download', 'DownloadController@index')->name('download');
+Route::get('/download/action/submissions-export-xlsx', 'DownloadController@export_XLSX')->name('submissions-export-xlsx');
+Route::get('/download/action/submissions-export-xls', 'DownloadController@export_XLS')->name('submissions-export-xls');
+Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')->name('submissions-export-tsv');
+Route::get('/download/action/submissions-export-csv', 'DownloadController@export_CSV')->name('submissions-export-csv');
 
 Route::get('/reset/modal', function (Request $request) {
   $request->session()->forget('modal.welcome.dismiss');
