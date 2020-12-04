@@ -32,7 +32,7 @@
         <div>
         <div class="mx-auto flex items-center justify-center">
           <!-- Heroicon name: check -->
-          <a href="https://thegencc.org/resources/faq/#public-beta" ><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
+          <a href="https://thegencc.org/resources/faq.html#public-beta" ><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
           <img src="/brand/logo/genecc-logo.jpg" class=" h-20" />
         </div>
         <div class="mt-3 text-center sm:mt-5">
