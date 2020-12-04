@@ -8,7 +8,7 @@
       </div>
   </div>
 <div class="mt-2 mb-6">
-  <p class="mb-2">Per in ridens elaboraret. Ne vix amet maluisset, sed te eros harum expetenda, in eos atqui adversarium. Nibh scaevola signiferumque est in. Vim at impetus consequuntur, tota inimicus expetendis et sed. Eius accusata pro eu.</p>
+  <p class="mb-2">The GenCC comprises organizations that currently provide online resources, as well diagnostic laboratories that have committed to sharing their internal curated gene-level knowledge.</p>
 </div>
 @endsection
 @section('content')
