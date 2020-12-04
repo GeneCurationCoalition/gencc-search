@@ -24,9 +24,13 @@
 
 	{{-- <body class="bg-gray-100 font-sans leading-normal tracking-normal"> --}}
 	<body class="bg-white font-sans leading-normal tracking-normal">
-		@if(Session::get('modal.welcome.dismiss') != true)
-			@livewire('modal.welcome')
-		@endif
+		@isset($hide_modal)
+			{{-- Workaround --}}
+		@else
+			@if(Session::get('modal.welcome.dismiss') != true)
+				@livewire('modal.welcome')
+			@endif
+		@endisset
 		@include('partials.navs.header-nav')
 
 	<!--Container-->
