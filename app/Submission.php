@@ -31,6 +31,11 @@ class Submission extends Model
         return $this->belongsTo('App\Disease');
     }
 
+    public function disease_original()
+    {
+        return $this->belongsTo('App\Disease', 'disease_original_id');
+    }
+
     public function submitter()
     {
         return $this->belongsTo('App\Submitter');
@@ -77,10 +82,11 @@ class Submission extends Model
 
 
 
-    protected $with = ['gene', 'disease', 'classification', 'inheritance', 'submitter'];
+    protected $with = ['gene', 'disease', 'disease_original', 'classification', 'inheritance', 'submitter'];
 
     protected $fillable = [
         'uuid',
+        'order',
         'submitted_as_submission_id' ,
         'submitted_as_hgnc_id',
         'submitted_as_hgnc_symbol',
