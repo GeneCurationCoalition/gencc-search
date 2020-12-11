@@ -86,7 +86,7 @@ class updateSubmissions extends Command
             if($submission->submitted_run_date){
                 $submitted_run_date = $submission->submitted_run_date->format('Y/m/d');
             } else {
-                $submitted_run_date = $submission->created_by->format('Y/m/d');
+                $submitted_run_date = $submission->created_at->format('Y/m/d');
             }
             $import = Excel::import(new SubmissionsImport($submitted_run_date), $data);
             //$this->line($import);
