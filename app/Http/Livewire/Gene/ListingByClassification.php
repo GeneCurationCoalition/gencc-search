@@ -135,11 +135,20 @@ class ListingByClassification extends Component
             //$this->filter['genes_id']['ref_' . $submission->gene->id]                       = $submission->gene->id;
 
             // $item->displayMondoDisease($item->diseases)->first()->title
-            if($submission->displayMondoDisease($submission->diseases)->first()) {
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['title']                      = ucfirst($submission->displayMondoDisease($submission->diseases)->first()->title);
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['ref']                        = $submission->displayMondoDisease($submission->diseases)->first()->id;
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['uuid']                       = $submission->displayMondoDisease($submission->diseases)->first()->uuid;
+            // if($submission->displayMondoDisease($submission->diseases)->first()) {
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['title']                      = ucfirst($submission->displayMondoDisease($submission->diseases)->first()->title);
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['ref']                        = $submission->displayMondoDisease($submission->diseases)->first()->id;
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['uuid']                       = $submission->displayMondoDisease($submission->diseases)->first()->uuid;
+            // }
+
+            // $item->displayMondoDisease($item->diseases)->first()->title
+            if ($submission->disease) {
+                $this->filter['diseases'][$submission->disease->uuid]['title']                      = ucfirst($submission->disease->title);
+                $this->filter['diseases'][$submission->disease->uuid]['ref']                        = $submission->disease->id;
+                $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
             }
+
+
             // $this->filter['diseases'][$submission->disease->uuid]['title']                      = ucfirst($submission->disease->title);
             // $this->filter['diseases'][$submission->disease->uuid]['ref']                        = $submission->disease->id;
             // $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
@@ -185,7 +194,7 @@ class ListingByClassification extends Component
                             //dd($filter_set['classifications']);
                             $query->whereNotIn('id', $filter_set['classifications']);
                         //}
-                })->whereHas('diseases', function (Builder $query) use ($filter, $filter_set) {
+                })->whereHas('disease', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['diseases'] as $key => $item) {
                         //dd($filter_set['diseases']);
                         $query->whereNotIn('id', $filter_set['diseases']);

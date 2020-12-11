@@ -17,6 +17,8 @@ class ListingOfSubmissions extends Component
 
     public $count = 0;
     public $submitter_id;
+    public $query_disease;
+    public $query_gene;
     public $date;
     public $filter;
     public $filter_enabled = false;
@@ -148,10 +150,16 @@ class ListingOfSubmissions extends Component
             $this->filter['genes'][$submission->gene->uuid]['uuid']                             = $submission->gene->uuid;
             //$this->filter['genes_id']['ref_' . $submission->gene->id]                       = $submission->gene->id;
 
-            if ($submission->displayMondoDisease($submission->diseases)->first()) {
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['title']                      = ucfirst($submission->displayMondoDisease($submission->diseases)->first()->title);
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['ref']                        = $submission->displayMondoDisease($submission->diseases)->first()->id;
-            $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['uuid']                       = $submission->displayMondoDisease($submission->diseases)->first()->uuid;
+            // if ($submission->displayMondoDisease($submission->diseases)->first()) {
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['title']                      = ucfirst($submission->displayMondoDisease($submission->diseases)->first()->title);
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['ref']                        = $submission->displayMondoDisease($submission->diseases)->first()->id;
+            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['uuid']                       = $submission->displayMondoDisease($submission->diseases)->first()->uuid;
+            // }
+
+            if ($submission->disease) {
+                $this->filter['diseases'][$submission->disease->uuid]['title']                      = ucfirst($submission->disease->title);
+                $this->filter['diseases'][$submission->disease->uuid]['ref']                        = $submission->disease->id;
+                $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
             }
             //$this->filter['diseases_id']['ref_' . $submission->disease->id]                 = $submission->disease->id;
             $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
@@ -197,11 +205,16 @@ class ListingOfSubmissions extends Component
                         //dd($filter_set['classifications']);
                         $query->whereNotIn('id', $filter_set['classifications']);
                     //}
-                })->whereHas('diseases', function (Builder $query) use ($filter, $filter_set) {
+
+                })->whereHas('disease', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['diseases'] as $key => $item) {
                         //dd($filter_set['classifications']);
-                        $query->whereNotIn('id', $filter_set['diseases']);
+                        //$query->whereNotIn('id', $filter_set['diseases']);
                     //}
+                    if (!empty($this->query_disease)) {
+                    //dd($disease);
+                        $query->where('title', 'like', '%' . $this->query_disease . '%');
+                    }
                 })->whereHas('inheritance', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['inheritances'] as $key => $item) {
                         //dd($filter_set['classifications']);
@@ -210,16 +223,23 @@ class ListingOfSubmissions extends Component
                 })->whereHas('gene', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['genes'] as $key => $item) {
                         //dd($filter_set['classifications']);
-                        $query->whereNotIn('id', $filter_set['genes']);
+                        //$query->whereNotIn('id', $filter_set['genes']);
                     //}
+                    if (!empty($this->query_gene)) {
+                    //dd($disease);
+                        $query->where('title', 'like', '%' . $this->query_gene . '%');
+                    }
                 })->whereHas('submitter', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['submitters'] as $key => $item) {
                         //dd($filter_set['classifications']);
                         $query->whereNotIn('id', $filter_set['submitters']);
                     //}
-                })
-                //->get();
-                ->paginate(10);
+                 })
+                // ->with(['classification' => function ($q) {
+                //         $q->orderBy('title', 'DESC');
+                //     }])
+                ->orderBy('order', 'ASC')
+                ->paginate(20);
         // }
 
         // $posts = App\Models\Post::whereHas('comments', function (Builder $query) {
