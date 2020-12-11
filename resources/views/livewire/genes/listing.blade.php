@@ -253,7 +253,7 @@
                                             </div>
                                             <div class="flex-grow pl-1">
                                                 @foreach ($classification_diseases as $disease)
-                                                    <span class=" py-1/2 px-3 border rounded-full border-gray-300 bg-gray-100 px-2 whitespace-no-wrap mb-1 inline-block">{{ $item->displayDiseaseMondo($disease['diseases'])['title'] }}</span>
+                                                    <span class=" py-1/2 px-3 border rounded-full border-gray-300 bg-gray-100 px-2 whitespace-no-wrap mb-1 inline-block">{{ $item->disease->title }}</span>
 
 
                                                 @endforeach
