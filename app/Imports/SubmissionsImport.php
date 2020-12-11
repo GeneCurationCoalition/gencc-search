@@ -56,6 +56,15 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 //dd($gene_record);
                 $submitter_record = Submitter::curie($row["submitter_id"])->first();
 
+                if (!isset($gene_record)) {
+                    echo "GENE ERROR - NOT IN HGNC ERROR -- '" . $row["hgnc_id"] . "\n";
+                }
+
+                if(isset($gene_record->title)){
+                    if ($gene_record->title != $row['hgnc_symbol']) {
+                        echo "GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
+                    }
+                }
 
                 // If disease isn't found... see if MONDO has
                 if(!isset($disease_record)){
@@ -170,7 +179,8 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'submitted_run_date'                     => $this->submitted_run_date,
                         ],
                         [
-                        'uuid'                          => $uuid,
+                        'uuid'                                   => $uuid,
+                        'order'                                  => $classification_record->order,
                         'submitted_run_date'                     => $this->submitted_run_date,
                         'submitted_as_submission_id'             => $row["submission_id"] ?? '',
                         'submitted_as_hgnc_id'                   => $row['hgnc_id'] ?? '',
@@ -200,6 +210,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                     if ($row['disease_id'] ?? '') {
                         $submission->disease()->associate($disease_record);
+                        $submission->disease_original()->associate($disease_record);
 
                         //
                         $relate_options[$disease_record->id] = [
@@ -211,6 +222,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                                 'type'          => 'equiv',
                                 'ontology'      => $eqivs->type
                             ];
+                            if($eqivs->type == "MONDO") {
+                                $submission->disease()->associate($eqivs->id);
+                            }
                         }
 
                         $submission->diseases()->sync($relate_options, false);
