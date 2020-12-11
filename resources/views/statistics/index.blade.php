@@ -3,7 +3,7 @@
     <div class="grid grid-cols-12 gap-0">
       <div class="col-span-10 text-white"><h1 class=" truncate">GenCC Statistics</h1></div>
       <div class="col-span-2 pt-4 align-bottom">
-        <div class="text-right mt-4"><a class="px-3" target="gencc-help" href="https://thegencc.org/resources/help.html#stats-index"><i class="fas fa-question-circle"></i> Help</a></div>
+        <div class="text-right mt-4"><a class="px-3" target="_blank" href="https://thegencc.org/resources/help.html#stats-index"><i class="fas fa-question-circle"></i> Help</a></div>
       </div>
   </div>
 <div class="mt-2">
@@ -48,11 +48,11 @@
           &nbsp;
         </a>
         <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{  $item->submissions->count() }} </span> Curations
+            <span class="font-bold">{{  $item->submissions->count() }} </span> Submissions
           </a>
         @else
         <a class="pt-1 inline-block" href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{  $item->submissions->count() }} </span> Curations
+            <span class="font-bold">{{  $item->submissions->count() }} </span> Submissions
           </a>
         @endif
       </div>

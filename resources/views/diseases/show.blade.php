@@ -4,7 +4,7 @@
 <div class="grid grid-cols-12 gap-0">
   <div class="col-span-10 text-gray-600"><h1 class=" truncate">{{ $disease->title }}</h1></div>
       <div class="col-span-2 pt-6">
-        <div class="text-right text-xl"><a href="{{ route("diseases") }}" class="rounded-full py-1 px-5 text-center border-2 border-solid border-blue-600 text-blue-600 whitespace-no-wrap"><i class="far fa-arrow-alt-circle-left"></i> Return to list</a></div>
+        <div class="text-right text-xl"><a href="{{ route("diseases") }}" class="rounded-full py-1 px-5 text-center border-2 border-solid border-blue-600 text-blue-700 whitespace-no-wrap"><i class="far fa-arrow-alt-circle-left"></i> Return to list</a></div>
       </div>
     <div class="col-span-12 mb-4 mt-4"><hr /></div>
       <div class="col-span-2 text-gray-600">Disease Name:</div>

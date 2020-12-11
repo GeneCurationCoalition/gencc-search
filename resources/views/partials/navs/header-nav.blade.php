@@ -31,13 +31,13 @@
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="fas fa-file-code"></i> Download
 						</a>
-						<a href="https://thegencc.org/resources/faq" target="gencc-faq" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="https://thegencc.org/resources/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-question-circle"></i> FAQ
 						</a>
-						<a href="https://thegencc.org/content/" target="gencc-faq" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="https://thegencc.org/content/" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-comment"></i> Contact
 						</a>
-						<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="gencc-faq" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 px-2 leading-tight border-2 border-blue-800 ">
+						<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 px-2 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk"></i> Stay Informed
 						</a>
 
@@ -112,13 +112,13 @@
 												<i class="fas fa-file-code"></i> Download
 											</a>
 
-											<a href="https://thegencc.org/resources/faq" target="gencc-faq" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a href="https://thegencc.org/resources/faq" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-question-circle"></i> FAQ
 											</a>
-											<a href="https://thegencc.org/content/" target="gencc-faq" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a href="https://thegencc.org/content/" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-comment"></i> Contact
 											</a>
-											<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="gencc-faq" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-mail-bulk"></i> Stay Informed
 											</a>
 

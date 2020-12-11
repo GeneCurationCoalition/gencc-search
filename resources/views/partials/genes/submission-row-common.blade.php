@@ -29,16 +29,16 @@
                           <div class="col-span-11 xl:col-span-1"><i class="far fa-calendar text-gray-400"></i> <span class="list-text-label">{{ Carbon\Carbon::parse($item->submitted_as_date)->format('m/d/Y') }}</span><div class="text-sm text-gray-600 ml-4">Evaluated</div>
                         <div class="text-sm mt-3 text-gray-600 ml-4 font-semibold leading-snug">@if($item->submitted_run_date) {{ Carbon\Carbon::parse($item->submitted_run_date)->format('m/d/Y') }} @else N/A @endif<div class=" font-normal">Submitted</div></div>
                       </div>
-                          <div class="col-span-8 xl:col-span-4 "><a href="{{ route('submitter-show', $item->submitter->uuid) }}" class=""><i class="far fa-building text-gray-400"></i> <span class="list-text-label">{{ $item->submitter->title }}</span></a>
+                          <div class="col-span-8 xl:col-span-4 "><a href="{{ route('submitter-show', $item->submitter->uuid) }}" class="list-text-label"><i class="far fa-building text-gray-400"></i> <span class=" text-blue-700">{{ $item->submitter->title }}</span></a>
                             <div class="ml-4 pt-1 text-sm flex-inline-list">
                               <ul>
                                 @if($item->submitted_as_public_report_url)
-                              <li><a target="assertion_criteria_url" href="{{ $item->submitted_as_public_report_url }}" class="text-blue-600">Public Report <i class="fas fa-external-link-alt"></i></a></li>
+                              <li><a target="_blank" href="{{ $item->submitted_as_public_report_url }}" class="text-blue-700">Public Report <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
                                 @if($item->submitted_as_assertion_criteria_url)
-                              <li><a target="assertion_criteria_url" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-600">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
+                              <li><a target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
-                              <li><a class="text-blue-600" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
+                              <li><a class="text-blue-700" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
                               </ul>
                             </div>
                             @if($item->submitted_as_notes)

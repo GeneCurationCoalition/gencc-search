@@ -70,15 +70,15 @@
 				<li><i class="fas fa-angle-double-right"></i> Individuals should not change their health behavior solely on the basis of information obtained on this website.</li>
 				<li><i class="fas fa-angle-double-right"></i> If you have questions about the information obtained on this website, please see a health care professional.</li>
 				<li><i class="fas fa-angle-double-right"></i> The GenCC does not accept medical questions and/or provide advice. All medical questions should be directed to your health care professional.</li>
-				<li><i class="fas fa-angle-double-right"></i> If you contact the GenCC, do not share any information containing protected health information (PHI). <a href="https://clinicalgenome.org/share-your-data/" target="_ClinGen">Click here to learn how to share data.</a></li>
+				<li><i class="fas fa-angle-double-right"></i> If you contact the GenCC, do not share any information containing protected health information (PHI). <a href="https://clinicalgenome.org/share-your-data/" target="_blank">Click here to learn how to share data.</a></li>
 			</ul> --}}
 
 			<div class="pb-5">
 				<hr class="border-1 border-gray-200 my-6" />
 				&copy; 2020 <a href="https://thegencc.org/" class="underline">The GenCC</a> - All rights reserved.
 							<a href="{{ route('reset-modal') }}" class="float-right text-sm text-muted px-2 underline"> GenCC Welcome Statement</a>
-							<a href="https://thegencc.org/privacy.html" target="_gencc" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
-							<a href="https://thegencc.org/terms.html" target="_gencc" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
+							<a href="https://thegencc.org/privacy.html" target="_blank" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
+							<a href="https://thegencc.org/terms.html" target="_blank" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
 			</div>
 
 	</div>

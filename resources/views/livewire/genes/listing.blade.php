@@ -225,7 +225,7 @@
                 {{-- <div class="list-text-desc truncate pt-half">Submitted Classifications</div> --}}
             </div>
             <div class="hidden xl:inline-block invisible xl:visible col-span-1 pr-1 mt-1">
-                <a href="{{ route('gene-show', $item->curie) }}" class=" text-center w-100 block border-gray-400 text-gray-500 py-1 mb-1 px-1 rounded-full hover:border-blue-600 hover:text-blue-600 hover:border-2">Details <i class="far fa-arrow-alt-circle-right"></i></a>
+                <a href="{{ route('gene-show', $item->curie) }}" class=" text-center w-100 block border-gray-400 text-gray-500 py-1 mb-1 px-1 rounded-full hover:border-blue-600 hover:text-blue-700 hover:border-2">Details <i class="far fa-arrow-alt-circle-right"></i></a>
             </div>
         </div>
 
