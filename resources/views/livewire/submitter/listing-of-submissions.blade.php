@@ -45,7 +45,7 @@
           </div>
 
 
-          {{-- <div class="relative inline-block text-left flex-1 w-full " x-data="{ open: false }">
+          <div class="relative inline-block text-left flex-1 w-full " x-data="{ open: false }">
             <div  @click="open = true">
               <button type="button" class=" text-left inline-flex w-full border border-gray-300 px-4 py-2 bg-white leading-5 text-gray-700 input-text hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150" id="options-menu" aria-haspopup="true" aria-expanded="true">
                 Genes
@@ -71,11 +71,11 @@
                 @endforeach
               </div>
             </div>
-          </div> --}}
+          </div>
 
 
 
-          {{-- <div class="relative inline-block text-left flex-1 w-full " x-data="{ open: false }">
+          <div class="relative inline-block text-left flex-1 w-full " x-data="{ open: false }">
             <div  @click="open = true">
               <button type="button" class=" text-left inline-flex w-full border border-gray-300 px-4 py-2 bg-white leading-5 text-gray-700 input-text hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150" id="options-menu" aria-haspopup="true" aria-expanded="true">
                 Diseases
@@ -101,13 +101,6 @@
                 @endforeach
               </div>
             </div>
-          </div> --}}
-
-          <div class="col-span-4 xl:col-span-2 ">
-            <input class="input input-text" wire:model.debounce.500ms="query_gene" type="text" value="{{ $query_gene }}" placeholder="Filter by gene symbol...">
-          </div>
-          <div class="col-span-4 xl:col-span-2 ">
-            <input class="input input-text" wire:model.debounce.500ms="query_disease" type="text" value="{{ $query_disease }}" placeholder="Filter by disease name...">
           </div>
 
 
