@@ -31,4 +31,17 @@ class Submitter extends Model
     {
         return $this->hasMany('App\Submission')->orderBy('classification_id')->orderBy('submitted_as_date');
     }
+
+    protected $fillable = [
+        'title',
+        'website',
+        'path_logo',
+        'description',
+        'text_descriptions',
+        'text_contact',
+        'text_assertions',
+        'text_disclaimer',
+        'status',
+        'downloadable'
+    ];
 }
