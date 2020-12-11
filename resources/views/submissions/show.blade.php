@@ -12,7 +12,7 @@
         <div class="col-span-2 pt-3 text-right pr-3">Submitter:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           <div class="font-normal font-bold"><a class="underline" href="{{ route('submitter-show', $submission->submitter->uuid) }}">{{ $submission->submitter->title }}</a></div>
-          <div class="text-xs">{{ $submission->submitter->curie }}</div>
+          {{-- <div class="text-xs">{{ $submission->submitter->curie }}</div> --}}
         </div>
 
         {{-- <div class="col-span-2 pt-3 text-right pr-3">GenCC Submission ID:</div>
@@ -42,12 +42,16 @@
 
         <div class="col-span-2 pt-3 text-right pr-3">Disease:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @foreach ($submission->diseases as $disease)
-            <div class="mb-2">
-              <div class="font-normal">{{ $disease->title }}</div>
-              <div class="text-xs">{!! $submission->displayLinkToDisease($disease->curie, $disease->curie) !!}</div>
+          <div class="mb-2">
+              <div class="font-normal">{{ $submission->disease->title }}</div>
+              <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease->curie, $submission->disease->curie) !!}</div>
             </div>
-          @endforeach
+            @if($submission->disease->id != $submission->disease_original->id)
+            <div class="mb-2">
+              <div class="font-normal">{{ $submission->disease_original->title }}</div>
+                <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease_original->curie, $submission->disease_original->curie) !!}</div>
+            </div>
+            @endif
         </div>
 
         <div class="col-span-2 pt-3 text-right pr-3">Mode Of Inheritance:</div>
@@ -56,7 +60,7 @@
           <div class="text-xs">{!! $submission->displayLinkToMoi($submission->inheritance->curie, $submission->inheritance->curie) !!}</div>
         </div>
 
-        <div class="col-span-2 pt-3 text-right pr-3">Classification Date:</div>
+        <div class="col-span-2 pt-3 text-right pr-3">Evaluated Date:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           <div class="font-normal">{{ Carbon\Carbon::parse($submission->submitted_as_date)->format('m/d/Y') }}</div>
         </div>
@@ -82,8 +86,8 @@
         <div class="col-span-2 pt-3 text-right pr-3">Public Report:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           @if(strlen($submission->submitted_as_public_report_url)>2)
-            <div class="font-normal"><a class="underline" target="assertion_criteria_url" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
-            <div class="text-xs"><a class="" target="assertion_criteria_url" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="font-normal"><a class="underline" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="text-xs"><a class="" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
           @else
             <div class="font-normal">N/A</div>
           @endif
@@ -92,18 +96,18 @@
         <div class="col-span-2 pt-3 text-right pr-3">Assertion Criteria:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
-            <div class="font-normal"><a class="underline" target="assertion_criteria_url" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
-            <div class="text-xs"><a class="" target="assertion_criteria_url" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="font-normal"><a class="underline" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="text-xs"><a class="" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
           @else
             <div class="font-normal">N/A</div>
           @endif
         </div>
 
-        <div class="col-span-2 pt-3 text-right pr-3 pb-3">Submission ID from Submitter:</div>
+        {{-- <div class="col-span-2 pt-3 text-right pr-3 pb-3">Submission ID from Submitter:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
             <div class="">{{ $submission->submitted_as_submission_id }}</div>
 
-        </div>
+        </div> --}}
         <div class="col-span-2 pt-3 text-right pr-3">Submitter Submitted Date:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
             <div class="">@if($submission->submitted_run_date) {{ Carbon\Carbon::parse($submission->submitted_run_date)->format('m/d/Y') }} @else N/A @endif</div>
