@@ -15,11 +15,14 @@
                                 <i class="far fa-disease text-gray-400"></i>
                               </div>
                               <div class="flex-initial break-words">
-                                <div class="list-text-label"> {{ $item->displayMondoDisease($item->diseases)->first()->title }}</div>
-                                <div class="text-sm text-gray-600">{!! $item->displayLinkToMondo($item->displayMondoDisease($item->diseases)->first()->curie, $item->displayMondoDisease($item->diseases)->first()->curie) !!}</div>
-                                @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
+                                <div class="list-text-label"> {{ $item->disease->title }}</div>
+                                <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}</div>
+                                {{-- @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
                                 <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToOmim($item->disease->curie, $item->disease->curie) !!}</div>
-                                @endif
+                                @endif --}}
+                                @if($item->disease->id != $item->disease_original->id)
+                                  <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}</div>
+                                  @endif
                               </div>
                             </div>
 
