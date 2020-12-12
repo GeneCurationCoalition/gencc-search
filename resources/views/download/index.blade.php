@@ -5,7 +5,7 @@
     <div class="grid grid-cols-12 gap-0">
       <div class="col-span-10 text-white"><h1 class=" truncate">GenCC Data</h1></div>
       <div class="col-span-2 pt-4 align-bottom">
-        <div class="text-right mt-4"><a class="px-3" href="https://thegencc.org/resources/help.html#stats-index"><i class="fas fa-question-circle"></i> Help</a></div>
+        <div class="text-right mt-4"><a class="px-3" href="https://thegencc.org/faq.html#stats-index"><i class="fas fa-question-circle"></i> Help</a></div>
       </div>
   </div>
 @endsection

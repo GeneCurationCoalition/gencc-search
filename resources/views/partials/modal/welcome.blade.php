@@ -32,7 +32,7 @@
         <div>
         <div class="mx-auto flex items-center justify-center">
           <!-- Heroicon name: check -->
-          <a href="https://thegencc.org/resources/faq.html#public-beta" ><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
+          <a href="https://thegencc.org/faq.html#public-beta" ><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
           <img src="/brand/logo/genecc-logo.jpg" class=" h-20" />
         </div>
         <div class="mt-3 text-center sm:mt-5">
@@ -50,7 +50,7 @@ The GenCC maintains this database to provide information pertaining to the valid
 Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Different displays within the database group assertions by submitter, by disease, by gene, and by clinical validity.
  </p>
  <p class="text-sm pb-2 text-gray-900">
-To harmonize terms describing gene-disease validity, the GenCC used a Delphi method to survey both members of our GenCC organizations and the international genetics community. Terms that were agreed upon are “Definitive, Strong, Moderate, Limited, Disputed Evidence, Refuted Evidence, Animal Model Only, and No Known Disease Relationship”. <a class="text-blue-700 underline" href='https://thegencc.org/resources/faq' target="_blank">Please see this page for more information on these terms.</a>
+To harmonize terms describing gene-disease validity, the GenCC used a Delphi method to survey both members of our GenCC organizations and the international genetics community. Terms that were agreed upon are “Definitive, Strong, Moderate, Limited, Disputed Evidence, Refuted Evidence, Animal Model Only, and No Known Disease Relationship”. <a class="text-blue-700 underline" href='https://thegencc.org/faq' target="_blank">Please see this page for more information on these terms.</a>
  </p>
 
             </p>

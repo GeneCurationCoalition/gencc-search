@@ -4,7 +4,7 @@
 		<div class="w-full container mx-auto flex flex-wrap items-center mt-0 pt-3 pb-3 md:pb-0">
 
 			<div class="w-1/3 pl-2 mb-4 md:pl-0">
-				<a href="https://thegencc.org/resources/faq.html#public-beta"><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" /></a>
+				<a href="https://thegencc.org/faq.html#public-beta"><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" /></a>
 				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="{{ route('home')}}">
 				 <img src="/brand/logo/genecc-logo.jpg" class=" h-16" />
 				</a>
@@ -31,7 +31,7 @@
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="fas fa-file-code"></i> Download
 						</a>
-						<a href="https://thegencc.org/resources/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="https://thegencc.org/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-question-circle"></i> FAQ
 						</a>
 						<a href="https://thegencc.org/content/" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
@@ -112,7 +112,7 @@
 												<i class="fas fa-file-code"></i> Download
 											</a>
 
-											<a href="https://thegencc.org/resources/faq" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a href="https://thegencc.org/faq" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-question-circle"></i> FAQ
 											</a>
 											<a href="https://thegencc.org/content/" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">

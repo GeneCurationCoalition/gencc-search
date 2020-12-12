@@ -3,7 +3,7 @@
   <div class="grid grid-cols-12 gap-0">
       <div class="col-span-10 text-white"><h1 class=" truncate">GenCC Submitters</h1></div>
       <div class="col-span-2 pt-5">
-                <div class="text-right mt-6"><a class="px-3" target="_blank" href="https://thegencc.org/resources/help.html#submitter-index"><i class="fas fa-question-circle"></i> Help</a></div>
+                <div class="text-right mt-6"><a class="px-3" target="_blank" href="https://thegencc.org/faq.html#submitter-index"><i class="fas fa-question-circle"></i> Help</a></div>
 
       </div>
   </div>
@@ -20,7 +20,7 @@
           <img class="h-48 w-full object-cover" src="{{ $submitter->path_logo }}" alt="">
           </a>
         </div>
-        <div class="flex-1 bg-white pt-3 pb-3 px-6 flex flex-col justify-between border-b">
+        <div class="flex-1 bg-white pt-3 pb-3 px-6 flex flex-col justify-between">
           <div class="flex-1">
             <a href="{{ route('submitter-show', $submitter->uuid) }}" class="block hover:underline">
               <h3 class="mt-0 text-xl leading-7 font-semibold">
@@ -29,12 +29,19 @@
               {{-- <p class="mt-3 text-base leading-6 text-gray-500">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium praesentium eius, ut atque fuga culpa, similique sequi cum eos quis dolorum.
               </p> --}}
-              <a href="{{ route('submitter-show', $submitter->uuid) }}" class=" text-blue-700 text-xs hover:underline">View All Submissions <i class="far fa-arrow-alt-circle-right"></i></a>
+              <a href="{{ route('submitter-show', $submitter->uuid) }}" class=" text-blue-700 text-xs hover:underline">
+                @if($submitter->count_submissions != 0)
+                  View submissions and learn more
+                @else
+                  Learn more
+                @endif
+              <i class="far fa-arrow-alt-circle-right"></i></a>
             </a>
           </div>
         </div>
+        @if($submitter->count_submissions != 0)
+        <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between  border-t">
 
-        <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between">
             <p class="mt-2 text-sm leading-5 font-medium text-gray-500">
                 Submission Stats
             </p>
@@ -64,6 +71,12 @@
                 </div>
           </div>
         </div>
+
+          @else
+            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+                Submission Coming Soon
+            </p>
+          @endif
       </div>
     @empty
         Sorry, we don't seem to have anything...
