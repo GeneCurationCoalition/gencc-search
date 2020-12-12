@@ -79,6 +79,8 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping
             'gene_symbol',
             'disease_curie',
             'disease_title',
+            'disease_original_curie',
+            'disease_original_title',
             'classification_curie',
             'classification_title',
             'moi_curie',
