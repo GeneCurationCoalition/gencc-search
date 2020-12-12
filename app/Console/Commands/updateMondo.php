@@ -22,7 +22,7 @@ class updateMondo extends Command
      *
      * @var string
      */
-    protected $description = '#2';
+    protected $description = 'TEMP SKIP - #2';
 
     /**
      * Create a new command instance.

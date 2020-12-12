@@ -22,7 +22,7 @@ class updateConnections extends Command
      *
      * @var string
      */
-    protected $description = '#3';
+    protected $description = 'TEMP SKIP - #3';
 
     /**
      * Create a new command instance.
