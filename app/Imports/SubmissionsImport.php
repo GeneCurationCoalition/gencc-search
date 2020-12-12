@@ -252,6 +252,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     if (!isset($submitter_record)) {
                         echo "- - - " . $row["submission_id"] . " | was skipped. Bad submitter | " . $row["submitter_id"] . " \n";
                     }
+                    echo "\nIMPORT ERRORS\n";
                 }
 
             } else {

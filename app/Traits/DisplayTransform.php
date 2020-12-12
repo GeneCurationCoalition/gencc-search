@@ -14,7 +14,7 @@ trait DisplayTransform
    * @param
    * @return string
    */
-  public function displayLinkToHgnc($text, $href, $css = null, $target = "hgnc", $options = null)
+  public function displayLinkToHgnc($text, $href, $css = null, $target = "_blank", $options = null)
   {
     return "<a class='{$css} text-gray-600' target='{$target}' href='https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
@@ -25,7 +25,7 @@ trait DisplayTransform
    * @param
    * @return string
    */
-  public function displayLinkToMondo($text, $href, $css=null, $target = "mondo", $options = null)
+  public function displayLinkToMondo($text, $href, $css=null, $target = "_blank", $options = null)
   {
 
     return "<a class='{$css} text-gray-600' target='{$target}' href='https://monarchinitiative.org/disease/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
@@ -37,7 +37,7 @@ trait DisplayTransform
    * @param
    * @return string
    */
-  public function displayLinkToOmim($text, $href, $css =null, $target = "omim", $options = null)
+  public function displayLinkToOmim($text, $href, $css =null, $target = "_blank", $options = null)
   {
     $href = str_replace("OMIM:", "", $href);
     return "<a class='{$css} text-gray-600' target='{$target}' href='https://omim.org/entry/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
@@ -49,7 +49,7 @@ trait DisplayTransform
    * @param
    * @return string
    */
-  public function displayLinkToMoi($text, $href, $css = null, $target = "hpo", $options = null)
+  public function displayLinkToMoi($text, $href, $css = null, $target = "_blank", $options = null)
   {
     return "<a class='{$css} text-gray-600' target='{$target}' href='https://hpo.jax.org/app/browse/term/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
@@ -62,7 +62,7 @@ trait DisplayTransform
    * @param
    * @return string
    */
-  public function displayLinkToDisease($text, $href, $css = null, $target = "omim", $options = null)
+  public function displayLinkToDisease($text, $href, $css = null, $target = "_blank", $options = null)
   {
     $ontology = explode(":", $href);
 
