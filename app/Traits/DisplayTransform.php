@@ -105,12 +105,12 @@ trait DisplayTransform
     // Collect the diseases
     $diseases = new Collection();
     foreach ($item->submissions as $element) {
-      $diseases->push($element->diseases);
+      $diseases->push($element->disease);
     }
     $diseases = $diseases->flatten(1);
     $diseases->values()->all();
-    $diseases = $diseases->where('type', 'MONDO');
-    $diseases = $diseases->unique('curie');
+    //$diseases = $diseases->where('type', 'MONDO');
+    //$diseases = $diseases->unique('curie');
     //dd($diseases);
     $this->diseases = $diseases;
 

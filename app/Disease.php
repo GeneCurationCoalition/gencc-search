@@ -2,12 +2,14 @@
 
 namespace App;
 
+use App\Traits\DisplayTransform;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\ModelTransform;
 
 class Disease extends Model
 {
     use ModelTransform;
+    use DisplayTransform;
 
     // public function submissions()
     // {

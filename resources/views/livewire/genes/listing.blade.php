@@ -249,12 +249,16 @@
                                     <div class="col-span-10 py-1">
                                         <div class="flex">
                                             <div class="flex-none">
-                                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white  whitespace-no-wrap gencc-{{ Str::slug($classification , '') }} ">{{ $classification }}</span>
+                                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white  whitespace-no-wrap gencc-{{ Str::slug($classification , '') }} "><a class="hover:underline" href="{{ route('gene-show', $item->curie) }}">{{ $classification }}</a></span>
                                             </div>
                                             <div class="flex-grow pl-1">
                                                 @foreach ($classification_diseases as $disease)
                                                     {{-- @isset($disease['diseases']) --}}
-                                                    <span class=" py-1/2 px-3 border rounded-full border-gray-300 bg-gray-100 px-2 whitespace-no-wrap mb-1 inline-block">{{ $item->displayDiseaseMondo($disease['diseases'])['title'] }}</span>
+                                                    <span class=" py-1/2 px-3 border rounded-full border-gray-300 bg-gray-100 px-2 whitespace-no-wrap mb-1 inline-block">
+                                                        {{-- {{ $item->displayDiseaseMondo($disease['disease'])['title'] }} --}}
+                                                        <a href="{{ route('gene-show', $item->curie) }}" class="hover:underline">{{ $disease['disease']['title'] }}</a>
+                                                    </span>
+                                                    {{-- {{ $disease['disease']['title'] }} --}}
                                                     {{-- @endisset --}}
                                                 @endforeach
                                             </div>

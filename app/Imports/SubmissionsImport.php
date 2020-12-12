@@ -8,6 +8,7 @@ use App\Gene;
 use App\Inheritance;
 use App\Submission;
 use App\Submitter;
+use App\Traits\ModelTransform;
 use Carbon\Carbon;
 use DateTime;
 use Maatwebsite\Excel\Row;
@@ -42,6 +43,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
         if($rowIndex > 12) {
             //dd($row);
             if(isset($row["submission_id"]) && isset($row["hgnc_id"]) && isset($row["disease_id"]) && isset($row["moi_id"]) && isset($row["date"])){
+                //echo "\n\n\n IMPORT ROW START - " . $rowIndex . " ... \n";
                 //dd($rowIndex);
 
                 $row["disease_id"] = preg_replace('/\s+/', '', $row["disease_id"]);
@@ -57,12 +59,12 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 $submitter_record = Submitter::curie($row["submitter_id"])->first();
 
                 if (!isset($gene_record)) {
-                    echo "GENE ERROR - NOT IN HGNC ERROR -- '" . $row["hgnc_id"] . "\n";
+                    echo "IMPORT ERROR - GENE ERROR - NOT IN HGNC ERROR -- '" . $row["hgnc_id"] . "\n";
                 }
 
                 if(isset($gene_record->title)){
                     if ($gene_record->title != $row['hgnc_symbol']) {
-                        echo "GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
+                        echo "IMPORT ERROR - GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
                         unset($gene_record);
                     }
                 }
@@ -72,104 +74,26 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 } elseif (DateTime::createFromFormat('Y-m-d', $row['date']) !== FALSE) {
                     $date_record = true;
                 } else {
-                    echo "DATE ERROR - DATE NOT SET CORRECTLY -- '" . $row["date"] . "' - '" . $row["hgnc_id"] . "\n";
+                    echo "IMPORT ERROR - DATE ERROR - DATE NOT SET CORRECTLY -- '" . $row["date"] . "' - '" . $row["hgnc_id"] . "\n";
                     $row['date'] = "";
                     unset($date_record);
                 }
 
-                // If disease isn't found... see if MONDO has
-                if(!isset($disease_record) || !isset($disease_record->title)){
+                if (!isset($disease_record)) {
+                    // process processMondoApi
 
-                   if(($row["disease_id"] == "null") || ($row["disease_id"] == "NULL")){
-                        echo "DISEASE ERROR -- '" . $row["disease_id"] . "\n";
+                    if(($row['disease_id'] != "NULL")) {
+                        $processMondoApi = new Disease;
+                        $processMondoApi = $processMondoApi->processMondoApi($row);
+                        // the disease should be in the DB... search again...
+                        $disease_record = Disease::curie($row["disease_id"])->first();
                     } else {
-                    //dd($row["disease_id"]);
-                    //$query = trim(preg_replace('/\s+/', '', $row["disease_id"]));
-                    $query = $row["disease_id"];
-                    $query = preg_replace("/[^a-zA-Z0-9:]/", "", $query);
-                    //dd($query);
-                    $client = new Client(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
-                    //dd($client);
-                    $response = $client->request('GET', 'bioentity/disease/'. $query);
-                    //dd($response->getStatusCode());
-                    if($response->getStatusCode() == 200) {
-                        //dd("sdfsdfds");
-                        $body = $response->getBody();
-                        //dd($body)
-                        $data = json_decode($response->getBody());
-                        //dd($data->label);
-                        //$data =
-                        // Only save some of the diseases
-                        //if (preg_match('(OMIM:|MONDO:|DOID:|Orphanet:|HP:)', $val) === 1) {
-                        if (preg_match('(MONDO:)', $data->id) === 1) {
-
-                            //dd("test");
-                            $type = explode(":", $data->id);
-                            $type = $type[0];
-                            $title = $data->label;
-                            $uuid = str_replace(':', '_', $data->id);
-
-                            $mondo = Disease::updateOrCreate(
-                                [
-                                    'curie' => $data->id,
-                                    'type' => $type,
-                                    'title' => $title,
-                                    'uuid'  => $uuid
-                                ],
-                                [
-                                    'curie' => $data->id,
-                                    'type' => $type,
-                                    'title' => $title,
-                                    'uuid'  => $uuid
-                                ]
-                            );
-
-
-                            //dd("test");
-                            $type = explode(":", $query);
-                            $type = $type[0];
-                            $title = $query;
-                            $uuid = str_replace(':', '_', $query);
-
-                            $omim = Disease::updateOrCreate(
-                                [
-                                    'curie' => $query,
-                                    'type' => $type,
-                                    'title' => $title,
-                                    'uuid'  => $uuid
-                                ],
-                                [
-                                    'curie' => $query,
-                                    'type' => $type,
-                                    'title' => $title,
-                                    'uuid'  => $uuid
-                                ]
-                            );
-
-                            // Connect the xrefs
-                            $mondo->xrefs = $omim->id;
-                            $omim->xrefs =  $mondo->id;
-                            $mondo->related_exactMatch = $omim->id;
-                            $omim->related_exactMatch =  $mondo->id;
-
-
-                            //dd($mondo);
-                            //dd($omim);
-                            $mondo->save();
-                            $omim->save();
-
-
-                            $disease_record = Disease::curie($row["disease_id"])->first();
-
-                        }
-
-
-                    } else {
-                        echo "MONDO API ERROR -- '" . $query . " --- STATUS RETURNED > " . $response->getStatusCode() . "\n";
+                        echo "- - - - SKIPPED processMondoApi - disease was NULL \n";
                     }
+                } else {
+                    //echo "OK - Disease found - Continue " . $disease_record->id . " for " . $row['disease_id'] . "\n";
+                    //dd("STOP");
                 }
-
-            }
 
                 // CONTINUE...
 
@@ -196,7 +120,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     //dd($row['notes'] ?? '');
                     $submission = Submission::updateOrCreate(
                         [
-                        'uuid'                          => $uuid,
+                        'uuid'                                  => $uuid,
                         'submitted_run_date'                     => $this->submitted_run_date,
                         ],
                         [
@@ -220,7 +144,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'submitted_as_pmids'                     => $row['pmids'] ?? '',
                         'submitted_as_assertion_criteria_url'    => $row['assertion_criteria_url'] ?? ''
                     ]);
-                            //dd($submission);
+
+                    //dd($submission);
+
                     if ($row['submitter_id'] ?? '') {
                         $submission->submitter()->associate($submitter_record);
                     }
@@ -228,11 +154,42 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     if ($row['hgnc_id'] ?? '') {
                         $submission->gene()->associate($gene_record);
                     }
-
+                    //dd($submission);
                     if ($row['disease_id'] ?? '') {
-                        $submission->disease()->associate($disease_record);
+                        //$submission->disease()->associate($disease_record);
                         $submission->disease_original()->associate($disease_record);
 
+                        //dd("sdfsdfsd");
+                        if (preg_match('(MONDO:)', $disease_record->curie) === 1) {
+
+                            //dd($disease_record->curie);
+                            $submission->disease()->associate($disease_record);
+                        } else {
+
+                            //dd($disease_record->curie);
+                            //dd($disease_record->equivalents->first()->curie);
+                            foreach ($disease_record->equivalents as $eqivs) {
+                                //dd($eqivs);
+                                // $relate_options[$eqivs->id] = [
+                                //     'type'          => 'equiv',
+                                //     'ontology'      => $eqivs->type
+                                // ];
+                                if($eqivs->type == "MONDO") {
+                                     $submission->disease()->associate($eqivs->id);
+                                     $submission->save();
+                                 }
+                            }
+                            //dd($submission);
+                            //dd($disease_record->id);
+                            //dd("else");
+
+                            //$item = $disease_record->equivalents;
+                            //dd($item);
+                            //$item = $item->where('type', 'MONDO')->first();
+                            //dd($item);
+                            //$submission->disease()->associate($item);
+                            //dd($submission);
+                        }
                         //
                         $relate_options[$disease_record->id] = [
                             'type'          => 'original',
@@ -243,9 +200,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                                 'type'          => 'equiv',
                                 'ontology'      => $eqivs->type
                             ];
-                            if($eqivs->type == "MONDO") {
-                                $submission->disease()->associate($eqivs->id);
-                            }
+                            // if($eqivs->type == "MONDO") {
+                            //     $submission->disease()->associate($eqivs->id);
+                            // }
                         }
 
                         $submission->diseases()->sync($relate_options, false);
@@ -279,25 +236,26 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 } else {
 
+                    echo "\nIMPORT ERRORS\n";
                     if (!isset($classification_record)) {
-                        echo $row["submission_id"] . " | was skipped. Bad classification | " . $row["classification_id"] . "\n";
+                        echo "- - - " . $row["submission_id"] . " | was skipped. Bad classification | " . $row["classification_id"] . "\n";
                     }
                     if (!isset($inheritance_record)) {
-                        echo $row["submission_id"] . " | was skipped. Bad inheritance | " . $row["moi_id"] . "\n";
+                        echo "- - - " . $row["submission_id"] . " | was skipped. Bad inheritance | " . $row["moi_id"] . "\n";
                     }
                     if (!isset($gene_record)) {
-                        echo $row["submission_id"] . " | was skipped. Bad Gene | " . $row["hgnc_id"] . "\n";
+                        echo "- - - " . $row["submission_id"] . " | was skipped. Bad Gene | " . $row["hgnc_id"] . "\n";
                     }
                     if (!isset($disease_record)) {
-                        echo $row["submission_id"] . " | was skipped. Bad disease | " . $row["disease_id"] . "\n";
+                        echo "- - - " . $row["submission_id"] . " | was skipped. Bad disease | " . $row["disease_id"] . "\n";
                     }
                     if (!isset($submitter_record)) {
-                        echo $row["submission_id"] . " | was skipped. Bad submitter | " . $row["submitter_id"] . " \n";
+                        echo "- - - " . $row["submission_id"] . " | was skipped. Bad submitter | " . $row["submitter_id"] . " \n";
                     }
                 }
 
             } else {
-                echo $rowIndex . " | was skipped. Missing info... \n";
+                echo "\n IMPORT ROW ERROR - " . $rowIndex . " | was skipped. Missing info... \n";
                 // if (!isset($row["classification_id"])) {
                 //     echo $rowIndex . " | was skipped. Missing classification \n";
                 // }

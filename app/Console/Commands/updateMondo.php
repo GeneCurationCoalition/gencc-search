@@ -48,7 +48,7 @@ class updateMondo extends Command
             //$results = file_get_contents("https://archive.monarchinitiative.org/latest/owl/mondo.json");
         } catch (\Exception $e) {
 
-            echo "(E001) Error retrieving search data\n";
+            echo "IMPORT ERROR - (E001) Error retrieving search data\n";
             exit;
         }
 
@@ -57,7 +57,7 @@ class updateMondo extends Command
         $data = \JsonMachine\JsonMachine::fromFile($results, "/graphs/0/nodes" /* <- Json Pointer */);
         //dd($data);
         if (!$data) {
-            echo "(E002) Error fetching search data.\n";
+            echo "IMPORT ERROR - (E002) Error fetching search data.\n";
         }
 
         Log::channel('slack')->info('MONDO Import Started');

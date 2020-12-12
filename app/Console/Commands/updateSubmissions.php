@@ -78,6 +78,10 @@ class updateSubmissions extends Command
 
             Log::channel('slack')->info('For Submitter ' . $submission->submitter->title);
             Log::channel('slack')->info('Loading submission ' . $submission->file_name);
+            $this->line(' ');
+            $this->line('#################################################');
+            $this->line('########## NEW FILE BEING PROCESSSED ############');
+            $this->line('#################################################');
             $this->line('For Submitter ' . $submission->submitter->title);
             $this->line('Loading submission '. $submission->file_name);
             //$data = Storage::disk('local')->path('public/private/official/PanelAppAus.xlsx');
@@ -97,7 +101,7 @@ class updateSubmissions extends Command
         //echo " \n";
         //dd($data);
         if (!$data) {
-            echo "(E002) Error fetching search data.\n";
+            echo "IMPORT ERROR - (E002) Error fetching search data.\n";
         }
 
         Log::channel('slack')->info('Submission Import Completed');

@@ -2,6 +2,9 @@
 
 namespace App\Traits;
 
+use App\Disease;
+use GuzzleHttp\Client;
+
 trait ModelTransform
 {
 
@@ -328,5 +331,148 @@ trait ModelTransform
   //   return ($return);
 
   // }
+
+  /**
+   * Return a displayable string of date parameter
+   *
+   * @param
+   * @return string
+   */
+  public function processMondoApi($data)
+  {
+    //dd("start");
+    $row_disease_id   = $data["disease_id"];
+
+    echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
+
+    // Get the query ready for MONDO API
+    $query = preg_replace("/[^a-zA-Z0-9:]/", "", $row_disease_id);
+    // Call the API
+    $client = new Client(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
+
+    // Get the response
+    $response = $client->request('GET', 'bioentity/disease/' . $query);
+
+    // Check the response
+    if ($response->getStatusCode() == 200) {
+      // Message is things is good
+      echo "- - - - processMondoApi getStatusCode = 200 -- (This is good) -- '" . $row_disease_id . "\n";
+
+      // $body = $response->getBody();
+      // Decode the response body so it can be used...
+      $var = json_decode($response->getBody());
+
+      //dd($var);
+
+      // Make 100% sure this is a MONDO return
+      if (preg_match('(MONDO:)', $var->id) === 1) {
+
+          echo "- - - - processMondoApi -- MONDO was returned -- '". $var->id ."' for '" . $row_disease_id . "\n";
+
+          // Do this to get if this as a MONDO (though it should be based on above)
+          $type = explode(":", $var->id);
+          $type = $type[0];
+
+          // Make the MONDO label be title since that is what the DB uses for easy naming
+          $title = $var->label;
+
+          // set the UUID which is the curie with an underscore
+          $uuid = str_replace(':', '_', $var->id);
+
+          $disease_mondo = Disease::updateOrCreate(
+            [
+              'curie' => $var->id,
+              'type' => $type,
+              'title' => $title,
+              'uuid'  => $uuid
+            ],
+            [
+              'curie' => $var->id,
+              'type' => $type,
+              'title' => $title,
+              'uuid'  => $uuid
+            ]
+          );
+
+          //dd($disease_mondo);
+
+          // START  xrefs
+          if ($var->xrefs) {
+              foreach ($var->xrefs as $xref) {
+                  // Only save some of the diseases
+                  if (preg_match('(OMIM:|MONDO:|Orphanet:)', $xref) === 1) {
+                      echo "- - - - processMondoApi GOOD -- XREF is a OMIM:|MONDO:|Orphanet -- " . $xref . " for " . $var->id . "\n";
+
+                      $type = explode(":", $xref);
+                      $type = $type[0];
+                      $title = $xref;
+                      $uuid = str_replace(':', '_', $xref);
+
+                      $disease_xref = Disease::updateOrCreate(
+                        [
+                          'curie' => $xref,
+                          'type' => $type,
+                          'title' => $title,
+                          'uuid'  => $uuid
+                        ],
+                        [
+                          'curie' => $xref,
+                          'type' => $type,
+                          'title' => $title,
+                          'uuid'  => $uuid
+                        ]
+                      );
+                      // Save the xref to the xref column in the MONDO to this new OMIM:|MONDO:|Orphanet disease
+                      $disease_xref->xrefs = $disease_mondo->id;
+                      $disease_xref->equivalents()->sync($disease_mondo);
+                      $disease_xref->save();
+
+                      // Save XREF to array for use by the MONDO
+                      $xref_array[] = $disease_xref->id;
+                      //dd($disease_xref);
+                  }
+              }
+
+
+              // Get the xref array and make sure unique and then pipe it all to the MONDO disease
+              // Doing it here because the data only availbale if the above works...
+              if(isset($xref_array)) {
+                  $xref_array = array_unique($xref_array);
+                  $disease_mondo->xrefs = implode("|", $xref_array);
+
+                  // set the xrefs as equivs
+                  $disease_mondo->equivalents()->sync($xref_array);
+
+                  // Save the xrefs to the MONDO xref col for future
+                  $disease_mondo->save();
+              }
+
+          } else {
+            echo "- - - - processMondoApi GOOD -- this MONDO does not have XREFs " . $var->id . "\n";
+          }
+
+
+      } else {
+        // message if the response wasn't a MONDO
+        echo "IMPORT ERROR - - - - processMondoApi ERROR -- Response was not MONDO -- '" . $var->id . "\n";
+      }
+
+      //dd("STOP");
+
+      // $var->xrefs;
+      // $var->id;
+      // $var->label;
+
+
+    } else {
+      // message is $response->getStatusCode() fails...
+      echo "IMPORT ERROR - - - - processMondoApi getStatusCode = '" . $response->getStatusCode() ."' -- (Not good) -- '" . $row_disease_id . "\n";
+    }
+
+
+    echo "- - - - processMondoApi END -- '" . $row_disease_id . "\n";
+
+    //dd("STOP");
+  }
 
 }

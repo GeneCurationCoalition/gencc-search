@@ -61,14 +61,14 @@ class updateHgnc extends Command
             $results = file_get_contents($results);
         } catch (\Exception $e) {
 
-            echo "(E001) Error retrieving search data\n";
+            echo "IMPORT ERROR - (E001) Error retrieving search data\n";
             exit;
         }
 
         $data = json_decode($results, true);
 
         if ($data['response']['numFound'] == 0) {
-            echo "(E002) Error fetching search data.\n";
+            echo "IMPORT ERROR - (E002) Error fetching search data.\n";
         }
 
         Log::channel('slack')->info('HGNC Import Started');
