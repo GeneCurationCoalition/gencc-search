@@ -65,43 +65,43 @@
           <div class="font-normal">{{ Carbon\Carbon::parse($submission->submitted_as_date)->format('m/d/Y') }}</div>
         </div>
 
+        @if (strlen($submission->submitted_as_notes)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Evidence/Notes:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @if (strlen($submission->submitted_as_notes)>2)
-            <div class="font-normal">{{ $submission->submitted_as_notes }}</div>
-          @else
-            <div class="font-normal">N/A</div>
-          @endif
-        </div>
 
+            <div class="font-normal">{{ $submission->submitted_as_notes }}</div>
+
+        </div>
+        @endif
+
+
+          @if (strlen($submission->submitted_as_pmids)>2)
         <div class="col-span-2 pt-3 text-right pr-3">PubMed IDs:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @if (strlen($submission->submitted_as_pmids)>2)
             <div class="font-normal">{{ $submission->submitted_as_pmids }}</div>
-          @else
-            <div class="font-normal">N/A</div>
-          @endif
-        </div>
 
+        </div>
+         @endif
+
+          @if(strlen($submission->submitted_as_public_report_url)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Public Report:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @if(strlen($submission->submitted_as_public_report_url)>2)
             <div class="font-normal"><a class="underline" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
             <div class="text-xs"><a class="" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
-          @else
-            <div class="font-normal">N/A</div>
-          @endif
-        </div>
 
+
+        </div>
+         @endif
+
+          @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Assertion Criteria:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
             <div class="font-normal"><a class="underline" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
             <div class="text-xs"><a class="" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
-          @else
-            <div class="font-normal">N/A</div>
-          @endif
+
+
         </div>
+         @endif
 
         {{-- <div class="col-span-2 pt-3 text-right pr-3 pb-3">Submission ID from Submitter:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
