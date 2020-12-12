@@ -11,7 +11,7 @@
       {{-- <hr class="mt-4 border" /> --}}
     </div>
     <div class="col-span-12 xl:col-span-1 py-3">
-      <p>{!! $submitter->text_description !!}</p>
+      <p>{!! $submitter->text_descriptions !!}</p>
       @if($submitter->website)
       <hr class="mt-3 mb-3 border" />
       <strong>Website</strong>
@@ -34,10 +34,13 @@
         @endisset
 
     </div>
+    @if($submitter->count_submissions != 0)
     <div class="col-span-12 xl:col-span-1 bg-gray-200 p-3">
+
       <h4 class="mb-1">Classifications Visualized</h4>
         <hr class="mt-1 mb-0 border" />
   <div class="grid grid-cols-12 gap-0 text-sm">
+
     @foreach ($classifications as $item)
     @if($item->curie != "GENCC:000000")
       <div class="col-span-3 border-r-2 border-gray-300 py-1 px-2">
@@ -63,13 +66,23 @@
       </div>
       @endif
     @endforeach
-  </div>
-
     </div>
+    </div>
+    @else
+            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+                Submission Coming Soon
+            </p>
+          @endif
+
+
+
 </div>
 <div class="grid grid-cols-12 mt-10 gap-0">
     <div class="col-span-12">
+        @if($submitter->count_submissions != 0)
             @livewire('submitter.listing-of-submissions', ['submitter' => $submitter])
+
+          @endif
       </div>
 </div>
 
