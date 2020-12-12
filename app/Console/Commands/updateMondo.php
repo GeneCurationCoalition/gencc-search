@@ -84,7 +84,13 @@ class updateMondo extends Command
             if (($deprecated  != true) && (preg_match('(OMIM:|MONDO:|Orphanet:|HP:)', $curie) === 1)) {
                 if ($curie) {
                     $disease = Disease::updateOrCreate(
-                        ['uuid' => $uuid],
+                        [
+                            'uuid'          => $uuid,
+                            'type'          => $type,
+                            'curie'         => $curie,
+                            'title'         => $title,
+                            'description'   => $description
+                        ],
                         [
                             'uuid'          => $uuid,
                             'type'          => $type,
@@ -112,7 +118,12 @@ class updateMondo extends Command
                             $uuid = str_replace(':', '_', $val);
 
                             $result = Disease::updateOrCreate(
-                                ['curie' => $val],
+                                [
+                                    'curie' => $val,
+                                    'type' => $type,
+                                    'title' => $title,
+                                    'uuid'  => $uuid
+                                ],
                                 [
                                     'curie' => $val,
                                     'type' => $type,
@@ -157,7 +168,11 @@ class updateMondo extends Command
                             if (preg_match('(OMIM:|MONDO:|Orphanet:|HP:)', $curie) === 1) {
                                 //dd($curie);
                                 $entry = Disease::updateOrCreate(
-                                    ['curie' => $curie],
+                                    [
+                                        'curie'     => $curie,
+                                        'type'      => $ontology,
+                                        'uuid'       => $uuid
+                                    ],
                                     [
                                         'curie'     => $curie,
                                         'type'      => $ontology,
@@ -209,7 +224,12 @@ class updateMondo extends Command
                             if (preg_match('(OMIM:|MONDO:|Orphanet:|HP:)', $xref) === 1) {
                                 //dd($xref);
                                 $entry = Disease::updateOrCreate(
-                                    ['curie' => $xref],
+                                    [
+                                        'curie' => $xref,
+                                        'type' => $type,
+                                        'title' => $title,
+                                        'uuid'  => $uuid
+                                    ],
                                     [
                                         'curie' => $xref,
                                         'type' => $type,

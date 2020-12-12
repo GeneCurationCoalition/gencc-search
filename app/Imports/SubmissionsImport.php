@@ -63,11 +63,22 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 if(isset($gene_record->title)){
                     if ($gene_record->title != $row['hgnc_symbol']) {
                         echo "GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
+                        unset($gene_record);
                     }
                 }
 
+                if (is_numeric($row['date'])) {
+                    $date_record = true;
+                } elseif (DateTime::createFromFormat('Y-m-d', $row['date']) !== FALSE) {
+                    $date_record = true;
+                } else {
+                    echo "DATE ERROR - DATE NOT SET CORRECTLY -- '" . $row["date"] . "' - '" . $row["hgnc_id"] . "\n";
+                    $row['date'] = "";
+                    unset($date_record);
+                }
+
                 // If disease isn't found... see if MONDO has
-                if(!isset($disease_record)){
+                if(!isset($disease_record) || !isset($disease_record->title)){
 
                    if(($row["disease_id"] == "null") || ($row["disease_id"] == "NULL")){
                         echo "DISEASE ERROR -- '" . $row["disease_id"] . "\n";
@@ -99,7 +110,12 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                             $uuid = str_replace(':', '_', $data->id);
 
                             $mondo = Disease::updateOrCreate(
-                                ['curie' => $data->id],
+                                [
+                                    'curie' => $data->id,
+                                    'type' => $type,
+                                    'title' => $title,
+                                    'uuid'  => $uuid
+                                ],
                                 [
                                     'curie' => $data->id,
                                     'type' => $type,
@@ -116,7 +132,12 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                             $uuid = str_replace(':', '_', $query);
 
                             $omim = Disease::updateOrCreate(
-                                ['curie' => $query],
+                                [
+                                    'curie' => $query,
+                                    'type' => $type,
+                                    'title' => $title,
+                                    'uuid'  => $uuid
+                                ],
                                 [
                                     'curie' => $query,
                                     'type' => $type,
@@ -152,7 +173,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 // CONTINUE...
 
-                if(isset($classification_missing) && isset($classification_record) && isset($inheritance_record) && isset($inheritance_missing) && isset($gene_record) && isset($disease_record) && isset($classification_missing) && isset($submitter_record)) {
+                if(isset($classification_missing) && isset($classification_record) && isset($inheritance_record) && isset($inheritance_missing) && isset($gene_record) && isset($disease_record) && isset($classification_missing) && isset($submitter_record) && isset($date_record)) {
 
                     //$uuid = $row["submitter_id"] . "__" . $row['submission_id'];
                     $uuid = $row["submitter_id"] . "-" . $row['hgnc_id'] . "-" . $row['disease_id'] . "-" . $row['moi_id'] . "-" . $row['classification_id'];
