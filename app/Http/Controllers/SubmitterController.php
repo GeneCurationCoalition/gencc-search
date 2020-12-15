@@ -17,7 +17,7 @@ class SubmitterController extends Controller
     public function index()
     {
         //$submitters = Submitter::whereHas('submissions')->paginate(25);
-        $submitters = Submitter::paginate(25);
+        $submitters = Submitter::where('status', 1)->paginate(25);
         $page_meta['seo']['title'] = "GenCC Submitters";
         //dd($records);
         return view('submitters.index', ['submitters' => $submitters, 'page' => 'submitter', 'page_meta' => $page_meta]);

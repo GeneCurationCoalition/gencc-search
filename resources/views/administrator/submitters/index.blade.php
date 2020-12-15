@@ -29,7 +29,8 @@
           <table class="min-w-full">
             <thead>
               <tr class="border-t border-gray-200">
-                <th class="px-8 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                <th class="border-b border-gray-200 bg-gray-50 "></th>
+                <th class="pr-8 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                   Submitter
                 </th>
                 <th class="hidden md:table-cell px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
@@ -45,7 +46,15 @@
               @foreach ($submitters as $submitter)
 
               <tr>
-                <td class="px-8 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
+                <td class="px-2 py-3 max-w-0 whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
+                  @if($submitter->status == 1)
+                    <span class=" bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">S</span>
+                  @else
+                    <span class=" bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">H</span>
+                  @endif
+                      {{-- {{ $submitter->status }} --}}
+                </td>
+                <td class="pr-8 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
                     <a href="{{ route('manage-submitters-show', $submitter->curie) }}" class="truncate text-blue-700 hover:text-gray-600">
                       {{ $submitter->title }}
                     </a>

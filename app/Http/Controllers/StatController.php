@@ -20,11 +20,12 @@ class StatController extends Controller
     {
         $genesCount = Gene::with('submissions')->has('submissions')->count();
         $diseasesCount = Disease::with('submissions')->has('submissions')->count();
-        $submitters = Submitter::has('submissions');
+        $submitters_with_submissions = Submitter::has('submissions');
         $submissionsCount = Submission::count();
         $classifications = Classification::with('submissions')->with('submissions')->get();
+        $submitters = Submitter::where('status', 1)->paginate(25);
         $page_meta['seo']['title'] = "GenCC Submission Statistics";
 
-        return view('statistics.index', ['genesCount' => $genesCount, 'diseasesCount' => $diseasesCount, 'submissionsCount' => $submissionsCount, 'classifications' => $classifications, 'page_meta' => $page_meta, 'submitter' => $submitters]);
+        return view('statistics.index', ['genesCount' => $genesCount, 'diseasesCount' => $diseasesCount, 'submissionsCount' => $submissionsCount, 'classifications' => $classifications, 'page_meta' => $page_meta, 'submitters_with_submissions' => $submitters_with_submissions, 'submitters' => $submitters]);
     }
 }

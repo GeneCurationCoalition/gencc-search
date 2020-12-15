@@ -15,6 +15,9 @@
           <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
             Manage {{ $submitter->title }}
           </h1>
+          <hr class="my-6 border" />
+          Toggle Status:
+          @livewire('dashboard.toggle-submitter-status', ['submitter' => $submitter])
         </div>
       </div>
       <!-- Projects table (small breakpoint and up) -->

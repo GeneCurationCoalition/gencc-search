@@ -22,8 +22,9 @@
         </div>
         <div class="rounded-full py-5 text-xs px-1 text-center text-blue-800 border-solid border-8 border-blue-800 bg-gray-200">
           <a href="{{ route('submitters') }}">
-            <div class="text-2xl xl:text-6xl mb-0 pb-0 leading-none">{{ $submitter->count() }}</div>
+            <div class="text-2xl xl:text-6xl mb-0 pb-0 leading-none">{{ $submitters_with_submissions->count() }}</div>
             <i class="fas fa-disease"></i> Submitters with submissions
+            <div class="underline">Learn about GenCC's submitters</div>
           </a>
         </div>
   </div>
@@ -62,19 +63,8 @@
 </div>
 <div class="col-12 mt-10"><hr /></div>
 <div class="mt-10">
-  <h2 class="my-3">Classification Facts</h2>
-  <div class="grid grid-cols-3  gap-2 xl:gap-10">
-    @foreach ($classifications as $item)
-      @if($item->curie != "GENCC:000000")
-        <div class="rounded-full py-5 text-xs px-1 text-center text-white {{ $item->css_class }}">
-          <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <div class="text-2xl xl:text-6xl mb-0 pb-0 leading-none">{{ $item->submissions->count() }}</div>
-            # {{ $item->title }} classifications
-          </a>
-        </div>
-      @endif
-    @endforeach
-  </div>
+  <h2 class="my-3">GenCC Submitters Stats</h2>
+  @include('partials.submitter.submitter-grid')
 </div>
 
 @endsection

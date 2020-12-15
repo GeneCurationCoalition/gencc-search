@@ -7,13 +7,18 @@
 <div class="grid grid-cols-2 mt-10 gap-8">
     <div class="col-span-12 xl:col-span-2">
       <h3 class=" truncate">{{ $submitter->title }}</h3>
-      <div class="text-sm">GenCC Ref: {{ $submitter->curie }}</div>
+      <p>This page is a summary of pilot submissions provided by {{ $submitter->title }}. <a class="underline text-blue-600" href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank">Click here</a> to be notified about GenCC updates.</p>
       {{-- <hr class="mt-4 border" /> --}}
     </div>
     <div class="col-span-12 xl:col-span-1 py-3">
       <p>{!! $submitter->text_descriptions !!}</p>
       @if($submitter->website)
       <hr class="mt-3 mb-3 border" />
+
+
+      <div class="mb-1">
+        <a href="{{ $submitter->website }}" class="text-blue-700 underline" target="_blank" >{{ $submitter->website }} <i class="fas fa-external-link-alt"></i></a></div>
+
       <strong>Website</strong>
       <div class="mb-1">
         <a href="{{ $submitter->website }}" class="text-blue-700 underline" target="_blank" >{{ $submitter->website }} <i class="fas fa-external-link-alt"></i></a></div>

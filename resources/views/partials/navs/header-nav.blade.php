@@ -3,13 +3,13 @@
 
 		<div class="w-full container mx-auto flex flex-wrap items-center mt-0 pt-3 pb-3 md:pb-0">
 
-			<div class="w-1/3 pl-2 mb-4 md:pl-0">
-				<a href="https://thegencc.org/faq.html#public-beta"><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" /></a>
-				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="{{ route('home')}}">
+			<div class="w-1/4 pl-2 mb-4 md:pl-0">
+				<img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" />
+				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="https://thegencc.org/">
 				 <img src="/brand/logo/genecc-logo.jpg" class=" h-16" />
 				</a>
 			</div>
-			<div class="w-2/3 pr-0">
+			<div class="w-3/4 pr-0">
 				<div class="flex relative inline-block float-right">
 
 					<div class="relative text-sm  invisible lg:visible">
@@ -31,13 +31,16 @@
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="fas fa-file-code"></i> Download
 						</a>
-						<a href="https://thegencc.org/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="https://thegencc.org/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="far fa-question-circle"></i> FAQ
 						</a>
-						<a href="https://thegencc.org/content/" target="_blank" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-comment"></i> Contact
 						</a>
-						<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 px-2 leading-tight border-2 border-blue-800 ">
+						<a href="https://thegencc.org/" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
+							<i class="far fa-home"></i> About Us
+						</a>
+						<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk"></i> Stay Informed
 						</a>
 
@@ -115,9 +118,13 @@
 											<a href="https://thegencc.org/faq" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-question-circle"></i> FAQ
 											</a>
-											<a href="https://thegencc.org/content/" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-comment"></i> Contact
 											</a>
+											<a href="https://thegencc.org/" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="far fa-comment"></i> About Us
+											</a>
+
 											<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-mail-bulk"></i> Stay Informed
 											</a>

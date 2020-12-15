@@ -21,9 +21,9 @@ class InheritanceSeeder extends Seeder
             [
                 'uuid' => "HP_0000005",
                 'curie' => "HP:0000005",
-                'title' => "Unset Inheritance",
+                'title' => "Unknown Inheritance",
                 'description' => "Mode of inheritance HP:0000005",
-                'abbreviation' => "unset",
+                'abbreviation' => "Unknown",
                 'hex_color' => "#12345",
                 'css_class' => "inheritance-style-unset",
             ],

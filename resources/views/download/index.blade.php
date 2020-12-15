@@ -15,9 +15,7 @@
   <div class="grid lg:grid-cols-2 gap-4 lg:gap-20 xl:gap-40 mb-6">
         <div>
           <h2>Data Download</h2>
-          <p class="mb-3">Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Different displays within the database group assertions by submitter, by disease, by gene, and by clinical validity.</p>
-          <p class="mb-3">To harmonize terms describing gene-disease validity, the GenCC used a Delphi method to survey both members of our GenCC organizations and the international genetics community. Terms that were agreed upon are “Definitive, Strong, Moderate, Limited, Disputed Evidence, Refuted Evidence, Animal Model Only, and No Known Disease Relationship”. </p>
-          <p class="mb-6">Due to licensing restrictions, a GenCC download only includes a partial data set. Submissions from OMIM are not included in this set.</p>
+          <p class="mb-3">Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Member groups have submitted pilot sets of data and will continue to add to the data set over time. Due to licensing restrictions, a GenCC download does not include OMIM data. OMIM data can be accessed and downloaded through <a href="https://www.omim.org/" class="underline" target="_blank">https://www.omim.org/</a></p>
           <div class="grid grid-cols-2 gap-4 mb-6">
             <a href="{{ route('submissions-export-xlsx') }}" class="no-underline block text-center hover:underline text-blue-800 bg-blue-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-blue-800 "><i class="fas fa-file-download"></i> Submissions (xlsx)</a>
             <a href="{{ route('submissions-export-xls') }}" class="no-underline block text-center hover:underline text-blue-800 bg-blue-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-blue-800 "><i class="fas fa-file-download"></i> Submissions (xls)</a>

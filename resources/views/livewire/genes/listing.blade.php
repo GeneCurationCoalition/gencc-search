@@ -158,7 +158,7 @@
 
             </div>
         </div>
-            <div class="hidden xl:inline-block xl:visible text-blue-800 pl-0 text-xs mt-6 leading-tight"> <i class="far fa-question-circle"></i> About GenCC <div class="ml-4">Classifications</div></div>
+            <div class="hidden xl:inline-block xl:visible text-blue-800 pl-0 text-xs mt-6 leading-tight"> <i class="far fa-question-circle"></i> <a class="hover:underline" target="_blank" href="https://thegencc.org/faq.html#validity-termsdelphi-survey">About GenCC <div class="ml-4">Classifications</div></a></div>
     </div>
     {{-- <div class="row bg-gray-100"> --}}
     <div class="relative row bg-white">
