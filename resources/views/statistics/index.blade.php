@@ -7,7 +7,7 @@
       </div>
   </div>
 <div class="mt-2">
-  <div class="grid grid-cols-3 gap-2 xl:gap-10 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 xl:gap-10 mb-6">
         <div class="rounded-full py-5 text-xs px-1 text-center text-blue-800 border-solid border-8 border-blue-800 bg-gray-200">
           <a href="{{ route('genes') }}">
             <div class="text-2xl xl:text-6xl mb-0 pb-0 leading-none">{{ $submissionsCount }}</div>
