@@ -40,7 +40,7 @@
 						<a href="https://thegencc.org/" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="fas fa-home"></i> About Us
 						</a>
-						<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
+						<a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk"></i> Stay Informed
 						</a>
 
@@ -125,7 +125,7 @@
 												<i class="far fa-comment"></i> About Us
 											</a>
 
-											<a href="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-mail-bulk"></i> Stay Informed
 											</a>
 

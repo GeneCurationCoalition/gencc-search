@@ -6,7 +6,7 @@
       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
   </style>
   <div id="mc_embed_signup">
-  <form action="https://creationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&amp;id=7ccf9c9b09" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+  <form action="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&amp;id=7ccf9c9b09" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
       <div id="mc_embed_signup_scroll">
 
     <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Email address" required>
