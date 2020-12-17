@@ -6,3 +6,5 @@
 <div class="flex justify-between flex-1 sm:hidden"></div>
 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"></div>
 <div class="w-5 h-5"></div>
+<div class="far fa-home"></div>
+<div class="fas fa-home"></div>
