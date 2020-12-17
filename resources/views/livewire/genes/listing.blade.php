@@ -1,6 +1,4 @@
 <div class="">
-
-
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
         <div class="col-span-4 xl:col-span-2 mt-3">
@@ -42,7 +40,6 @@
                             {{ $submitter->title }}</button>
                     @endforeach
                 </div>
-
                     @if($filtering_by_submitter == true)
                     <div class="py-0" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <div class=" text-xs block px-4 py-2 text-sm leading-5 text-gray-700 bg-yellow-300" role="menuitem">
@@ -149,7 +146,6 @@
                 @else
                     <button class="text-gencc-animalmodelonly rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-animal bg-gray-200" wire:click="$set('curations_animal', '0')" ><i class="fas fa-check"></i></button>
                 @endif
-
                  @if($curations_noknown == "0")
                     <button class="text-gencc-noknown rounded-full h-6 border-2 mt-1 w-100 border-gray-300 bg-gray-200" wire:click="$set('curations_noknown', '1')" ></button>
                 @else
@@ -273,7 +269,6 @@
             </div>
         </div>
         {{-- TOGGLE END --}}
-
 </div>
         {{-- @livewire('genes.listing-row', compact('item'), key($item->id)) --}}
     @empty
