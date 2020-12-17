@@ -17,15 +17,15 @@ class ProcessSubmissions extends Component
 
     public function start()
     {
-        $this->process = "running";
-        $this->refid = Str::uuid();
-        $this->messages = Artisan::call('gencc:update-submissions', array('--ref' => $this->refid));
+        #$this->process = "running";
+        #$this->refid = Str::uuid();
+        #$this->messages = Artisan::call('gencc:update-submissions', array('--ref' => $this->refid));
     }
     public function running()
     {
         //dd("asdasd");
-        $this->messages = Artisan::call('gencc:update-submissions');
-        $this->process = "done";
+        #$this->messages = Artisan::call('gencc:update-submissions');
+        #$this->process = "done";
     }
 
     public function render()
