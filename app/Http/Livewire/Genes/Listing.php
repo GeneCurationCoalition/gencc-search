@@ -31,6 +31,7 @@ class Listing extends Component
     public $sort                            = '';
     public $page                            = 1;
     protected $items;
+    protected $return;
     protected $submitters;
     // protected $queryString = [
     //     'title'                             => ['except' => ''],
