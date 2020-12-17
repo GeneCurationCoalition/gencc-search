@@ -36,10 +36,10 @@
                             <div class="ml-4 pt-1 text-sm flex-inline-list">
                               <ul>
                                 @if($item->submitted_as_public_report_url)
-                              <li><a target="_blank" href="{{ $item->submitted_as_public_report_url }}" class="text-blue-700">Public Report <i class="fas fa-external-link-alt"></i></a></li>
+                              <li><a id='click-exit-public-report'  target="_blank" href="{{ $item->submitted_as_public_report_url }}" class="text-blue-700">Public Report <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
                                 @if($item->submitted_as_assertion_criteria_url)
-                              <li><a target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
+                              <li><a id='click-exit-assertion-criteria'  target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
                               <li><a class="text-blue-700" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
                               </ul>

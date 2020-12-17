@@ -76,13 +76,6 @@
 					@include("partials.terms.general-disclaimer")
 				</p>
 			</div>
-			{{-- <ul class=" my-8">
-				<li><i class="fas fa-angle-double-right"></i> The information on this website is not intended for diagnostic use or medical decision-making without review by a genetics professional.</li>
-				<li><i class="fas fa-angle-double-right"></i> Individuals should not change their health behavior solely on the basis of information obtained on this website.</li>
-				<li><i class="fas fa-angle-double-right"></i> If you have questions about the information obtained on this website, please see a health care professional.</li>
-				<li><i class="fas fa-angle-double-right"></i> The GenCC does not accept medical questions and/or provide advice. All medical questions should be directed to your health care professional.</li>
-				<li><i class="fas fa-angle-double-right"></i> If you contact the GenCC, do not share any information containing protected health information (PHI). <a href="https://clinicalgenome.org/share-your-data/" target="_blank">Click here to learn how to share data.</a></li>
-			</ul> --}}
 
 			<div class="pb-5">
 				<hr class="border-1 border-gray-200 my-6" />

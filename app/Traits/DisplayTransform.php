@@ -16,7 +16,7 @@ trait DisplayTransform
    */
   public function displayLinkToHgnc($text, $href, $css = null, $target = "_blank", $options = null)
   {
-    return "<a class='{$css} text-gray-600' target='{$target}' href='https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
+    return "<a class='{$css} text-gray-600' id='click-exit-hgnc-term'  target='{$target}' href='https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
 
   /**
@@ -28,7 +28,7 @@ trait DisplayTransform
   public function displayLinkToMondo($text, $href, $css=null, $target = "_blank", $options = null)
   {
 
-    return "<a class='{$css} text-gray-600' target='{$target}' href='https://monarchinitiative.org/disease/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
+    return "<a class='{$css} text-gray-600' id='click-exit-mondo-term' target='{$target}' href='https://monarchinitiative.org/disease/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
 
   /**
@@ -40,7 +40,7 @@ trait DisplayTransform
   public function displayLinkToOmim($text, $href, $css =null, $target = "_blank", $options = null)
   {
     $href = str_replace("OMIM:", "", $href);
-    return "<a class='{$css} text-gray-600' target='{$target}' href='https://omim.org/entry/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
+    return "<a class='{$css} text-gray-600' id='click-exit-omim-term' target='{$target}' href='https://omim.org/entry/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
 
   /**
@@ -51,7 +51,7 @@ trait DisplayTransform
    */
   public function displayLinkToMoi($text, $href, $css = null, $target = "_blank", $options = null)
   {
-    return "<a class='{$css} text-gray-600' target='{$target}' href='https://hpo.jax.org/app/browse/term/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
+    return "<a class='{$css} text-gray-600'  id='click-exit-moi-term' target='{$target}' href='https://hpo.jax.org/app/browse/term/{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
   }
 
 

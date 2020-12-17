@@ -86,8 +86,8 @@
           @if(strlen($submission->submitted_as_public_report_url)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Public Report:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal"><a class="underline" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
-            <div class="text-xs"><a class="" target="_blank" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="font-normal"><a class="underline"  id='click-exit-public-report' target="_blank" href="{{  $submission->submitted_as_public_report_url }}">Click here to view the public report <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="text-xs"><a class="" id='click-exit-public-report'  target="_blank" href="{{  $submission->submitted_as_public_report_url }}">{{ $submission->submitted_as_public_report_url }} <i class="fas fa-external-link-alt"></i></a></div>
 
 
         </div>
@@ -96,8 +96,8 @@
           @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Assertion Criteria:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal"><a class="underline" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
-            <div class="text-xs"><a class="" target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+            <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
 
 
         </div>
