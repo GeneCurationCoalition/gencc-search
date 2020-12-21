@@ -115,10 +115,14 @@ class ListingByDisease extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->get();
+        $records = Submission::where('gene_id', '=', $gene_id)->where('status', '=', 1)->get();
 
         $count_submissions = $records->count();
         $this->filter = [];
+
+        if ($records->count() == 0) {
+            return view('partials.no-results.genes');
+        }
 
         foreach ($records as $submission) {
             $count_submissions++;
@@ -206,8 +210,9 @@ class ListingByDisease extends Component
         //     $query->where('content', 'like', 'foo%');
         // })->get();
 
+        $this->records = $records;
         return view('livewire.gene.listing-by-disease', [
-            'records' => $records,
+            'records' => $this->records,
             'filter' => $this->filter,
             'count_submissions' => $count_submissions,
             'filter_set' => $filter_set
