@@ -133,7 +133,7 @@ class ListingOfSubmissions extends Component
     {
 
         $submitter_id = $this->submitter_id;
-        $records = Submission::where('submitter_id', '=', $submitter_id)->get();
+        $records = Submission::where('submitter_id', '=', $submitter_id)->where('status', '=', 1)->get();
 
         $count_submissions = $records->count();
 
@@ -238,6 +238,7 @@ class ListingOfSubmissions extends Component
                 // ->with(['classification' => function ($q) {
                 //         $q->orderBy('title', 'DESC');
                 //     }])
+                ->where('status', '=', 1)
                 ->orderBy('order', 'ASC')
                 ->paginate(20);
         // }

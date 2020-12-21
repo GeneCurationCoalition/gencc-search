@@ -14,7 +14,7 @@ class Classification extends Model
 
     public function submissions()
     {
-        return $this->hasMany('App\Submission');
+        return $this->hasMany('App\Submission')->where('status', '=', 1);
     }
 
     public function scopeCurie($query, $id)

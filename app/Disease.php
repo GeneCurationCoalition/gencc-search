@@ -22,7 +22,7 @@ class Disease extends Model
 
     public function submissions()
     {
-        return $this->belongsToMany('App\Submission', 'disease_submission')->withTimestamps()->withPivot('type');
+        return $this->belongsToMany('App\Submission', 'disease_submission')->where('status', '=', 1)->withTimestamps()->withPivot('type');
     }
     public function xrefs()
     {

@@ -53,12 +53,12 @@ class Submission extends Model
 
     public function scopeCurie($query, $id)
     {
-        return $query->where('curie', '=', $id)->orderBy('updated_at', 'asc');
+        return $query->where('curie', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
     }
 
     public function scopeUuid($query, $id)
     {
-        return $query->where('uuid', '=', $id)->orderBy('updated_at', 'asc');
+        return $query->where('uuid', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
     }
 
 
