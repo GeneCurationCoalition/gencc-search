@@ -25,7 +25,7 @@ class SubmitterFileList extends Component
     {
         //dd("sdf");
         $file = SubmissionFile::uuid($uuid)->first();
-        $file->status = 0;
+        $file->status = 1;
         $file->save();
 
         $this->submitter = Submitter::curie($this->submitter->curie)->first();
@@ -36,7 +36,18 @@ class SubmitterFileList extends Component
     {
         //dd("sdf");
         $file = SubmissionFile::uuid($uuid)->first();
-        $file->status = 1;
+        $file->status = 0;
+        $file->save();
+
+        $this->submitter = Submitter::curie($this->submitter->curie)->first();
+        //dd($this->submitter);
+    }
+
+    public function archive($uuid)
+    {
+        //dd("sdf");
+        $file = SubmissionFile::uuid($uuid)->first();
+        $file->status = 2;
         $file->save();
 
         $this->submitter = Submitter::curie($this->submitter->curie)->first();

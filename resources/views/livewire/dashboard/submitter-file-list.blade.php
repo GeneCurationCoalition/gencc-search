@@ -25,9 +25,11 @@
             <tr class="@if($file->updated_at->diffForHumans() == "1 second ago") bg-green-100 @endif">
             <td class="hidden md:table-cell pl-8 text-sm text-center leading-5 text-gray-500">
                 @if($file->status == 1)
-                    <button wire:click="enable('{{ $file->uuid }}')" class=" bg-green-800 hover:bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Enabled</button>
+                    <button wire:click="disable('{{ $file->uuid }}')" class=" bg-green-800 hover:bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Enabled</button>
+                @elseif($file->status == 0)
+                    <button wire:click="archive('{{ $file->uuid }}')" class=" bg-red-800 hover:bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Disabled</button>
                 @else
-                    <button wire:click="disable('{{ $file->uuid }}')" class="bg-red-500 hover:bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Disabled</button>
+                    <button wire:click="enable('{{ $file->uuid }}')" class="bg-gray-500 hover:bg-gray-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Archived</button>
                 @endif
             </td>
             <td class="px-4 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
