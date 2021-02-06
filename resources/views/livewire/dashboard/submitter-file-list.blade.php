@@ -32,8 +32,13 @@
                     <button wire:click="enable('{{ $file->uuid }}')" class="bg-gray-500 hover:bg-gray-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Archived</button>
                 @endif
             </td>
-            <td class="px-4 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
-                {{ $file->file_name }}
+            <td class="px-4 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5  font-medium text-gray-900">
+
+                {!!Str::limit($file->file_name, 60, '...')!!}
+                <a title="{{ $file->file_name }}">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+
             </td>
             <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-right">
                 @if($file->submitted_run_date){{ $file->submitted_run_date->format('m/d/Y') }}@endif
