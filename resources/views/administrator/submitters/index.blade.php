@@ -2,15 +2,15 @@
 
 @section('content')
 
-<div class="h-screen flex overflow-hidden bg-white">
+<div class=" flex bg-white">
   <!-- Static sidebar for desktop -->
   @include('partials.navs.dashboard-nav')
   <!-- Main column -->
-  <div class="flex flex-col w-0 flex-1 overflow-hidden">
+  <div class="flex flex-col w-0 flex-1">
     <!-- Search header -->
-    <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none" tabindex="0">
+    <main class="flex-1 z-0 focus:outline-none" tabindex="0">
       <!-- Page title & actions -->
-      <div class="border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div class="px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
           <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
             Manage Submitters
@@ -20,7 +20,7 @@
       <div class=" px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
 
-            @livewire('dashboard.process-submissions')
+            @livewire('dashboard.submitter.process-submissions')
         </div>
       </div>
       <!-- Projects table (small breakpoint and up) -->
@@ -55,7 +55,7 @@
                       {{-- {{ $submitter->status }} --}}
                 </td>
                 <td class="pr-8 py-3 max-w-0 w-full whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
-                    <a href="{{ route('manage-submitters-show', $submitter->curie) }}" class="truncate text-blue-700 hover:text-gray-600">
+                    <a href="{{ route('manage-submitter-show', $submitter->curie) }}" class="truncate text-blue-700 hover:text-gray-600">
                       {{ $submitter->title }}
                     </a>
                 </td>

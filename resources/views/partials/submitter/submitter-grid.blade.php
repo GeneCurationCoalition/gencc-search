@@ -3,7 +3,7 @@
       <div class="flex flex-col rounded-lg shadow-lg border border-gray-400 overflow-hidden">
         <div class="flex-shrink-0">
           <a href="{{ route('submitter-show', $submitter->uuid) }}" class="block">
-          <img class="h-48 w-full object-cover" src="{{ $submitter->path_logo }}" alt="">
+          <img class="h-48 w-full object-cover" src="/brand/submitters/{{ $submitter->uuid }}.png" alt="">
           </a>
         </div>
         <div class="flex-1 bg-white pt-3 pb-3 px-6 flex flex-col justify-between">

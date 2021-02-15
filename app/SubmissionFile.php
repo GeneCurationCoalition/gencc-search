@@ -29,6 +29,7 @@ class SubmissionFile extends Model
         return $this->belongsTo('App\User', 'created_by_user');
     }
 
+
     protected static function boot()
     {
         parent::boot();
@@ -50,7 +51,9 @@ class SubmissionFile extends Model
         'file_type',
         'status',
         'file_size',
-        'submitted_run_date'
+        'submitted_run_date',
+        'processed_last_at',
+        'private_notes'
     ];
     protected $casts = [
         'submitted_run_date' => 'date:Y-m-d'
