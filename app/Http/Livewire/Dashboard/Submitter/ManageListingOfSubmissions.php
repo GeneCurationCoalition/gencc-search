@@ -17,6 +17,7 @@ class ManageListingOfSubmissions extends Component
 
     public $count = 0;
     public $submitter_id;
+    public $submitter_curie;
     public $query_disease;
     public $query_gene;
     public $date;
@@ -29,6 +30,9 @@ class ManageListingOfSubmissions extends Component
     {
         //dd($gene);
         $this->submitter_id = $submitter->id;
+        $this->submitter_curie = $submitter->curie;
+
+        //dd($this->submitter_curie);
 
         $this->date = new DateTime();
         $this->date =  $this->date->getTimestamp();
@@ -175,6 +179,8 @@ class ManageListingOfSubmissions extends Component
         }
         $this->filter_set['submitters'] = array_unique($result);
     }
+
+
 
 
     public function render()
@@ -325,6 +331,7 @@ class ManageListingOfSubmissions extends Component
         //dd($records);
         return view('livewire.dashboard.submitter.manage-listing-of-submissions', [
             'records' => $records,
+            'submitter_curie' => $this->submitter_curie,
             'filter' => $this->filter,
             'count_submissions' => $count_submissions,
             'filter_set' => $filter_set

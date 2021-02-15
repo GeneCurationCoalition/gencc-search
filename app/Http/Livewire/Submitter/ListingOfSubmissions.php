@@ -172,13 +172,15 @@ class ListingOfSubmissions extends Component
             //$this->filter['submitters_id']['ref_' . $submission->submitter->id]             = $submission->submitter->id;
         }
 
-        $this->filter['genes'] = Arr::sortRecursive($this->filter['genes']);
-        //this->filter['diseases'] = Arr::sortRecursive($this->filter['diseases']);
-        $this->filter['diseases'] = array_values(Arr::sort($this->filter['diseases'], function ($value) {
-            return $value['title'];
-        }));
-        $this->filter['inheritances'] = Arr::sortRecursive($this->filter['inheritances']);
-        $this->filter['submitters'] = Arr::sortRecursive($this->filter['submitters']);
+        if($records->count()) {
+            $this->filter['genes'] = Arr::sortRecursive($this->filter['genes']);
+            //this->filter['diseases'] = Arr::sortRecursive($this->filter['diseases']);
+            $this->filter['diseases'] = array_values(Arr::sort($this->filter['diseases'], function ($value) {
+                return $value['title'];
+            }));
+            $this->filter['inheritances'] = Arr::sortRecursive($this->filter['inheritances']);
+            $this->filter['submitters'] = Arr::sortRecursive($this->filter['submitters']);
+        }
         //dd($this->filter);
 
         //  dd($records);

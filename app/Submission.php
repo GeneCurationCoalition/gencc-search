@@ -103,6 +103,9 @@ class Submission extends Model
         'submitted_as_date',
         'submitted_as_pmids',
         'submitted_as_assertion_criteria_url',
-        'submitted_run_date'
+        'submitted_run_date',
+        'from_submission_file_name',
+        'from_submission_file_id',
+        'private_notes'
     ];
 }
