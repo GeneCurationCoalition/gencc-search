@@ -13,15 +13,16 @@
       <div class="px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
           <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
-            {{ $submitter->title }}
+            {{ $submitter->title ?? "Create"}}
 
           </h1>
+          @if(isset($submitter->title))
           <div class="my-4">
             <div class="inline text-blue-700 text-center border-blue-500 border px-4 py-2"><a href="{{ route('manage-submitter-show', $submitter->curie) }}" class="text-blue-600">Submissions</a></div>
             <div class="inline text-blue-700 text-center border-blue-500 border px-4 py-2"><a href="{{ route('manage-submitter-show-files', $submitter->curie) }}" class="text-blue-600">Submissions Files</a></div>
             <div class="inline text-white bg-blue-500 text-center border px-4 py-2"><a href="{{ route('manage-submitter-show-profile', $submitter->curie) }}" class="text-white">Manage Info &amp; Manage Status</a></div>
           </div>
-
+          @endif
         </div>
       </div>
 
@@ -39,7 +40,7 @@
       </div>
 
 
-
+      @if($submitter != null)
             <!-- Projects table (small breakpoint and up) -->
       <div class="sm:block" id="link_status">
         <div class="align-middle inline-block min-w-full border-gray-200">
@@ -50,6 +51,7 @@
           </div>
         </div>
       </div>
+      @endif
     </main>
   </div>
 </div>

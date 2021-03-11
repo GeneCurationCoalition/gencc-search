@@ -59,6 +59,19 @@ class AdministratorController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function submitterCreate()
+    {
+
+        //dd($newCurie);
+        return view('administrator.submitters.edit-profile', ['submitter' => null]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
     public function files($id)
     {
         $submitter = Submitter::curie($id)->with('submissions.gene', 'submissions.disease')->firstOrFail();

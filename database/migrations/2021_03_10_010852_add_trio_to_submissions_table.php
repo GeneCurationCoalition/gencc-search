@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class {{ class }} extends Migration
+class AddTrioToSubmissionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class {{ class }} extends Migration
      */
     public function up()
     {
-        Schema::table('{{ table }}', function (Blueprint $table) {
+        Schema::table('submissions', function (Blueprint $table) {
             //
+            $table->unsignedBigInteger('trio_id')->unsigned()->index()->nullable();
+            $table->foreign('trio_id')->references('id')->on('trios')->onDelete('cascade');
         });
     }
 
@@ -25,7 +27,7 @@ class {{ class }} extends Migration
      */
     public function down()
     {
-        Schema::table('{{ table }}', function (Blueprint $table) {
+        Schema::table('submission_files', function (Blueprint $table) {
             //
         });
     }

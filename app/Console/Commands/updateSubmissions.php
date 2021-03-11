@@ -71,7 +71,7 @@ class updateSubmissions extends Command
 
         Log::channel('slack')->info('Submission Import Started');
 
-
+        $data = "";
 
         $submissions = SubmissionFile::where('status', 1)->orderby('created_at', 'asc')->get();
         foreach($submissions as $submission) {
@@ -93,6 +93,11 @@ class updateSubmissions extends Command
                 $submitted_run_date = $submission->created_at->format('Y/m/d');
             }
             $import = Excel::import(new SubmissionsImport($submitted_run_date), $data);
+
+            $submission->processed_last_at = now();
+            $submission->status = 0;
+            $submission->private_notes = $submission->private_notes . "\n SYS NOTE - File processed on ". now();
+            $submission->save();
             //$this->line($import);
         }
         $this->line('Loading completed');
@@ -101,7 +106,7 @@ class updateSubmissions extends Command
         //echo " \n";
         //dd($data);
         if (!$data) {
-            echo "IMPORT ERROR - (E002) Error fetching search data.\n";
+            echo "IMPORT ERROR - (E002) Error fetching search data OR no files are availbale to process.\n";
         }
 
         Log::channel('slack')->info('Submission Import Completed');

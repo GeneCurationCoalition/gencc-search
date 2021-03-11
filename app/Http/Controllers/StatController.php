@@ -22,7 +22,7 @@ class StatController extends Controller
         $diseasesCount = Disease::with('submissions')->has('submissions')->count();
         $submitters_with_submissions = Submitter::has('submissions');
         $submissionsCount = Submission::where('status', '=', 1)->count();
-        $classifications = Classification::with('submissions')->with('submissions')->get();
+        $classifications = Classification::with('submissions')->get();
         $submitters = Submitter::where('status', 1)->paginate(25);
         $page_meta['seo']['title'] = "GenCC Submission Statistics";
 

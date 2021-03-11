@@ -16,7 +16,7 @@ class CreateTriosTable extends Migration
         Schema::create('trios', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('uuid')->nullable();
-            $table->string('name')->nullable();
+            $table->string('title')->nullable();
             $table->integer('status')->default(0);
             $table->unsignedBigInteger('gene_id')->unsigned()->index()->nullable();
             $table->foreign('gene_id')->references('id')->on('genes')->onDelete('cascade');

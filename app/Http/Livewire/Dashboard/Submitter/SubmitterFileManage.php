@@ -18,7 +18,7 @@ class SubmitterFileManage extends Component
         //dd($this->file->file_name);
     }
 
-    public function enable($uuid)
+    public function toprocess($uuid)
     {
         //dd("sdf");
         $this->file->status = 1;
@@ -29,7 +29,7 @@ class SubmitterFileManage extends Component
         //dd($this->submitter);
     }
 
-    public function disable($uuid)
+    public function processed($uuid)
     {
         //dd("sdf");
         $this->file->status = 0;

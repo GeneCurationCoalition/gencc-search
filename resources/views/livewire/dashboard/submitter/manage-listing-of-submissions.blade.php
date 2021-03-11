@@ -117,8 +117,8 @@
 
       </div>
 
-  <hr class="  mb-6 mt-4" />
-    <div class="relative">
+  <hr class="  mb-6 mt-4 " />
+    <div class="relative min-h-screen">
               <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
                       <div class="text-center">
                           <i class="fas fa-circle-notch fa-spin fa-10x text-green-600"></i>

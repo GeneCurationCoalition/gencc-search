@@ -41,6 +41,11 @@ class Submission extends Model
         return $this->belongsTo('App\Submitter');
     }
 
+    public function trio()
+    {
+        return $this->belongsTo('App\Submitter');
+    }
+
     public function diseases()
     {
         return $this->belongsToMany('App\Disease', 'disease_submission')->withTimestamps()->withPivot('type');

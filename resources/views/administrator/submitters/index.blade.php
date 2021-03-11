@@ -12,6 +12,7 @@
       <!-- Page title & actions -->
       <div class="px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
+          <a href="{{ route('manage-submitter-create') }}" class="bg-blue-500 float-right hover:bg-blue-700 text-gray-100 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"> Create New Submitter</a>
           <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
             Manage Submitters
           </h1>
@@ -19,7 +20,6 @@
       </div>
       <div class=" px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
-
             @livewire('dashboard.submitter.process-submissions')
         </div>
       </div>
@@ -60,7 +60,7 @@
                     </a>
                 </td>
                 <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-left">
-                  <span class=" bg-green-800 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">{{ $submitter->submission_files->where('status', 1)->count() }} active</span> <span class=" bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">{{ $submitter->submission_files->where('status', 0)->count() }} disabled </span>
+                  <span class=" bg-green-800 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">{{ $submitter->submission_files->where('status', 1)->count() }} To Process</span> <span class=" bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">{{ $submitter->submission_files->where('status', 0)->count() }} Processed</span> <span class=" bg-gray-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full">{{ $submitter->submission_files->where('status', 2)->count() }} Archived </span>
                 </td>
                 <td class="hidden md:table-cell px-6 py-3 whitespace-no-wrap text-sm leading-5 text-gray-500 text-left">
                   {{ $submitter->curie }}

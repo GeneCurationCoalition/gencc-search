@@ -32,11 +32,11 @@
             <div class="col-span-9 py-1 my-2 border-l-8 pl-3">
                 {{-- {{ $file->status }} --}}
                 @if($file->status == 1)
-                    <button wire:click="disable('{{ $file->uuid }}')" class=" bg-green-800 hover:bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Enabled</button>
+                    <button wire:click="processed('{{ $file->uuid }}')" class=" bg-green-800 hover:bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">To Process</button>
                 @elseif($file->status == 0)
-                    <button wire:click="archive('{{ $file->uuid }}')" class=" bg-red-800 hover:bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Disabled</button>
+                    <button wire:click="archive('{{ $file->uuid }}')" class=" bg-red-800 hover:bg-red-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Processed</button>
                 @else
-                    <button wire:click="enable('{{ $file->uuid }}')" class="bg-gray-500 hover:bg-gray-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Archived</button>
+                    <button wire:click="toprocess('{{ $file->uuid }}')" class="bg-gray-500 hover:bg-gray-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Archived</button>
                 @endif
 
             </div>
@@ -51,7 +51,7 @@
         <div class="col-span-3 pt-4 text-right pr-3">Private Notes:</div>
             <div class="col-span-9 py-1 my-2 border-l-8 pl-3">
                 <form wire:submit.prevent="save">
-                    <textarea wire:model.defer="file.private_notes" placeholder="Submission file notes" class="w-full border border-gray-400 p-2">{{ $file->private_notes }}</textarea>
+                    <textarea rows="15" wire:model.defer="file.private_notes" placeholder="Submission file notes" class="w-full border border-gray-400 p-2">{{ $file->private_notes }}</textarea>
                     <button class="bg-blue-500 hover:bg-blue-700 text-gray-100 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">Save Notes...</button>
 
                             <div class="inline text-white bg-gray-700 float-right text-center px-3 py-2"><a href="{{ route('manage-submitter-show-files', $file->submitter->curie) }}" class="text-white">Return to list</a></div>

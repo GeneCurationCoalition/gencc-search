@@ -56,6 +56,7 @@ class SubmissionFile extends Model
         'private_notes'
     ];
     protected $casts = [
-        'submitted_run_date' => 'date:Y-m-d'
+        'submitted_run_date' => 'date:Y-m-d',
+        'processed_last_at' => 'datetime:Y-m-d'
     ];
 }

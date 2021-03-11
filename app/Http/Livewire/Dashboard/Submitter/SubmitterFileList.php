@@ -21,7 +21,7 @@ class SubmitterFileList extends Component
         //dd($this->submitter);
     }
 
-    public function enable($uuid)
+    public function toprocess($uuid)
     {
         //dd("sdf");
         $file = SubmissionFile::uuid($uuid)->first();
@@ -43,7 +43,7 @@ class SubmitterFileList extends Component
         //dd($this->submitter);
     }
 
-    public function disable($uuid)
+    public function processed($uuid)
     {
         //dd("sdf");
         $file = SubmissionFile::uuid($uuid)->first();
