@@ -343,7 +343,7 @@ trait ModelTransform
     //dd("start");
     $row_disease_id   = $data["disease_id"];
 
-    echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
+    //echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
 
     // Get the query ready for MONDO API
     $query = preg_replace("/[^a-zA-Z0-9:]/", "", $row_disease_id);
@@ -356,7 +356,7 @@ trait ModelTransform
     // Check the response
     if ($response->getStatusCode() == 200) {
       // Message is things is good
-      echo "- - - - processMondoApi getStatusCode = 200 -- (This is good) -- '" . $row_disease_id . "\n";
+      //echo "- - - - processMondoApi getStatusCode = 200 -- (This is good) -- '" . $row_disease_id . "\n";
 
       // $body = $response->getBody();
       // Decode the response body so it can be used...
@@ -367,7 +367,7 @@ trait ModelTransform
       // Make 100% sure this is a MONDO return
       if (preg_match('(MONDO:)', $var->id) === 1) {
 
-          echo "- - - - processMondoApi -- MONDO was returned -- '". $var->id ."' for '" . $row_disease_id . "\n";
+          //echo "- - - - processMondoApi -- MONDO was returned -- '". $var->id ."' for '" . $row_disease_id . "\n";
 
           // Do this to get if this as a MONDO (though it should be based on above)
           $type = explode(":", $var->id);
@@ -401,7 +401,7 @@ trait ModelTransform
               foreach ($var->xrefs as $xref) {
                   // Only save some of the diseases
                   if (preg_match('(OMIM:|MONDO:|Orphanet:)', $xref) === 1) {
-                      echo "- - - - processMondoApi GOOD -- XREF is a OMIM:|MONDO:|Orphanet -- " . $xref . " for " . $var->id . "\n";
+                      //echo "- - - - processMondoApi GOOD -- XREF is a OMIM:|MONDO:|Orphanet -- " . $xref . " for " . $var->id . "\n";
 
                       $type = explode(":", $xref);
                       $type = $type[0];
@@ -448,7 +448,7 @@ trait ModelTransform
               }
 
           } else {
-            echo "- - - - processMondoApi GOOD -- this MONDO does not have XREFs " . $var->id . "\n";
+            //echo "- - - - processMondoApi GOOD -- this MONDO does not have XREFs " . $var->id . "\n";
           }
 
 
@@ -470,7 +470,7 @@ trait ModelTransform
     }
 
 
-    echo "- - - - processMondoApi END -- '" . $row_disease_id . "\n";
+    //echo "- - - - processMondoApi END -- '" . $row_disease_id . "\n";
 
     //dd("STOP");
   }
