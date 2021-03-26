@@ -12,6 +12,6 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/DATA/*
+/DATA/EXCLUDE/*
 .notes.txt
 .htpasswd
