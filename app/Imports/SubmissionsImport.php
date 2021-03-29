@@ -60,6 +60,14 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 if (!isset($gene_record)) {
                     echo "IMPORT ERROR - GENE ERROR - NOT IN HGNC ERROR -- '" . $row["hgnc_id"] . "\n";
+                    echo "IMPORT MESSAGE - TRYING GENE SYSTEM -- '" . $row["hgnc_symbol"] . "\n";
+
+                    $gene_record = Gene::where('title', '=', $row['hgnc_symbol'])->first();
+
+                    if (!isset($gene_record)) {
+                        echo "IMPORT ERROR - GENE ERROR - NOT IN SYMBOL ERROR -- '" . $row["hgnc_symbol"] . "\n";
+                    }
+
                 }
 
                 if(isset($gene_record->title)){
