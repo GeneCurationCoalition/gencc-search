@@ -32,9 +32,9 @@
 							<i class="fas fa-file-code"></i> Download
 						</a>
 
-						<a href="{{ route('reports')}}" class="no-underline hover:underline text-gray-800 p-2">
+						{{-- <a href="{{ route('reports')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="fas fa-chart-pie"></i> Reports
-						</a>
+						</a> --}}
 
 						<a href="https://thegencc.org/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="far fa-question-circle"></i> FAQ
