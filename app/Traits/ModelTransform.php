@@ -185,6 +185,9 @@ trait ModelTransform
       case "no-known":
         $color  = "gencc-noknowndiseaserelationship";
         break;
+      case "supportive":
+        $color  = "gencc-supportive";
+        break;
       default:
         $color  = "gencc-nul";
         break;
