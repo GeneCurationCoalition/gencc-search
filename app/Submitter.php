@@ -24,7 +24,7 @@ class Submitter extends Model
 
     public function submission_files()
     {
-        return $this->hasMany('App\SubmissionFile');
+        return $this->hasMany('App\SubmissionFile')->orderBy('status', 'asc');
     }
 
     public function submissions()
@@ -35,6 +35,8 @@ class Submitter extends Model
     protected $fillable = [
         'title',
         'website',
+        'curie',
+        'uuid',
         'path_logo',
         'description',
         'text_descriptions',

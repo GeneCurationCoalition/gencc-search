@@ -1,8 +1,8 @@
 #Protect Directory
-AuthName "Dialog prompt"
-AuthType Basic
-AuthUserFile /var/www/gencc-search/.htpasswd
-Require valid-user
+# AuthName "Dialog prompt"
+# AuthType Basic
+# AuthUserFile /var/www/gencc-search/.htpasswd
+# Require valid-user
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>

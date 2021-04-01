@@ -2,41 +2,39 @@
 
 @section('content')
 
-<div class="h-screen flex overflow-hidden bg-white">
+<div class=" flex bg-white">
   <!-- Static sidebar for desktop -->
   @include('partials.navs.dashboard-nav')
   <!-- Main column -->
-  <div class="flex flex-col w-0 flex-1 overflow-hidden">
+  <div class="flex flex-col w-0 flex-1">
     <!-- Search header -->
-    <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none" tabindex="0">
+    <main class="flex-1 z-0 focus:outline-none" tabindex="0">
       <!-- Page title & actions -->
-      <div class="border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div class="px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div class="flex-1 min-w-0">
           <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
-            Manage {{ $submitter->title }}
+            {{ $submitter->title }}
+
           </h1>
-          <hr class="my-6 border" />
-          Toggle Status:
-          @livewire('dashboard.toggle-submitter-status', ['submitter' => $submitter])
+          <div class="my-4">
+            <div class="inline text-white bg-blue-500 text-center border px-4 py-2"><a href="{{ route('manage-submitter-show', $submitter->curie) }}" class="text-white">Submissions</a></div>
+            <div class="inline text-blue-700 text-center border-blue-500 border px-4 py-2"><a href="{{ route('manage-submitter-show-files', $submitter->curie) }}" class="text-blue-600">Submissions Files</a></div>
+            <div class="inline text-blue-700 text-center border-blue-500 border px-4 py-2"><a href="{{ route('manage-submitter-show-profile', $submitter->curie) }}" class="text-blue-600">Manage Info &amp; Manage Status</a></div>
+          </div>
+
         </div>
       </div>
+
       <!-- Projects table (small breakpoint and up) -->
-      <div class="sm:block">
-        <div class="align-middle inline-block min-w-full border-gray-200">
+      <div class="sm:block" id="link_classifications">
+        <div class="align-middle inline-block min-w-full">
           <div class="px-8 py-4">
-            <h3>Submission File Upload</h3>
-          @livewire('dashboard.submission-upload', ['submitter' => $submitter])
-            <div class="pl-3 mt-1 text-xs">Supported formats: XLS, XLSX</div>
+            @livewire('dashboard.submitter.manage-listing-of-submissions', ['submitter' => $submitter])
+
           </div>
         </div>
       </div>
-      <!-- Projects table (small breakpoint and up) -->
-      <div class="mt-0 sm:block">
-        <div class="align-middle inline-block min-w-full border-b border-gray-200">
-          <div class="px-8 pb-4 italic">Note: Enabling/disabling files controls the files processed during the "Process Submissions" action.  <br />Note: Disabling a file doesn't remove submissions already uploaded.</div>
-          @livewire('dashboard.submitter-file-list', ['submitter' => $submitter])
-        </div>
-      </div>
+
     </main>
   </div>
 </div>

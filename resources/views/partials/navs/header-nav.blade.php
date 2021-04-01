@@ -31,6 +31,11 @@
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="fas fa-file-code"></i> Download
 						</a>
+
+						{{-- <a href="{{ route('reports')}}" class="no-underline hover:underline text-gray-800 p-2">
+							<i class="fas fa-chart-pie"></i> Reports
+						</a> --}}
+
 						<a href="https://thegencc.org/faq" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="far fa-question-circle"></i> FAQ
 						</a>
@@ -38,7 +43,7 @@
 							<i class="far fa-comment"></i> Contact
 						</a>
 						<a href="https://thegencc.org/" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
-							<i class="fas fa-home"></i> About Us
+							<i class="fas fa-home"></i> About
 						</a>
 						<a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk"></i> Stay Informed

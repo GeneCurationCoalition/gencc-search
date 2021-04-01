@@ -60,6 +60,14 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 if (!isset($gene_record)) {
                     echo "IMPORT ERROR - GENE ERROR - NOT IN HGNC ERROR -- '" . $row["hgnc_id"] . "\n";
+                    echo "IMPORT MESSAGE - TRYING GENE SYSTEM -- '" . $row["hgnc_symbol"] . "\n";
+
+                    $gene_record = Gene::where('title', '=', $row['hgnc_symbol'])->first();
+
+                    if (!isset($gene_record)) {
+                        echo "IMPORT ERROR - GENE ERROR - NOT IN SYMBOL ERROR -- '" . $row["hgnc_symbol"] . "\n";
+                    }
+
                 }
 
                 if(isset($gene_record->title)){
@@ -121,7 +129,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     $submission = Submission::updateOrCreate(
                         [
                         'uuid'                                  => $uuid,
-                        'submitted_run_date'                     => $this->submitted_run_date,
+                        //'submitted_run_date'                     => $this->submitted_run_date,
                         ],
                         [
                         'uuid'                                   => $uuid,
@@ -142,7 +150,8 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'submitted_as_public_report_url'         => $row['public_report_url'] ?? '',
                         'submitted_as_notes'                     => $row['notes'] ?? '',
                         'submitted_as_pmids'                     => $row['pmids'] ?? '',
-                        'submitted_as_assertion_criteria_url'    => $row['assertion_criteria_url'] ?? ''
+                        'submitted_as_assertion_criteria_url'    => $row['assertion_criteria_url'] ?? '',
+                        'status'                                 => $row['status'] ?? '1'
                     ]);
 
                     //dd($submission);
@@ -236,7 +245,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 } else {
 
-                    echo "\nIMPORT ERRORS\n";
+                    echo "\nIMPORT MESSAGE\n";
                     if (!isset($classification_record)) {
                         echo "- - - " . $row["submission_id"] . " | was skipped. Bad classification | " . $row["classification_id"] . "\n";
                     }
@@ -252,7 +261,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     if (!isset($submitter_record)) {
                         echo "- - - " . $row["submission_id"] . " | was skipped. Bad submitter | " . $row["submitter_id"] . " \n";
                     }
-                    echo "\nIMPORT ERRORS\n";
+                    echo "\nIMPORT MESSAGE\n";
                 }
 
             } else {

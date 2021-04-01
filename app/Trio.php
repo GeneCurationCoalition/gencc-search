@@ -11,7 +11,7 @@ class Trio extends Model
 
     public function submissions()
     {
-        return $this->belongsToMany('App\Submission', 'disease_submission')->withTimestamps()->withPivot('type');
+        return $this->hasMany('App\Submission');
     }
 
     public function gene()
@@ -48,4 +48,17 @@ class Trio extends Model
         'date' => 'date:Y-m-d'
     ];
 
+    protected $with = ['gene', 'disease', 'inheritance', 'submissions.classification'];
+
+    protected $fillable = [
+        'uuid',
+        'title',
+        'name',
+        'gene_id',
+        'disease_id',
+        'moi_id',
+        'description',
+        'status',
+        'uuid'
+    ];
 }

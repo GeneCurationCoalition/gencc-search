@@ -2,7 +2,7 @@
 /public/hot
 /public/storage
 /storage/*.key
-/database/seeders/UsersSeeder.php
+#/database/seeders/UsersSeeder.php
 /storage/framework/laravel-excel/
 /vendor
 .env
@@ -12,6 +12,6 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/DATA/*
+/DATA/EXCLUDE/*
 .notes.txt
 .htpasswd
