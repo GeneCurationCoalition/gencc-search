@@ -59,6 +59,7 @@ class ListingOfSubmissions extends Component
         } else {
             $result = array_merge($array, $value);
         }
+
         $this->filter_set['classifications'] = array_unique($result);
         //dd($this->filter_set);
         //$this->filter['classifications_id'][$submission->classification->uuid]          = $submission->classification->id;
@@ -201,6 +202,8 @@ class ListingOfSubmissions extends Component
         }
             //dd($filter_set);
             //dd($filter);
+            $has_records = Submission::where('submitter_id', '=', $submitter_id)->where('status', '=', 1)->count();
+            //dd($has_records);
             $records = Submission::where('submitter_id', '=', $submitter_id)
                 ->whereHas('classification', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['classifications'] as $key => $item) {
@@ -252,6 +255,7 @@ class ListingOfSubmissions extends Component
         //dd($records);
         return view('livewire.submitter.listing-of-submissions', [
             'records' => $records,
+            'has_records' => $has_records,
             'filter' => $this->filter,
             'count_submissions' => $count_submissions,
             'filter_set' => $filter_set
