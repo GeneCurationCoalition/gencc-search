@@ -68,7 +68,7 @@ class updateCounts extends Command
 
         $this->line('Updating Gene Counts... ');
         Log::channel('slack')->info('Updating Gene Counts... ');
-        $items = Gene::with('submissions.classification')->has('submissions')->get();
+        $items = Gene::with('submissions.classification')->get();
         //$items = $items->processSubmissionsForGene();
         //dd($items);
         // if (empty($items))
@@ -94,26 +94,28 @@ class updateCounts extends Command
             );
 
             foreach ($item->submissions as $val) {
-                //$val = strstr(, 'GENCC');
-                //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
-                // Take the val and add one to it.
-                $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
+                if ($val->status == 1) {
+                    //$val = strstr(, 'GENCC');
+                    //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
+                    // Take the val and add one to it.
+                    $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
 
-                // TODO - Make this better
-                if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
-                    $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
-                } else {
-                    $list['count_unique_submitters'][$val->submitter->curie]    = 1;
-                }
-
-                if (isset($val->disease)) {
-                    if(isset($list['count_unique_diseases'][$val->disease->curie])) {
-                        $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                    // TODO - Make this better
+                    if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
+                        $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
                     } else {
-                        $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                        $list['count_unique_submitters'][$val->submitter->curie]    = 1;
+                    }
+
+                    if (isset($val->disease)) {
+                        if(isset($list['count_unique_diseases'][$val->disease->curie])) {
+                            $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                        } else {
+                            $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                        }
                     }
                 }
-                //dd($list);
+                    //dd($list);
             }
 
 
@@ -145,7 +147,7 @@ class updateCounts extends Command
 
         Log::channel('slack')->info('Updating Submitter Submission Counts...');
         $this->line('Updating Submitter Submission Counts... ');
-        $items = Submitter::with('submissions.classification')->has('submissions')->get();
+        $items = Submitter::with('submissions.classification')->get();
         //$items = $items->processSubmissionsForGene();
         //dd($items);
         // if (empty($items))
@@ -170,29 +172,32 @@ class updateCounts extends Command
                 "nul"                           => "0"
             );
 
+            $submission_val_count = 0;
             foreach ($item->submissions as $val) {
-                //$val = strstr(, 'GENCC');
-                //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
-                // Take the val and add one to it.
-                $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
+                if ($val->status == 1) {
+                    $submission_val_count++;
+                    //$val = strstr(, 'GENCC');
+                    //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
+                    // Take the val and add one to it.
+                    $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
 
-                // TODO - Make this better
-                if (isset($list['count_unique_genes'][$val->submitter->curie])) {
-                    $list['count_unique_genes'][$val->submitter->curie]    = $list['count_unique_genes'][$val->submitter->curie] + 1;
-                } else {
-                    $list['count_unique_genes'][$val->submitter->curie]    = 1;
-                }
-
-                if (isset($val->disease)) {
-                    if (isset($list['count_unique_diseases'][$val->disease->curie])) {
-                        $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                    // TODO - Make this better
+                    if (isset($list['count_unique_genes'][$val->submitter->curie])) {
+                        $list['count_unique_genes'][$val->submitter->curie]    = $list['count_unique_genes'][$val->submitter->curie] + 1;
                     } else {
-                        $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                        $list['count_unique_genes'][$val->submitter->curie]    = 1;
+                    }
+
+                    if (isset($val->disease)) {
+                        if (isset($list['count_unique_diseases'][$val->disease->curie])) {
+                            $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                        } else {
+                            $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                        }
                     }
                 }
                 //dd($list);
             }
-
 
             $submitter = Submitter::find($item->id);
             $submitter->curations_definitive     = $list['definitive'];
@@ -205,13 +210,17 @@ class updateCounts extends Command
             $submitter->curations_noknown        = $list['no-known'];
             $submitter->curations_supportive     = $list['supportive'];
             $submitter->curations_nul            = $list['nul'];
-            $submitter->count_submissions        = count($item->submissions);
+            $submitter->count_submissions        = $submission_val_count;
             if (isset($list['count_unique_diseases'])) {
                 $submitter->count_unique_diseases        = count($list['count_unique_diseases']);
+            } else {
+                $submitter->count_unique_diseases        = 0;
             }
             if (isset($list['count_unique_genes'])) {
                 $submitter->count_unique_genes      = count($list['count_unique_genes']);
                 //$gene->count_unique_submitters       = $list['count_unique_submitters'];
+            } else {
+                $submitter->count_unique_genes        = 0;
             }
             $submitter->save();
 
@@ -225,7 +234,7 @@ class updateCounts extends Command
         Log::channel('slack')->info('Updating Diseases Counts...');
         $this->line('Updating Diseases Counts... ');
 
-        $items = Disease::with('submissions.classification')->has('submissions')->get();
+        $items = Disease::with('submissions.classification')->get();
         //$items = $items->processSubmissionsForGene();
         //dd($items);
         if (empty($items))
@@ -251,24 +260,26 @@ class updateCounts extends Command
             );
 
             foreach ($item->submissions as $val) {
-                //dd($val);
-                // Take the val and add one to it.
-                $list[$val->classification->slug]                           = $list[$val->classification->slug] + 1;
+                if($val->status == 1) {
+                    //dd($val);
+                    // Take the val and add one to it.
+                    $list[$val->classification->slug]                           = $list[$val->classification->slug] + 1;
 
-                // TODO - Make this better
-                if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
-                    $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
-                } else {
-                    $list['count_unique_submitters'][$val->submitter->curie]    = 1;
+                    // TODO - Make this better
+                    if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
+                        $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
+                    } else {
+                        $list['count_unique_submitters'][$val->submitter->curie]    = 1;
+                    }
+
+                    // if (isset($val->disease)) {
+                    //     if(isset($list['count_unique_diseases'][$val->disease->curie])) {
+                    //         $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
+                    //     } else {
+                    //         $list['count_unique_diseases'][$val->disease->curie]    = 1;
+                    //     }
+                    // }
                 }
-
-                // if (isset($val->disease)) {
-                //     if(isset($list['count_unique_diseases'][$val->disease->curie])) {
-                //         $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
-                //     } else {
-                //         $list['count_unique_diseases'][$val->disease->curie]    = 1;
-                //     }
-                // }
             }
             //dd($list);
 
