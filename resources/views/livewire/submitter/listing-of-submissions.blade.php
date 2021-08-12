@@ -1,5 +1,5 @@
 <div class="">
-
+    @if($has_records > 0)
       <div class="col-span-12 mb-4"><h2>Submissions </h2>
         <span class="font-bold"> {{ $records->total() }} </span>
         @if($filter_enabled == true)
@@ -185,4 +185,5 @@
               @endforeach
       {{ $records->links() }}
     </div>
+    @endif
 </div>
