@@ -101,7 +101,7 @@
               <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
               <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
             @elseif($submission->submitted_as_assertion_criteria_url)
-              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ route('submitter-show', $submission->submitter->uuid) }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria' href="{{ route('submitter-show', $submission->submitter->uuid) }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
               <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  href="{{ route('submitter-show', $submission->submitter->uuid) }}">{{route('submitter-show', $submission->submitter->uuid)  }} <i class="fas fa-external-link-alt"></i></a></div>
             @endif
 
