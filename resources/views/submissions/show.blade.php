@@ -96,8 +96,14 @@
           @if(strlen($submission->submitted_as_assertion_criteria_url)>2)
         <div class="col-span-2 pt-3 text-right pr-3">Assertion Criteria:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
-            <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
+
+             @if (strpos(strtoupper($submission->submitted_as_assertion_criteria_url), 'HTTP') !== false)
+              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+              <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            @elseif($submission->submitted_as_assertion_criteria_url)
+              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+              <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  href="{{ route('submitter-show', $submission->submitter->uuid) }}">{{route('submitter-show', $submission->submitter->uuid)  }} <i class="fas fa-external-link-alt"></i></a></div>
+            @endif
 
 
         </div>

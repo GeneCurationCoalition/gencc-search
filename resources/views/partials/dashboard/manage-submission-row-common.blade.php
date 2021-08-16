@@ -38,8 +38,10 @@
                                 @if($item->submitted_as_public_report_url)
                               <li><a id='click-exit-public-report'  target="_blank" href="{{ $item->submitted_as_public_report_url }}" class="text-blue-700">Public Report </a></li>
                                 @endif
-                                @if($item->submitted_as_assertion_criteria_url)
-                              <li><a id='click-exit-assertion-criteria'  target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria </a></li>
+                                @if (strpos(strtoupper($item->submitted_as_assertion_criteria_url), 'HTTP') !== false)
+                                  <li><a id='click-exit-assertion-criteria'  target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
+                                @elseif($item->submitted_as_assertion_criteria_url)
+                                  <li><a id='click-exit-assertion-criteria' href="{{ route('submitter-show', $item->submitter->uuid) }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
                               <li><a class="text-blue-700" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
                               </ul>

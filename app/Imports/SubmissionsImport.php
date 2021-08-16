@@ -125,6 +125,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         $date = "";
 
                     }
+                    //if(!$row['status']) {
+                    //    $row['status'] = '1';
+                    //}
                     //dd($row['notes'] ?? '');
                     $submission = Submission::updateOrCreate(
                         [
@@ -132,6 +135,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'submitted_as_disease_id'                => $row['disease_id'] ?? '',
                         'submitted_as_moi_id'                    => $row['moi_id'] ?? '',
                         'submitted_as_submitter_id'              => $row['submitter_id'] ?? '',
+                        //'status'                                 => $row['status']
                         //'submitted_run_date'                     => $this->submitted_run_date,
                         ],
                         [
@@ -157,7 +161,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'status'                                 => $row['status'] ?? '1'
                     ]);
 
-                    //dd($submission);
+                    //dd($row);
 
                     if ($row['submitter_id'] ?? '') {
                         $submission->submitter()->associate($submitter_record);
