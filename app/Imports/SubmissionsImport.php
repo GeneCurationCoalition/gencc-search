@@ -42,6 +42,8 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
         //dd($rowIndex);
         if($rowIndex > 12) {
             //dd($row);
+
+            //dd($row);
             if(isset($row["submission_id"]) && isset($row["hgnc_id"]) && isset($row["disease_id"]) && isset($row["moi_id"]) && isset($row["date"])){
                 //echo "\n\n\n IMPORT ROW START - " . $rowIndex . " ... \n";
                 //dd($rowIndex);
@@ -49,11 +51,19 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 $row["disease_id"] = preg_replace('/\s+/', '', $row["disease_id"]);
                 $row["hgnc_id"] = preg_replace('/\s+/', '', $row["hgnc_id"]);
 
+                if (preg_match('(Orphanet:|Orpha:|ORPHA:|ORPHANET:)', $row["disease_id"]) === 1) {
+                    $explode = explode(":", $row["disease_id"]);
+                    $row["disease_id"] = "Orphanet:" . $explode[1];
+                    //$query = "ORPHA:79304";
+                    //dd($query);
+                }
+
                 $classification_missing = Classification::curie("GENCC:000000")->first();
                 $classification_record = Classification::curie($row["classification_id"])->first();
                 $inheritance_missing = Inheritance::curie("HP:0000005")->first();
                 $inheritance_record = Inheritance::curie($row["moi_id"])->first();
                 $disease_record = Disease::curie($row["disease_id"])->first();
+                //dd($row["disease_id"]);
                 $gene_record = Gene::curie($row['hgnc_id'])->first();
                 //dd($gene_record);
                 $submitter_record = Submitter::curie($row["submitter_id"])->first();
@@ -242,6 +252,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
 
 
+                    echo "- - - " . $submission->id . " submitted as " . $submission->submitted_as_submission_id . "  SAVED \n";
 
 
                     $submission->save();

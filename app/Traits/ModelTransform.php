@@ -3,7 +3,7 @@
 namespace App\Traits;
 
 use App\Disease;
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as GClient;
 
 trait ModelTransform
 {
@@ -351,21 +351,65 @@ trait ModelTransform
     // Get the query ready for MONDO API
     $query = preg_replace("/[^a-zA-Z0-9:]/", "", $row_disease_id);
     // Call the API
-    $client = new Client(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
 
+    // This is checking the import curie for ORPHANET and switching them to ORPHA which is with the API expects
+    if (preg_match('(Orphanet:|Orpha:|ORPHA:|ORPHANET:)', $query) === 1) {
+      $explode = explode(":", $query);
+      $query = "ORPHA:". $explode[1];
+      //$query = "ORPHA:79304";
+      //dd($query);
+    }
+
+    try {
+      $client = new GClient(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
+      $response = $client->request('GET', 'bioentity/disease/' . $query);
+
+      if ($response->getStatusCode() != 200) {
+        unset($response);
+      } else {
+        $response = $response->getBody();
+      }
+      //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query)
+      //$client = new GClient();
+      //dd($client);
+      //$response = $client->request('GET', 'https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
+
+      //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
+      //$response = json_decode($response);
+    } catch (\Exception $e) {
+        echo "import guzzle exception \n";
+
+        try {
+          $response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
+          //$response = json_decode($response);
+        } catch (\Exception $e) {
+          echo "import file_get_contents exception \n";
+        }
+
+    }
+    // } finally {
+    //   //optional code that always runs
+    // }
+
+    //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
+    //$response = json_decode($response);
+    //dd($response);
     // Get the response
-    $response = $client->request('GET', 'bioentity/disease/' . $query);
+      //echo $query;
+      //echo gettype($query);
+      //$client = new GClient(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
+      //$response = $client->request('GET', 'bioentity/disease/' . $query);
 
     // Check the response
-    if ($response->getStatusCode() == 200) {
+    //if ($response->getStatusCode() == 200) {
+    if (isset($response)) {
       // Message is things is good
       //echo "- - - - processMondoApi getStatusCode = 200 -- (This is good) -- '" . $row_disease_id . "\n";
 
       // $body = $response->getBody();
       // Decode the response body so it can be used...
-      $var = json_decode($response->getBody());
+      $var = json_decode($response);
 
-      //dd($var);
 
       // Make 100% sure this is a MONDO return
       if (preg_match('(MONDO:)', $var->id) === 1) {
@@ -403,8 +447,9 @@ trait ModelTransform
           if ($var->xrefs) {
               foreach ($var->xrefs as $xref) {
                   // Only save some of the diseases
-                  if (preg_match('(OMIM:|MONDO:|Orphanet:)', $xref) === 1) {
+                  if (preg_match('(OMIM:|MONDO:|Orphanet:|Orpha:|ORPHA:|ORPHANET:)', $xref) === 1) {
                       //echo "- - - - processMondoApi GOOD -- XREF is a OMIM:|MONDO:|Orphanet -- " . $xref . " for " . $var->id . "\n";
+
 
                       $type = explode(":", $xref);
                       $type = $type[0];
@@ -457,7 +502,7 @@ trait ModelTransform
 
       } else {
         // message if the response wasn't a MONDO
-        echo "IMPORT ERROR - - - - processMondoApi ERROR -- Response was not MONDO -- '" . $var->id . "\n";
+        echo "IMPORT ERROR - - - - processMondoApi ERROR -- Response was not MONDO or the response didn't have a MONDO equiv-- '" . $var->id . "\n";
       }
 
       //dd("STOP");
@@ -469,7 +514,7 @@ trait ModelTransform
 
     } else {
       // message is $response->getStatusCode() fails...
-      echo "IMPORT ERROR - - - - processMondoApi getStatusCode = '" . $response->getStatusCode() ."' -- (Not good) -- '" . $row_disease_id . "\n";
+      echo "IMPORT ERROR - - - - processMondoApi ERROR ' -- (Not good) -- '" . $row_disease_id . "\n";
     }
 
 
