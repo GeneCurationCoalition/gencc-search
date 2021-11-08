@@ -75,10 +75,10 @@
         @endif
 
 
-          @if (strlen($submission->submitted_as_pmids)>2)
+          @if (strlen($submission->submitted_as_pmids)>4)
         <div class="col-span-2 pt-3 text-right pr-3">PubMed IDs:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal">{{ $submission->submitted_as_pmids }}</div>
+            <div class="font-normal">{{ preg_replace('/\D/', ' ', $submission->submitted_as_pmids) }}</div>
 
         </div>
          @endif
