@@ -32,8 +32,9 @@
         <div>
         <div class="mx-auto flex items-center justify-center">
           <!-- Heroicon name: check -->
-          <a href="https://thegencc.org/faq.html#public-beta" ><img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
-          <img src="/brand/logo/genecc-logo.jpg" class=" h-20" />
+          <!--<a href="https://thegencc.org/faq.html#public-beta" >
+            <img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-24 ml-40 -mt-8 pl-10" /></a>
+          <img src="/brand/logo/genecc-logo.jpg" class=" h-20" />-->
         </div>
         <div class="mt-3 text-center sm:mt-5">
           <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
@@ -41,7 +42,7 @@
           </h3>
           <div class="mt-2 text-left">
             <p class="text-sm pb-2 text-gray-900">
-              All data here are released under a <a class="text-blue-700 underline"  href='https://web.archive.org/web/20141107034939/http://www.wellcome.ac.uk/stellent/groups/corporatesite/@policy_communications/documents/web_document/wtd003207.pdf' target="_blank" id='click-exit-fort-lauderdale-agreement' >Fort Lauderdale Agreement</a> for the benefit of the wider biomedical community. You can freely download and search the data, and we encourage the use and publications of validity data for specific targeted sets of genes. However, we ask that you not publish global (site-wide) analyses of these data, or of large gene sets, until after the GenCC flagship paper has been published (estimated to be spring 2021). After the flagship publication, data will be available free of restriction under a CC0 1.0 Universal (CC0 1.0) Public Domain Dedication. The GenCC requests that you give attribution to GenCC and the contributing sources whenever possible and appropriate.
+              All data here are released under a <a class="text-blue-700 underline"  href='https://web.archive.org/web/20141107034939/http://www.wellcome.ac.uk/stellent/groups/corporatesite/@policy_communications/documents/web_document/wtd003207.pdf' target="_blank" id='click-exit-fort-lauderdale-agreement' >Fort Lauderdale Agreement</a> for the benefit of the wider biomedical community. You can freely download and search the data, and we encourage the use and publications of validity data for specific targeted sets of genes. However, we ask that you not publish global (site-wide) analyses of these data, or of large gene sets, until after the GenCC flagship paper has been published (estimated to be spring 2022). After the flagship publication, data will be available free of restriction under a CC0 1.0 Universal (CC0 1.0) Public Domain Dedication. The GenCC requests that you give attribution to GenCC and the contributing sources whenever possible and appropriate.
             </p>
             <p class="text-sm pb-2 text-gray-900">
 The GenCC maintains this database to provide information pertaining to the validity of gene-disease relationships. The GenCC comprises organizations that currently provide online resources (e.g. ClinGen, DECIPHER, Genetics Home Reference, Genomics England PanelApp, OMIM, Orphanet, PanelApp Australia, TGMI’s G2P), as well diagnostic laboratories that have committed to sharing their internal curated gene-level knowledge (e.g. Ambry, Illumina, Invitae, Myriad Women’s Health, Partners Laboratory for Molecular Medicine).

@@ -26,7 +26,7 @@
 
         <div>
           <h2>API Access</h2>
-          <p class="mb-4">Access to GenCC through an API will be released in early 2021. We recommend anyone interested in access to the API, or would like to be notified when early access is available, to <a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 ">signup</a> so the GenCC can keep you informed.</p>
+          <p class="mb-4">Access to GenCC through an API will be released in spring of 2022. We recommend anyone interested in access to the API, or would like to be notified when early access is available, to <a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 ">signup</a> so the GenCC can keep you informed.</p>
           <a id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="o-underline block text-center hover:underline text-blue-800 bg-blue-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk"></i> Signup to keep informed
 						</a>
