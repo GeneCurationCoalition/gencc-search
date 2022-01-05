@@ -50,6 +50,7 @@ return [
             'excel_compatibility'    => false,
         ],
 
+
         /*
         |--------------------------------------------------------------------------
         | Worksheet properties

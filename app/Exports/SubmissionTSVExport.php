@@ -22,7 +22,7 @@ use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 //     }
 // }
 //, WithMapping
-class SubmissionExport implements FromCollection, WithHeadings, WithMapping, WithCustomCsvSettings
+class SubmissionTSVExport implements FromCollection, WithHeadings, WithMapping, WithCustomCsvSettings
 {
     use Exportable;
 
@@ -112,7 +112,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
     public function getCsvSettings(): array
 {
     return [
-        'delimiter' => ","
+        'delimiter' => "\t"
     ];
 }
 
