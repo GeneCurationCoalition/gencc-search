@@ -115,7 +115,7 @@
 
 	<script src="{{ asset('js/app.js') }}"></script>
 	<script src="/packages/jquery-3-4-1/jquery.min.js"></script>
-  <script src="/packages/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+    <script src="/packages/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
 	<script src="/packages/bootstrap-4.3.1-js/bootstrap.bundle.js"></script>
 	<script type="text/javascript">
 	$(function () {

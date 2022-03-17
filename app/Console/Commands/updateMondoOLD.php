@@ -8,14 +8,14 @@ use App\Disease;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-class updateMondo extends Command
+class updateMondopld extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'gencc:update-mondo';
+    protected $signature = 'gencc:update-mondoOLD';
 
     /**
      * The console command description.
@@ -41,6 +41,9 @@ class updateMondo extends Command
      */
     public function handle()
     {
+        echo "DO NOT RUN THIS!!! \n";
+        return;
+
         echo "Downloading mondo's from monarchinitiative.org ...\n";
 
         try {

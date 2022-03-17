@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
+use App\Term;
 
 class SubmissionsImport implements OnEachRow, WithHeadingRow
 {
@@ -82,8 +83,15 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 if(isset($gene_record->title)){
                     if ($gene_record->title != $row['hgnc_symbol']) {
-                        echo "IMPORT ERROR - GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
-                        unset($gene_record);
+
+                        // make sure its not an alias or previous symbol before throwing an error
+                        $check = Term::name($row['hgnc_symbol'])->first();
+
+                        if ($check === null || $check->value != $gene_record->hgnc_id)
+                        {
+                            echo "IMPORT ERROR - GENE ERROR - GENE SYMBOLS DON'T MATCH -- HGNC: '" . $gene_record->title . "' v.s. Submitted: '" . $row["hgnc_symbol"] . "\n";
+                            unset($gene_record);
+                        }
                     }
                 }
 
@@ -92,9 +100,14 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                 } elseif (DateTime::createFromFormat('Y-m-d', $row['date']) !== FALSE) {
                     $date_record = true;
                 } else {
+                    try {
+                        $tmp = \Carbon\Carbon::parse($row['date']);
+                        $date_record = true;
+                    } catch (InvalidFormatException $_) {
                     echo "IMPORT ERROR - DATE ERROR - DATE NOT SET CORRECTLY -- '" . $row["date"] . "' - '" . $row["hgnc_id"] . "\n";
                     $row['date'] = "";
                     unset($date_record);
+                    }
                 }
 
                 if (!isset($disease_record)) {
@@ -109,7 +122,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         echo "- - - - SKIPPED processMondoApi - disease was NULL \n";
                     }
                 } else {
-                    //echo "OK - Disease found - Continue " . $disease_record->id . " for " . $row['disease_id'] . "\n";
+                    echo "OK - Disease found - Continue " . $disease_record->id . " for " . $row['disease_id'] . "\n";
                     //dd("STOP");
                 }
 
@@ -132,7 +145,12 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         $date = \Carbon\Carbon::createFromFormat('Y-m-d', $row['date']);
                         //dd($date);
                     } else {
-                        $date = "";
+                        try {
+                            $date = \Carbon\Carbon::parse($row['date']);
+                        } catch (InvalidFormatException $_) {
+                            $date = "";
+                        }
+                       // $date = "";
 
                     }
                     //if(!$row['status']) {

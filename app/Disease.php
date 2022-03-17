@@ -6,10 +6,28 @@ use App\Traits\DisplayTransform;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\ModelTransform;
 
+/**
+ *
+ * @category   Model
+ * @package    GenCC
+ * @author     P. Weller <pweller1@geisinger.edu>
+ * @copyright  2022 Geisinger
+ * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
+ * @version    Release: @package_version@
+ * @link       http://pear.php.net/package/PackageName
+ * @see        NetOther, Net_Sample::Net_Sample()
+ * @since      Class available since Release 1.0.0
+ *
+ * */
 class Disease extends Model
 {
     use ModelTransform;
     use DisplayTransform;
+
+    public const STATUS_INITIALIZED = 0;
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_GG_DEPRECATED = 9;
+    public const STATUS_DEPRECATED = 10;
 
     // public function submissions()
     // {
