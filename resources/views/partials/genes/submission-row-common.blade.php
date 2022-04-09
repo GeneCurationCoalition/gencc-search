@@ -1,4 +1,5 @@
 <div class="border-t border-t-gray-200 border-t-solid pt-0 mt-2 text-sm">
+
                       <div class="grid grid-cols-11 gap-2 my-3 ">
 
                           <div class="col-span-11 xl:col-span-1 -mt-1"><a href="{{ route('submission-show', $item->uuid) }}">{!!  $item->displayCurationLabelPill($item->classification) !!}</a></div>
@@ -15,7 +16,7 @@
                                 <i class="far fa-disease text-gray-400"></i>
                               </div>
                               <div class="flex-initial break-words">
-                                <div class="list-text-label"> {{ $item->disease->title }}</div>
+                                <div class="list-text-label"> {{ $item->disease->title}}</div>
                                 <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}</div>
                                 {{-- @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
                                 <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToOmim($item->disease->curie, $item->disease->curie) !!}</div>

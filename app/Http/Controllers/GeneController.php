@@ -65,7 +65,7 @@ class GeneController extends Controller
         $records = Classification::with(['submissions' => function ($query) use ($item) {
             return $query->where('gene_id', '=', $item->id);
         }])->get();
-        //dd($classifications);
+        //dd($records);
         $page_meta['seo']['title'] = $item->title . " gene with submissions organized by classifications";
         return view('genes.show', ['gene' => $item, 'records' => $records, 'page' => 'show', 'page_meta' => $page_meta]);
     }
