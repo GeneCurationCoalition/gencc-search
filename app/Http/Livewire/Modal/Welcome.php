@@ -8,7 +8,7 @@ use Livewire\Component;
 class Welcome extends Component
 {
 
-    public $dismiss = false;
+    public $dismiss = true; // - short circuit the modal - false;
 
     public function dismiss($val = null) {
         $this->dismiss = true;

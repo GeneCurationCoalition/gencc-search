@@ -37,9 +37,9 @@
 		@isset($hide_modal)
 			{{-- Workaround --}}
 		@else
-			@if(Session::get('modal.welcome.dismiss') != true)
+			{{-- @if(Session::get('modal.welcome.dismiss') != true)
 				@livewire('modal.welcome')
-			@endif
+			@endif --}}
 		@endisset
 		@include('partials.navs.header-nav')
 
