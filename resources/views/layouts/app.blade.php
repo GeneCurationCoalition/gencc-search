@@ -72,15 +72,16 @@
 		<div class="container w-full mx-auto py-3  text-sm">
 			<div class="mt-5 mb-5">
 				<p class="">
-					<p class="mb-2">The GenCC database is currently released under a Fort Lauderdale Agreement for the benefit of the wider biomedical community. You can freely download and search the data, and we encourage the use and publications of validity data for specific targeted sets of genes. However, we ask that you not publish global (site-wide) analyses of these data, or of large gene sets, until after the GenCC flagship paper has been published (estimated to be spring 2022). After the flagship publication, data will be available free of restriction under a CC0 1.0 Universal (CC0 1.0) Public Domain Dedication. The GenCC requests that you give attribution to GenCC and the contributing sources whenever possible and appropriate. </p>
-					@include("partials.terms.general-disclaimer")
+					{{-- <p class="mb-2">The GenCC database is currently released under a Fort Lauderdale Agreement for the benefit of the wider biomedical community. You can freely download and search the data, and we encourage the use and publications of validity data for specific targeted sets of genes. However, we ask that you not publish global (site-wide) analyses of these data, or of large gene sets, until after the GenCC flagship paper has been published (estimated to be spring 2022). After the flagship publication, data will be available free of restriction under a CC0 1.0 Universal (CC0 1.0) Public Domain Dedication. The GenCC requests that you give attribution to GenCC and the contributing sources whenever possible and appropriate. </p>  --}}
+					<p class="mb-2">The GenCC data are available free of restriction under a CC0 1.0 Universal (CC0 1.0) Public Domain Dedication. The GenCC requests that you give attribution to GenCC and the contributing sources whenever possible and appropriate. The accepted Flagship manuscript is now available from Genetics in Medicine (<a href="https://www.gimjournal.org/article/S1098-3600(22)00746-8/fulltext" target="_manu">https://www.gimjournal.org/article/S1098-3600(22)00746-8/fulltext</a>).</p>
+                    @include("partials.terms.general-disclaimer")
 				</p>
 			</div>
 
 			<div class="pb-5">
 				<hr class="border-1 border-gray-200 my-6" />
 				&copy; 2022 <a href="https://thegencc.org/" class="underline">The GenCC</a> - All rights reserved.
-							<a href="{{ route('reset-modal') }}" class="float-right text-sm text-muted px-2 underline"> GenCC Welcome Statement</a>
+							{{-- <a href="{{ route('reset-modal') }}" class="float-right text-sm text-muted px-2 underline"> GenCC Welcome Statement</a>--}}
 							<a href="https://thegencc.org/privacy.html" target="_blank" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
 							<a href="https://thegencc.org/terms.html" target="_blank" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
 			</div>
