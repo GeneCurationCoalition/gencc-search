@@ -252,7 +252,7 @@
                                                     @if (isset($disease['disease']))
                                                     <span class=" py-1/2 px-3 border rounded-full border-gray-300 bg-gray-100 px-2 whitespace-no-wrap mb-1 inline-block">
                                                         {{-- {{ $item->displayDiseaseMondo($disease['disease'])['title'] }} --}}
-                                                        <a href="route('gene-show',$item->curie)" class="hover:underline">{{ $disease['disease']['title'] }}</a>
+                                                        <a href="{{ route('gene-show',$item->curie) }}" class="hover:underline">{{ $disease['disease']['title'] }}</a>
                                                     </span>
                                                     {{-- {{ $disease['disease']['title'] }} --}}
                                                     @endif
