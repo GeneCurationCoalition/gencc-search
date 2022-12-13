@@ -3,11 +3,6 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use JiraRestApi\Issue\IssueService;
-use JiraRestApi\Issue\Comment;
-use JiraRestApi\Issue\IssueField;
-use JiraRestApi\User\UserService;
-use JiraRestApi\JiraException;
 
 use DB;
 use Mail;
@@ -15,13 +10,10 @@ use Mail;
 use Carbon\Carbon;
 
 use App\Gene;
-use App\GeneLib;
+use App\Conflict;
 use App\Morbid;
-use App\Panel;
-use App\Sensitivity;
-use App\Validity;
-use App\Nodal;
-use App\Gdmmap;
+use App\Submission;
+use App\Inheritance;
 
 class RunReport extends Command
 {
@@ -64,6 +56,10 @@ class RunReport extends Command
                 echo "Creating gene overlap report\n";
                 $this->report1();
                 echo "Update Complete\n";
+                break;
+            case 'conflict':
+                $this->report3();
+                echo "Report Complete\n";
                 break;
             default:
                 echo "Nothing to do, exiting\n";
@@ -156,5 +152,83 @@ class RunReport extends Command
         echo "Number of Exclusive Omim genes:  $omim_exc \n";
         echo "Percent overlap:  " . ($gencc_count / $records->count * 100) . "\n";
     }
+
+
+    public function report3()
+    {
+        $records = Submission::where('status', 1)->get();
+        $fd = fopen("/tmp/conflictreport.tsv", "w");
+
+        $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +";
+
+        fwrite($fd, $header . PHP_EOL);
+
+        $results = [];
+
+        //clear the table
+        Conflict::truncate();
+
+
+        foreach($records as $record)
+        {
+            //echo "Processing record id $record->id \n";
+
+            $moi = Inheritance::find($record->moi_id);
+
+            if ($moi === null || $record->disease === null)
+                continue;
+
+            $lookup = Conflict::triple($record->gene->curie, $record->disease->curie, $moi->curie)->first();
+
+            if ($lookup === null)
+            {
+                $lookup = new Conflict([
+                            'hgnc_id' => $record->gene->curie, 'gene_symbol' => $record->gene->title, 'mondo_id' => $record->disease->curie,
+                            'disease' => $record->disease->title, 'moi' => $moi->curie,
+                            'weak' => 0, 'strong' => 0, 'submitters' => []
+                ]);
+
+                $lookup->save();
+            }
+
+            // update classification counters
+            switch ($record->classification->curie)
+            {
+                case 'GENCC:100001':
+                case 'GENCC:100002':
+                case 'GENCC:100003':
+                    $lookup->strong++;
+                    break;
+                case 'GENCC:100004':
+                case 'GENCC:100005':
+                case 'GENCC:100006':
+                case 'GENCC:100007':
+                case 'GENCC:100008':
+                    $lookup->weak++;
+                    break;
+            }
+            // update submitters
+            $submitters = $lookup->submitters;
+            $submitters[] = ['submitter' => $record->submitter->title, 'classification' => $record->classification->title, 'date' => $record->submitted_as_date];
+            $lookup->submitters = $submitters;
+            $lookup->save();
+
+        }
+
+        $records = Conflict::where('weak', '!=', 0)->where('strong', '!=', 0)->orderBy('gene_symbol', 'asc')->get();
+
+        foreach($records as $record)
+        {
+            $moi = Inheritance::where('curie', $record->moi)->first();
+
+            $data = [$record->gene_symbol, $record->hgnc_id, $record->mondo_id, $record->disease, $moi->title, $record->weak, $record->strong];
+
+            fwrite($fd, implode("\t", $data) . PHP_EOL);
+        }
+
+        fclose($fd);
+    }
+
+
 
 }
