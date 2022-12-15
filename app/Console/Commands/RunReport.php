@@ -14,6 +14,8 @@ use App\Conflict;
 use App\Morbid;
 use App\Submission;
 use App\Inheritance;
+use App\Submitter;
+use App\Classification;
 
 class RunReport extends Command
 {
@@ -156,10 +158,14 @@ class RunReport extends Command
 
     public function report3()
     {
+        $classifications = Classification::all()->pluck('title')->toArray();
+
         $records = Submission::where('status', 1)->get();
         $fd = fopen("/tmp/conflictreport.tsv", "w");
 
-        $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +";
+        $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +\t";
+
+        $header .= implode("\t", $classifications);
 
         fwrite($fd, $header . PHP_EOL);
 
@@ -223,7 +229,109 @@ class RunReport extends Command
 
             $data = [$record->gene_symbol, $record->hgnc_id, $record->mondo_id, $record->disease, $moi->title, $record->weak, $record->strong];
 
-            fwrite($fd, implode("\t", $data) . PHP_EOL);
+            // create a new array using values fron Subs
+            $cdata = array_fill_keys($classifications, "");
+
+            foreach($record->submitters as $submitter)
+            {
+                if (!empty($cdata[$submitter["classification"]]))
+                    $cdata[$submitter["classification"]] .= " || ";
+
+                $cdata[$submitter["classification"]] .= $submitter["submitter"] . ", " . $submitter["date"] . ", " . $submitter["classification"];
+            }
+
+            fwrite($fd, implode("\t", array_merge($data, $cdata)) . PHP_EOL);
+        }
+
+        fclose($fd);
+    }
+
+
+    public function report4()
+    {
+        $subs = Submitter::all()->pluck('title')->toArray();
+
+        $records = Submission::where('status', 1)->get();
+        $fd = fopen("/tmp/conflictreport.tsv", "w");
+
+        $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +\t";
+
+        $header .= implode("\t", $subs);
+
+        fwrite($fd, $header . PHP_EOL);
+
+        $results = [];
+
+        //clear the table
+        Conflict::truncate();
+
+
+        foreach($records as $record)
+        {
+            //echo "Processing record id $record->id \n";
+
+            $moi = Inheritance::find($record->moi_id);
+
+            if ($moi === null || $record->disease === null)
+                continue;
+
+            $lookup = Conflict::triple($record->gene->curie, $record->disease->curie, $moi->curie)->first();
+
+            if ($lookup === null)
+            {
+                $lookup = new Conflict([
+                            'hgnc_id' => $record->gene->curie, 'gene_symbol' => $record->gene->title, 'mondo_id' => $record->disease->curie,
+                            'disease' => $record->disease->title, 'moi' => $moi->curie,
+                            'weak' => 0, 'strong' => 0, 'submitters' => []
+                ]);
+
+                $lookup->save();
+            }
+
+            // update classification counters
+            switch ($record->classification->curie)
+            {
+                case 'GENCC:100001':
+                case 'GENCC:100002':
+                case 'GENCC:100003':
+                    $lookup->strong++;
+                    break;
+                case 'GENCC:100004':
+                case 'GENCC:100005':
+                case 'GENCC:100006':
+                case 'GENCC:100007':
+                case 'GENCC:100008':
+                    $lookup->weak++;
+                    break;
+            }
+            // update submitters
+            $submitters = $lookup->submitters;
+            $submitters[] = ['submitter' => $record->submitter->title, 'classification' => $record->classification->title, 'date' => $record->submitted_as_date];
+            $lookup->submitters = $submitters;
+            $lookup->save();
+
+        }
+
+        $records = Conflict::where('weak', '!=', 0)->where('strong', '!=', 0)->orderBy('gene_symbol', 'asc')->get();
+
+        foreach($records as $record)
+        {
+            $moi = Inheritance::where('curie', $record->moi)->first();
+
+            $data = [$record->gene_symbol, $record->hgnc_id, $record->mondo_id, $record->disease, $moi->title, $record->weak, $record->strong];
+
+            // create a new array using values fron Subs
+            $subdata = array_fill_keys($subs, "");
+
+            foreach($record->submitters as $submitter)
+            {
+                if (!empty($subdata[$submitter["submitter"]]))
+                $subdata[$submitter["submitter"]] .= " || ";
+
+                $subdata[$submitter["submitter"]] .= $submitter["submitter"] . ", " . $submitter["date"] . ", " . $submitter["classification"];
+            }
+
+            fwrite($fd, implode("\t", array_merge($data, $subdata)) . PHP_EOL);
         }
 
         fclose($fd);
