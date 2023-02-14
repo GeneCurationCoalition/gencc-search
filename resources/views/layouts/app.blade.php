@@ -8,6 +8,7 @@
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 
 	<title>{{ $page_meta['seo']['title'] ?? "GenCC" }}</title>
+	<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
 	<!-- Scripts -->
 
