@@ -7,7 +7,7 @@
 <div class="grid grid-cols-2 mt-10 gap-8">
     <div class="col-span-12 xl:col-span-2">
       <h3 class=" truncate">{{ $submitter->title }}</h3>
-      <p>This page is a summary of pilot submissions provided by {{ $submitter->title }}. <a class="underline text-blue-600" id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank">Click here</a> to be notified about GenCC updates.</p>
+      <p>This page is a summary of submissions provided by {{ $submitter->title }}. <a class="underline text-blue-600" id="click-signup" href="https://gencc.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank">Click here</a> to be notified about GenCC updates.</p>
       {{-- <hr class="mt-4 border" /> --}}
     </div>
     <div class="col-span-12 xl:col-span-1 py-3">

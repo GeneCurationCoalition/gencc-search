@@ -17,7 +17,7 @@
               </p> --}}
               <a href="{{ route('submitter-show', $submitter->uuid) }}" class=" text-blue-700 text-xs hover:underline">
                 @if($submitter->count_submissions != 0)
-                  View pilot data submissions and learn more
+                  View data submissions and learn more
                 @else
                   Learn more
                 @endif
@@ -28,9 +28,14 @@
         @if($submitter->count_submissions != 0)
         <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between  border-t">
 
-            <p class="mt-2 text-sm leading-5 font-medium text-gray-500">
-                Pilot Submission Data Stats
-            </p>
+          <p class="float-root mt-2 text-sm leading-5 font-medium text-gray-500">
+            <span class="float-left">
+              Submission Data Stats
+            </span>
+            <span class="float-right">
+              (Total {{ $submitter->curations_definitive + $submitter->curations_strong + $submitter->curations_moderate + $submitter->curations_supportive + $submitter->curations_limited + $submitter->curations_disputed +  $submitter->curations_refuted + $submitter->curations_animal + $submitter->curations_noknown }} Submissions)
+            </span>
+          </p>
           <div class="mt-1 mb-3 flex items-center -ml-4 -mr-4">
               <div class="grid grid-cols-9 gap-1 w-full">
                     <div class="col-span-3 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
@@ -60,7 +65,7 @@
 
           @else
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
-                Pilot Submission Data Coming Soon
+                Submission Data Coming Soon
             </p>
           @endif
       </div>

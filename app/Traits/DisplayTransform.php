@@ -74,6 +74,12 @@ trait DisplayTransform
         $href = str_replace("OMIM:", "", $href);
         $href = 'https://omim.org/entry/'. $href;
         break;
+      case "Orphanet":
+        $href = str_replace("Orphanet:", "Orpha:", $href);
+      case "Orpha:":
+        $href = str_replace("Orpha:", "", $href);
+        $href = 'https://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=EN&Expert='. $href;
+        break;
     }
 
     return "<a class='{$css} text-gray-600' target='{$target}' href='{$href}'>{$text} <i class='fas fa-external-link-alt'></i></a>";
