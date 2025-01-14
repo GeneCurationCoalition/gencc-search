@@ -60,7 +60,8 @@ class updateHgnc extends Command
             //$results = file_get_contents("ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/json/hgnc_complete_set.json");
             //$results = Storage::disk('local')->path('public/data/hgnc_complete_set.json');
             //$results = file_get_contents($results);
-            $results = file_get_contents("http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/hgnc_complete_set.json");
+            //$results = file_get_contents("http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/hgnc_complete_set.json");
+            $results = file_get_contents("https://storage.googleapis.com/public-download-files/hgnc/json/json/hgnc_complete_set.json");
         } catch (\Exception $e) {
 
             echo "\nIMPORT ERROR - (E001) Error retrieving gene data\n";

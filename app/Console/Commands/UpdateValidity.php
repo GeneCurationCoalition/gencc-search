@@ -136,7 +136,7 @@ class UpdateValidity extends Command
 
             // get the HP term for the MOI
 
-            if ($data[4] == "Undetermined")
+            if ($data[4] == "Undetermined" || $data[4] == "UD")
                 $data[4] = "Unknown";           // Clingen uses undetermined instead of known;
             else if ($data[4] == "MT")
                 $data[4] = "MIT";

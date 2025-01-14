@@ -28,11 +28,11 @@
         @if($submitter->count_submissions != 0)
         <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between  border-t">
 
-          <p class="float-root mt-2 text-sm leading-5 font-medium text-gray-500">
-            <span class="float-left">
+          <p class="flex justify-between mt-2 text-sm leading-5 font-medium text-gray-500">
+            <span>
               Submission Data Stats
             </span>
-            <span class="float-right">
+            <span>
               (Total {{ $submitter->curations_definitive + $submitter->curations_strong + $submitter->curations_moderate + $submitter->curations_supportive + $submitter->curations_limited + $submitter->curations_disputed +  $submitter->curations_refuted + $submitter->curations_animal + $submitter->curations_noknown }} Submissions)
             </span>
           </p>
