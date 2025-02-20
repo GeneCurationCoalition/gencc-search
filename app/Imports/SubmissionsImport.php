@@ -59,6 +59,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     //dd($query);
                 }
 
+                if (is_numeric($row["disease_id"]))
+                    $row["disease_id"] = 'OMIM:' . $row["disease_id"];
+
                 $classification_missing = Classification::curie("GENCC:000000")->first();
                 $classification_record = Classification::curie($row["classification_id"])->first();
                 $inheritance_missing = Inheritance::curie("HP:0000005")->first();
