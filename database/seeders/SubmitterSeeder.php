@@ -71,21 +71,21 @@ class SubmitterSeeder extends Seeder
             [
                 'uuid' => "GENCC_000106",
                 'curie' => "GENCC:000106",
-                'title' => "Invitae",
+                'title' => "Labcorp Genetics (formerly Invitae)",
                 'path_logo' => '/brand/submitters/logo_invitae.png',
                 'website' => "https://www.invitae.com/",
-                'text_descriptions' => "Invitae is a CLIA-certified fee-for-service clinical testing laboratory.",
-                'text_contact' => "Jacke Tahiliani, Coordinator <br>Phone: 800-436-3037<br>Email: jackie.tahiliani@invitae.com",
+                'text_descriptions' => "Labcorp Genetics (formerly Invitae) is a CLIA-certified fee-for-service clinical testing laboratory.",
+                'text_contact' => "Yunyun Jiang, Coordinator <br>Phone: 800-436-3037<br>Email: yunyun.jiang@invitae.com",
                 'text_assertions' => "https://view.publitas.com/invitae/invitaeposter_nsgc2019_curatingthehumangenome/page/1"
             ],
             [
                 'uuid' => "GENCC_000107",
                 'curie' => "GENCC:000107",
                 'title' => "Laboratory for Molecular Medicine",
-                'path_logo' => '/brand/submitters/logo_lmm.png',
-                'website' => "https://personalizedmedicine.partners.org/laboratory-for-molecular-medicine/",
-                'text_descriptions' => "The Laboratory for Molecular Medicine (LMM) is a CLIA-certified molecular diagnostic laboratory, operated by Partners HealthCare Personalized Medicine. The LMM is led by a group of Harvard Medical School-affiliated faculty, geneticists, clinicians, and researchers from Brigham and Women’s Hospital and Massachusetts General Hospital, Partners' founding members. Our mission is to bridge the gap between research and clinical medicine.",
-                'text_contact' => "Christina Austin-Tse, Coordinator<br>Phone: 617-768-8500<br>Email: caustint@broadinstitute.org",
+                'path_logo' => '/brand/submitters/logo_lmm2.png',
+                'website' => "https://www.massgeneralbrigham.org/en/research-and-innovation/centers-and-programs/personalized-medicine/molecular-medicine",
+                'text_descriptions' => "The Laboratory for Molecular Medicine (LMM) is a CLIA-certified molecular diagnostic laboratory, operated by Mass General Brigham Personalized Medicine. The LMM is led by a group of Harvard Medical School-affiliated faculty, geneticists, clinicians, and researchers from Brigham and Women’s Hospital and Massachusetts General Hospital, Mass General Brigham’s founding members. Our mission is to bridge the gap between research and clinical medicine.",
+                'text_contact' => "Kalotina Machini<br>Email: kmachini@bwh.harvard.edu",
                 'text_assertions' => "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6323417/<br>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6612528/"
             ],
 
