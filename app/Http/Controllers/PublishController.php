@@ -6,11 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use Setting;
+use Artisan;
 
 use App\Classification;
 use App\Gene;
 use App\Disease;
-use App\Moi;
+use App\Inheritance;
 use App\Submitter;
 use App\Submission;
 
@@ -84,6 +85,8 @@ class PublishController extends Controller
                                 'sid' => $data['submission_id'],
                                 'message' => 'Submission accepted'],
                                 200);
+                    Setting::set('update_counts', 1);
+                    Setting::save();
                 }
                 else
                 {
@@ -95,11 +98,13 @@ class PublishController extends Controller
                                 501);
                 }
                 break;
+            case 'unpublish':
+                break;
             case 'end':
                 // update all the counters
                 Log::info("Submissions  completer, updating counts");
-                Artisan::call('gencc:update-counts');
-                Log::info("Counts updated");
+                //Artisan::call('gencc:update-counts');
+                //Log::info("Counts updated");
 
                 return response()->json(['success' => 'true',
                             'status_code' => 200,
@@ -148,7 +153,7 @@ class PublishController extends Controller
         if ($classification === null)
             return "Classification not found";
 
-        $moi = Moi::curie($data->moi->id)->first();
+        $moi = Inheritance::curie($data->moi->id)->first();
         if ($moi === null)
             return "Inheritance not found";
     

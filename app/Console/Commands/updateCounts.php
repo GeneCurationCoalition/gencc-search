@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+use Setting;
+
 class updateCounts extends Command
 {
     /**
@@ -65,6 +67,21 @@ class updateCounts extends Command
             ]
         );
 
+        if (Setting::get('running_counts') == 1)
+        {
+            print('Another update is running, exiting');
+            return;
+        }
+
+        if (Setting::get('update_counts') == 0)
+        {
+            print('There are no updates pending, exiting');
+            return;
+        }
+
+        Setting::set('running_counts', 1);
+        Setting::set('update_counts', 0);
+        Setting::save();
 
         $this->line('Updating Gene Counts... ');
         Log::channel('slack')->info('Updating Gene Counts... ');
@@ -140,7 +157,8 @@ class updateCounts extends Command
             }
             $gene->save();
 
-            //dd($gene);
+            Setting::set('running_counts', 0);
+            Setting::save();
 
         }
 
