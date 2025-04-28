@@ -18,4 +18,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 // Publish endpoint
-Route::post('/publish', '\PublishController@process');
+Route::post('/publish', 'PublishController@process');
