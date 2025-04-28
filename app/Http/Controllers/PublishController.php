@@ -128,7 +128,12 @@ class PublishController extends Controller
      */
     public function process_submission($record)
     {
-        $data = $record->data;
+        $data = $record->input('data');
+
+        // web1 (and probably web2) are casting inputs to arrays, so we need to cast back.
+        $data = json_encode($data);
+
+        $data = json_decode($data);
 
         // confirm the required information is all present
         $gene = Gene::curie($data->gene->id)->first();
@@ -151,13 +156,20 @@ class PublishController extends Controller
         if ($submitter === null)
             return "Submitter not found";
     
+        // repack any evidence lines
+        $evidences = [];
+
+        foreach ($data->evidence as $evidence)
+            if (!empty($evidence->pmid))
+                $evidences[] = $evidence->pmid;
+
         // create or update the record based on the submission-id
         $submission = Submission::updateOrCreate(
             ['uuid' => $data->submission_id],
             [
                 'uuid' => $data->submission_id,
                 'order'                                  => $classification->order,
-                'submitted_run_date'                     => $record->publish_date,
+                'submitted_run_date'                     => $record->input('publish_date'),
                 'submitted_as_hgnc_id'                   => $data->gene->id,
                 'submitted_as_disease_id'                => $data->disease->id,
                 'submitted_as_moi_id'                    => $data->moi->id,
@@ -172,7 +184,7 @@ class PublishController extends Controller
                 'submitted_as_date'                      => $data->report->display_date,
                 'submitted_as_public_report_url'         => $data->report->ext_url,
                 'submitted_as_notes'                     => $data->notes->display,
-                'submitted_as_pmids'                     => $data->evidence,
+                'submitted_as_pmids'                     => implode(',', $evidences),
                 'submitted_as_assertion_criteria_url'    => $data->criteria->url,
                 'status'                                 => 1
             ]);
