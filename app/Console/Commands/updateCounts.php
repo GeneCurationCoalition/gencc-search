@@ -25,7 +25,7 @@ class updateCounts extends Command
      *
      * @var string
      */
-    protected $signature = 'gencc:update-counts {--ref=}';
+    protected $signature = 'gencc:update-counts {force=no} {--ref=}';
 
     /**
      * The console command description.
@@ -52,7 +52,7 @@ class updateCounts extends Command
     public function handle()
     {
 
-        $arguments = $this->arguments();
+        $argument = $this->argument('force');
         $options = $this->options();
         $refUuid = ($this->option('ref') ?? Str::uuid());
 
@@ -73,7 +73,7 @@ class updateCounts extends Command
             return;
         }
 
-        if (Setting::get('update_counts') == 0)
+        if (Setting::get('update_counts') == 0 && $argument != 'yes')
         {
             print('There are no updates pending, exiting');
             return;
@@ -156,9 +156,6 @@ class updateCounts extends Command
                 //$gene->count_unique_submitters       = $list['count_unique_submitters'];
             }
             $gene->save();
-
-            Setting::set('running_counts', 0);
-            Setting::save();
 
         }
 
@@ -335,6 +332,9 @@ class updateCounts extends Command
         $notification->status = 0;
         $notification->running = 0;
         $notification->save();
+
+        Setting::set('running_counts', 0);
+        Setting::save();
         return 0;
     }
 }

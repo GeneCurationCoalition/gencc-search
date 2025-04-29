@@ -80,13 +80,13 @@ class PublishController extends Controller
                 if ($check === true)
                 {
                     Log::info("Submission " . $data['submission_id'] . " added");
+                    Setting::set('update_counts', 1);
+                    Setting::save();
                     return response()->json(['success' => 'true',
                                 'status_code' => 200,
                                 'sid' => $data['submission_id'],
                                 'message' => 'Submission accepted'],
                                 200);
-                    Setting::set('update_counts', 1);
-                    Setting::save();
                 }
                 else
                 {
@@ -99,6 +99,32 @@ class PublishController extends Controller
                 }
                 break;
             case 'unpublish':
+                // remove submission from db
+                $data = $request->input('data');
+
+                $check = $this->unpublish_submission($request);
+
+                if ($check === true)
+                {
+                    Log::info("Submission " . $data['submission_id'] . " unpublished");
+                    Setting::set('update_counts', 1);
+                    Setting::save();
+
+                    return response()->json(['success' => 'true',
+                                'status_code' => 200,
+                                'sid' => $data['submission_id'],
+                                'message' => 'Submission unpublished'],
+                                200);
+                }
+                else
+                {
+                    Log::error("Submission " . $data['submission_id'] . " failed removal error: " . $check);
+                    return response()->json(['success' => 'false',
+                                'status_code' => 9008,
+                                'sid' => $data['submission_id'],
+                                'message' => 'Submission remove failed:  ' . $check],
+                                501);
+                }
                 break;
             case 'end':
                 // update all the counters
@@ -170,7 +196,8 @@ class PublishController extends Controller
 
         // create or update the record based on the submission-id
         $submission = Submission::updateOrCreate(
-            ['uuid' => $data->submission_id],
+            ['uuid' => $data->submission_id,
+            'status' => 1 ],
             [
                 'uuid' => $data->submission_id,
                 'order'                                  => $classification->order,
@@ -223,5 +250,36 @@ class PublishController extends Controller
         $check = $submission->save();
 
         return ($check ? $check : "Submission not associated");
+    }
+
+
+    /**
+     * Unpublish a submission record.
+     *
+     * @param  object  $record
+     * @return \Illuminate\Http\Response
+     */
+    public function unpublish_submission($record)
+    {
+        $data = $record->input('data');
+
+        // web1 (and probably web2) are casting inputs to arrays, so we need to cast back.
+        $data = json_encode($data);
+
+        $data = json_decode($data);
+
+        $submitter = Submitter::curie($data->submitter->id)->first();
+        if ($submitter === null)
+            return "Submitter not found";
+
+        $submission = Submission::where('uuid', $data->submission_id)->where('status', 1)->where('submitter_id', $submitter->id)->first();
+
+        if ($submission === null)
+            return "Submission not found";
+
+        $check = $submission->update(['status', 0]);
+
+        return ($check ? $check : "Submission not removed");
+
     }
 }
