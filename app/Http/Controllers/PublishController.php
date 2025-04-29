@@ -128,7 +128,7 @@ class PublishController extends Controller
                 break;
             case 'end':
                 // update all the counters
-                Log::info("Submissions  completer, updating counts");
+                Log::info("Remote Session completed");
                 //Artisan::call('gencc:update-counts');
                 //Log::info("Counts updated");
 

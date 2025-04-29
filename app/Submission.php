@@ -111,6 +111,7 @@ class Submission extends Model
         'submitted_run_date',
         'from_submission_file_name',
         'from_submission_file_id',
-        'private_notes'
+        'private_notes',
+        'status'
     ];
 }
