@@ -277,7 +277,7 @@ class PublishController extends Controller
         if ($submission === null)
             return "Submission not found";
 
-        $check = $submission->update(['status', 0]);
+        $check = $submission->update(['status' => 0]);
 
         return ($check ? $check : "Submission not removed");
 
