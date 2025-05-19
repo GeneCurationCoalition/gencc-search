@@ -297,7 +297,18 @@ class Listing extends Component
             // ->orwhere('curations_animal', '>=', $query['or_curations_animal'])
             // ->orwhere('curations_noknown', '>=', $query['or_curations_noknown'])
 
-            ->whereHas('submissions')->orderBy('title')->paginate(25);
+            ->whereHas('submissions')
+            // extract nonnumeric and numeric terms from title,
+            // order by first 3 pairs, then remainder
+            ->orderByRaw("
+                REGEXP_SUBSTR(title, '^[^0-9]+') ASC,
+                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 1) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(title, '[^0-9]+', 1, 2) ASC,
+                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 2) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(title, '[^0-9]+', 1, 3) ASC,
+                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 3) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(title, '[^0-9]+', 1, 4) ASC")
+            ->paginate(25);
 
         //dd(count($this->return));
 
