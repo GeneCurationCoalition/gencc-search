@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
-use Carbon\Carbon;
-
 use Setting;
+
+
 
 class AllowPosts extends Command
 {
@@ -46,12 +46,16 @@ class AllowPosts extends Command
             case "yes":
             case "no":
                 Setting::set('allow_posts', $this->argument('value'));
+                $token_posts = Setting::get('token_posts');
+                if ($token_posts == null) {
+                    Setting::set('token_posts', 'eKtvHtwlWB1y7Q5MxcLwWyjYF55Ltvs0ITWlAi8UNAcXZkzZiYUi0v7HvMOr');
+                }
                 Setting::save();
                 break;
             default:
                 break;
         }
-        
+
     }
 
 }
