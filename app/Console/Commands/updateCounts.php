@@ -15,8 +15,8 @@ use App\Submitter;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
-use Setting;
 
 class updateCounts extends Command
 {
@@ -67,21 +67,32 @@ class updateCounts extends Command
             ]
         );
 
-        if (Setting::get('running_counts') == 1)
+        $value = DB::table('settings')
+            ->where('key', 'running_counts')
+            ->value('value');  // returns the single column value
+        $runningCounts = (int) $value;
+
+        if ($runningCounts == 1)
         {
             print('Another update is running, exiting');
             return;
         }
 
-        if (Setting::get('update_counts') == 0 && $argument != 'yes')
+        $value = DB::table('settings')
+            ->where('key', 'update_counts')
+            ->value('value');  // returns the single column value
+        $updateCounts = (int) $value;
+        if ( $updateCounts == 0 && $argument != 'yes')
         {
             print('There are no updates pending, exiting');
             return;
         }
 
-        Setting::set('running_counts', 1);
-        Setting::set('update_counts', 0);
-        Setting::save();
+        DB::beginTransaction();
+        DB::table('settings')->where('key', 'running_counts')->update(['value' => 1]);
+        DB::table('settings')->where('key', 'update_counts')->update(['value' => 0]);
+        DB::commit();
+
 
         $this->line('Updating Gene Counts... ');
         Log::channel('slack')->info('Updating Gene Counts... ');
@@ -134,7 +145,6 @@ class updateCounts extends Command
                 }
                     //dd($list);
             }
-
 
             $gene = Gene::find($item->id);
             $gene->curations_definitive     = $list['definitive'];
@@ -324,17 +334,22 @@ class updateCounts extends Command
         }
 
         $this->line('Disease Counts Completed... ');
-        Log::channel('slack')->info('Disease Counts Completed...');
+
+        DB::beginTransaction();
+        DB::table('settings')->where('key', 'running_counts')->update(['value' => 0]);
+        DB::commit();
+
 
         $this->line('Processing completed');
+
+        Log::channel('slack')->info('Disease Counts Completed...');
 
         Log::channel('slack')->info('Submission Import Completed');
         $notification->status = 0;
         $notification->running = 0;
         $notification->save();
 
-        Setting::set('running_counts', 0);
-        Setting::save();
+
         return 0;
     }
 }
