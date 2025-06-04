@@ -75,7 +75,7 @@ class updateCounts extends Command
         if ($runningCounts == 1)
         {
             print('Another update is running, exiting');
-            return;
+            return -1;
         }
 
         $value = DB::table('settings')
@@ -85,11 +85,16 @@ class updateCounts extends Command
         if ( $updateCounts == 0 && $argument != 'yes')
         {
             print('There are no updates pending, exiting');
-            return;
+            return -1;
         }
 
+        // Using query builder queries for settings as previous version of code
+        // using l4-settings had defect where explicit updates to Settings were
+        // not always working
         DB::beginTransaction();
-        DB::table('settings')->where('key', 'running_counts')->update(['value' => 1]);
+        DB::table('settings')->updateOrInsert(          # https://laravel.com/docs/8.x/queries#update-or-insert
+            ['key' => 'running_counts', 'value' => 0],
+            ['value' => 1]);
         DB::table('settings')->where('key', 'update_counts')->update(['value' => 0]);
         DB::commit();
 
