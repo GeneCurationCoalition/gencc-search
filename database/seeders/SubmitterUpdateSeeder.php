@@ -19,10 +19,10 @@ class SubmitterUpdateSeeder extends Seeder
     public function run()
     {
         DB::table('submitters')
-            ->where("uuid", "GENCC_000112")
+            ->where("uuid", "GENCC_000115")
             ->update(
                 [
-                    'text_assertions' => "https://www.ebi.ac.uk/gene2phenotype/about/terminology"
+                    'text_contact' => "Stephanie DiTroia<br>Email: sditroia@broadinstitute.org",
                 ]
             );
     }
