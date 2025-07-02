@@ -127,7 +127,7 @@
 												<i class="far fa-comment"></i> Contact
 											</a>
 											<a href="{{ route('about') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-home"></i> About Us
+												<i class="fas fa-info-circle"></i> About
 											</a>
 
 											<a id="click-signup" href="https://creaationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
