@@ -10,78 +10,166 @@
 @endsection
 
 @section('content')
-<div class="gencc-about">
-    <section class="why-gencc mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">Why is the GenCC needed?</h2>
-        <p class="mb-4 text-gray-700 leading-relaxed">
-            Several groups and resources provide information that pertains to the validity of gene-disease relationships. 
-            However, the standards, terminologies, and assessment criteria used to define these relationships are still evolving. 
-            The Gene Curation Coalition (GenCC) was formed to try to address this need.
-        </p>
-        <p class="mb-4 text-gray-700 leading-relaxed">
-            The GenCC brings together groups interested in evaluating the clinical validity of gene-disease relationships, 
-            with the goal of sharing data publicly and developing consistent assessment terminology.
-        </p>
-    </section>
+<div class="mt-6">
+    <!-- https://v1.tailwindcss.com/docs/upgrading-to-v1#17-double-check-your-default-line-height -->
+    <h2 class="my-3">Why is the GenCC needed?</h2>
+    <p class="mb-4 text-gray-900 leading-normal">
+        Several groups and resources provide information that pertains to the validity of gene-disease relationships; however, the standards and terminologies to define the evidence base for a gene’s role in disease are still evolving and the community is in need of trusted and harmonized sources that define the level of evidence for a gene’s role in disease. To tackle this issue, the Gene Curation Coalition (GenCC) was formed.
+    </p>
+    <p class="mb-4 text-gray-900 leading-normal">
+        The Gene Curation Coalition brings together groups engaged in the evaluation of gene-disease validity with a willingness to share data publicly, to develop consistent terminology for gene curation activities and to facilitate the consistent assessment of genes that have been reported in association with disease.
+    </p>
+</div>
 
-    <section class="gencc-goals mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">The goals of the GenCC are as follows:</h2>
-        <ul class="list-disc list-inside space-y-2 text-gray-700 leading-relaxed ml-4">
-            <li>Clarify the overlap between gene curation efforts</li>
-            <li>Understand different curation processes and classification systems</li>
-            <li>Develop consistent terminology for validity assessment</li>
-            <li>Collaborate on gene curation projects</li>
-        </ul>
-    </section>
+<div class="col-12 mt-10"><hr /></div>
 
-    <section class="steering-committee mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">Steering Committee</h2>
-        <div class="committee-members space-y-4">
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Heidi Rehm</h3>
-                <p class="text-gray-600">Chief Genomics Officer - Massachusetts General Brigham Personalized Medicine</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Teri Manolio</h3>
-                <p class="text-gray-600">Director - National Human Genome Research Institute</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Sharon Plon</h3>
-                <p class="text-gray-600">Professor - Baylor College of Medicine</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Michael Bamshad</h3>
-                <p class="text-gray-600">Professor - University of Washington</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Christine Eng</h3>
-                <p class="text-gray-600">Professor - Baylor College of Medicine</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Cynthia Powell</h3>
-                <p class="text-gray-600">Professor - University of North Carolina at Chapel Hill</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Ada Hamosh</h3>
-                <p class="text-gray-600">Professor - Johns Hopkins University School of Medicine</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Helen Firth</h3>
-                <p class="text-gray-600">Consultant Clinical Geneticist - Cambridge University Hospitals</p>
-            </div>
-            <div class="member">
-                <h3 class="font-semibold text-lg text-gray-800">Steven Harrison</h3>
-                <p class="text-gray-600">Director of Genomic Medicine - Partners HealthCare</p>
-            </div>
-        </div>
-    </section>
+<div class="mt-10">
+    <h2 class="my-3">The goals of the GenCC are as follows:</h2>
+    <ul class="list-disc list-inside space-y-2 text-gray-900 leading-normal ml-4">
+        <li>Clarify the overlap between gene curation efforts</li>
+        <li>Understand different curation processes and classification systems</li>
+        <li>Develop consistent terminology for validity assessment</li>
+        <li>Collaborate on gene curation projects</li>
+    </ul>
+</div>
 
+<div class="col-12 mt-10"><hr /></div>
+
+<div class="mt-10">
+    <h2 class="my-3">Steering Committee</h2>
+    <table class="w-full border-collapse">
+        <tbody>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Heidi Rehm</div>
+                    <div class="text-lg italic">GenCC Co-Chair</div>
+                    ClinGen
+                </td>
+
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Marina DiStefano</div>
+                    <div class="text-lg italic">GenCC Co-Chair</div>
+                    ClinGen
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Fowzan Alkuraya</div>
+                    King Faisal Specialist Hospital and Research Center
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Christina Austin-Tse</div>
+                    Broad CMG
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Marie Balzotti</div>
+                    Myriad Women's Health
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Elspeth Bruford</div>
+                    HGNC
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Alison Coffey</div>
+                    Illumina
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Yaron Einhorn</div>
+                    Franklin by Genoox
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Helen Firth</div>
+                    DECIPHER
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Ada Hamosh</div>
+                    OMIM
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Sarah Hunt</div>
+                    EMBL-EBI
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Yunyun Jiang</div>
+                    Invitae
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Teri Klein</div>
+                    PharmGKB
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Kalotina Machini</div>
+                    Laboratory for Molecular Medicine
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Kelly Radtke</div>
+                    Ambry
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Ana Rath</div>
+                    Orphanet
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Catherine Snow</div>
+                    Genomics England PanelApp
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">Zornitza Stark</div>
+                    PanelApp Australia
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2 text-gray-900">
+                    <div class="font-semibold text-xl">James Ware</div>
+                    Gene2Phenotype (G2P)
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<!-- <div class="col-12 mt-10"><hr /></div> -->
+
+<!-- <div class="mt-10">
     <div class="disclaimer bg-gray-100 p-4 rounded-lg">
         <p class="text-sm text-gray-600 italic">
-            The information on this website is not intended for direct diagnostic use or medical decision-making 
-            without review by a genetics professional. Individuals should not change their health behavior 
+            The information on this website is not intended for direct diagnostic use or medical decision-making
+            without review by a genetics professional. Individuals should not change their health behavior
             solely on the basis of information contained on this website.
         </p>
     </div>
-</div>
+</div> -->
 @endsection
