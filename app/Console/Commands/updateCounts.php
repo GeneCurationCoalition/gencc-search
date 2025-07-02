@@ -92,10 +92,12 @@ class updateCounts extends Command
         // using l4-settings had defect where explicit updates to Settings were
         // not always working
         DB::beginTransaction();
-        DB::table('settings')->updateOrInsert(          # https://laravel.com/docs/8.x/queries#update-or-insert
+        DB::table('settings')->updateOrInsert(
             ['key' => 'running_counts', 'value' => 0],
             ['value' => 1]);
-        DB::table('settings')->where('key', 'update_counts')->update(['value' => 0]);
+        DB::table('settings')->updateOrInsert(
+            ['key' => 'update_counts'],
+            ['value' => 0]);
         DB::commit();
 
 

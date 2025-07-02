@@ -59,6 +59,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                     //dd($query);
                 }
 
+                if (is_numeric($row["hgnc_id"]))
+                    $row["hgnc_id"] = 'HGNC:' . $row["hgnc_id"];
+
                 if (is_numeric($row["disease_id"]))
                     $row["disease_id"] = 'OMIM:' . $row["disease_id"];
 
@@ -131,7 +134,9 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
 
                 // CONTINUE...
 
-                if(isset($classification_missing) && isset($classification_record) && isset($inheritance_record) && isset($inheritance_missing) && isset($gene_record) && isset($disease_record) && isset($classification_missing) && isset($submitter_record) && isset($date_record)) {
+                if(isset($classification_missing) && isset($classification_record) && isset($inheritance_record) &&
+                    isset($inheritance_missing) && isset($gene_record) && isset($disease_record) &&
+                    isset($submitter_record) && isset($date_record)) {
 
                     //$uuid = $row["submitter_id"] . "__" . $row['submission_id'];
                     $uuid = $row["submitter_id"] . "-" . $row['hgnc_id'] . "-" . $row['disease_id'] . "-" . $row['moi_id'] . "-" . $row['classification_id'];
