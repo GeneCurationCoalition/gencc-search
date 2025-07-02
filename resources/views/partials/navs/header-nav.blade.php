@@ -42,7 +42,7 @@
 						<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-comment"></i> Contact
 						</a>
-						<a href="https://thegencc.org/" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
+						<a href="{{ route('about') }}" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="fas fa-home"></i> About
 						</a>
 						<a id="click-signup" href="https://creationproject.us7.list-manage.com/subscribe?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
@@ -126,8 +126,8 @@
 											<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-comment"></i> Contact
 											</a>
-											<a href="https://thegencc.org/" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-comment"></i> About Us
+											<a href="{{ route('about') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="fas fa-home"></i> About Us
 											</a>
 
 											<a id="click-signup" href="https://creaationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">

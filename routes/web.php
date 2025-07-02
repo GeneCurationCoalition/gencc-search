@@ -74,6 +74,8 @@ Route::get('/download/action/submissions-export-xls', 'DownloadController@export
 Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')->name('submissions-export-tsv');
 Route::get('/download/action/submissions-export-csv', 'DownloadController@export_CSV')->name('submissions-export-csv');
 
+Route::get('/about', 'AboutController@index')->name('about');
+
 Route::get('/reset/modal', function (Request $request) {
   $request->session()->forget('modal.welcome.dismiss');
   return redirect('/');
