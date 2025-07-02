@@ -10,7 +10,10 @@
 @endsection
 
 @section('content')
-<div class="mt-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+    <!-- Left column: Why and Goals -->
+    <div>
+        <div class="mt-0">
     <!-- https://v1.tailwindcss.com/docs/upgrading-to-v1#17-double-check-your-default-line-height -->
     <h2 class="my-3">Why is the GenCC needed?</h2>
     <p class="mb-4 text-gray-900 leading-normal">
@@ -31,11 +34,11 @@
         <li>Develop consistent terminology for validity assessment as well as inheritance, allelic requirement, and mechanism of disease</li>
         <li>Collaborate on gene curation projects</li>
     </ul>
-</div>
+        </div>
+    </div>
 
-<div class="col-12 mt-10"><hr /></div>
-
-<div class="mt-10">
+    <!-- Right column: Steering Committee -->
+    <div class="mt-10 lg:mt-0">
     <h2 class="my-3">Steering Committee</h2>
     <table class="w-full border-collapse">
         <tbody>
@@ -159,6 +162,7 @@
 
         </tbody>
     </table>
+    </div>
 </div>
 
 <!-- <div class="col-12 mt-10"><hr /></div> -->
