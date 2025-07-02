@@ -25,10 +25,10 @@
 
 <div class="mt-10">
     <h2 class="my-3">The goals of the GenCC are as follows:</h2>
-    <ul class="list-disc list-inside space-y-2 text-gray-900 leading-normal ml-4">
+    <ul class="space-y-2 text-gray-900 leading-normal ml-6 pl-4" style="list-style-type: disc !important; list-style-position: outside !important;">
         <li>Clarify the overlap between gene curation efforts</li>
-        <li>Understand different curation processes and classification systems</li>
-        <li>Develop consistent terminology for validity assessment</li>
+        <li>Understand the aims, processes, information used, classification systems, and users of the different curation efforts</li>
+        <li>Develop consistent terminology for validity assessment as well as inheritance, allelic requirement, and mechanism of disease</li>
         <li>Collaborate on gene curation projects</li>
     </ul>
 </div>
