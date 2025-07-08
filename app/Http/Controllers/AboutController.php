@@ -15,6 +15,6 @@ class AboutController extends Controller
     {
         $page_meta['seo']['title'] = "About GenCC";
 
-        return view('about', ['page_meta' => $page_meta]);
+        return view('general.about', ['page_meta' => $page_meta]);
     }
 }
