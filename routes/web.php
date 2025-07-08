@@ -77,6 +77,7 @@ Route::get('/download/action/submissions-export-csv', 'DownloadController@export
 Route::get('/about', 'AboutController@index')->name('about');
 Route::get('/privacy', 'PrivacyController@index')->name('privacy');
 Route::get('/terms', 'TermsController@index')->name('terms');
+Route::get('/faq', 'FaqController@index')->name('faq');
 
 Route::get('/reset/modal', function (Request $request) {
   $request->session()->forget('modal.welcome.dismiss');
