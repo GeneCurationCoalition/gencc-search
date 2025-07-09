@@ -1,4 +1,4 @@
-    <div class="mt-0">
+    <!-- <div class="mt-0"> -->
         <!-- https://v1.tailwindcss.com/docs/upgrading-to-v1#17-double-check-your-default-line-height -->
         <h2 class="my-3">What is the GenCC and why is it needed?</h2>
         <p class="mb-4">
@@ -7,11 +7,11 @@
         <p class="mb-4">
             The Gene Curation Coalition brings together groups engaged in the evaluation of gene-disease validity with a willingness to share data publicly, to develop consistent terminology for gene curation activities, and to facilitate the consistent assessment of genes that have been reported in association with disease.
         </p>
-    </div>
+    <!-- </div> -->
 
-    <div class="col-12 mt-10"><hr /></div>
+    <div class="col-12 mt-10 mb-8"><hr /></div>
 
-    <div class="mt-10">
+    <!-- <div class="mt-10"> -->
         <h2 class="my-3">What are the goals of the GenCC?</h2>
 
         <p class="mb-4">
@@ -24,4 +24,4 @@
             <li>Develop the GenCC Database, a shared resource to bring together gene-level resources</li>
             <li>Collaborate to harmonize gene-disease curations</li>
         </ul>
-    </div>
+    <!-- </div> -->
