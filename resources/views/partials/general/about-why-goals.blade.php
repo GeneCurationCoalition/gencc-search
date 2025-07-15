@@ -18,7 +18,7 @@
             The GenCC is working to harmonize approaches to ensure gene-level resources are comparable and interoperable. This allows groups to work together most effectively and to provide consistent and useful resources for the community. The goals of the GenCC are as follows:
         </p>
 
-        <ul class="space-y-2 ml-6 pl-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
             <li>Understand the aims, processes, information used, classification systems, and users of the different gene curation efforts</li>
             <li>Develop consistent terminology for validity assessment as well as inheritance, allelic requirement, and mechanism of disease</li>
             <li>Develop the GenCC Database, a shared resource to bring together gene-level resources</li>
