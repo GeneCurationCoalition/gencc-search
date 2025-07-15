@@ -81,10 +81,10 @@
 
 			<div class="pb-5">
 				<hr class="border-1 border-gray-200 my-6" />
-				&copy; 2025 <a href="https://thegencc.org/" class="underline">The GenCC</a> - All rights reserved.
+				&copy; 2025 <a href="{{ url('/') }}" class="underline">The GenCC</a> - All rights reserved.
 							{{-- <a href="{{ route('reset-modal') }}" class="float-right text-sm text-muted px-2 underline"> GenCC Welcome Statement</a>--}}
-							<a href="/privacy" target="_blank" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
-							<a href="/terms" target="_blank" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
+							<a href="{{ url('/privacy') }}" target="_blank" class="float-right text-sm text-muted px-2 underline"> GenCC Website Privacy Policy</a>
+							<a href="{{ url('/terms') }}" target="_blank" class="float-right text-sm text-muted px-2 underline">GenCC Terms of Use</a>
 			</div>
 
 	</div>

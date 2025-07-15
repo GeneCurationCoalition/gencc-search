@@ -5,7 +5,7 @@
 
 			<div class="w-1/2 md:w-1/4 pl-2 mb-4 md:pl-0">
 				<!--<img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" />-->
-				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="https://thegencc.org/">
+				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="{{ url('/') }}">
 				 <img src="/brand/logo/genecc-logo.jpg" class=" h-16" />
 				</a>
 			</div>
