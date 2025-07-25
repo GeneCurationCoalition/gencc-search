@@ -79,7 +79,7 @@ class PublishController extends Controller
                 // respond accordingly
                 if ($check === true)
                 {
-                    Log::info("Submission " . $data['submission_id'] . " added");
+                    Log::info("Submission " . $data['submission_id'] . " processed.");
                     Setting::set('update_counts', 1);
                     Setting::save();
                     return response()->json(['success' => 'true',
@@ -143,7 +143,7 @@ class PublishController extends Controller
             default:
                 break;
         }
-                        
+
         return response()->json(['success' => 'false',
                 'status_code' => 9011,
                 'message' => 'Unknown command'],
@@ -182,11 +182,11 @@ class PublishController extends Controller
         $moi = Inheritance::curie($data->moi->id)->first();
         if ($moi === null)
             return "Inheritance not found";
-    
+
         $submitter = Submitter::curie($data->submitter->id)->first();
         if ($submitter === null)
             return "Submitter not found";
-    
+
         // repack any evidence lines
         $evidences = [];
 
@@ -194,43 +194,51 @@ class PublishController extends Controller
             if (!empty($evidence->pmid))
                 $evidences[] = $evidence->pmid;
 
-        // create or update the record based on the submission-id
-        $submission = Submission::updateOrCreate(
-            ['uuid' => $data->submission_id,
-            'status' => 1 ],
-            [
-                'uuid' => $data->submission_id,
-                'order'                                  => $classification->order,
-                'submitted_run_date'                     => $record->input('publish_date'),
-                'submitted_as_hgnc_id'                   => $data->gene->id,
-                'submitted_as_disease_id'                => $data->disease->id,
-                'submitted_as_moi_id'                    => $data->moi->id,
-                'submitted_as_submitter_id'              => $data->submitter->id,
-                'submitted_as_submission_id'             => $data->submission_id,
-                'submitted_as_hgnc_symbol'               => $data->gene->symbol,
-                'submitted_as_disease_name'              => $data->disease->name,
-                'submitted_as_moi_name'                  => $data->moi->name,
-                'submitted_as_submitter_name'            => $data->submitter->name,
-                'submitted_as_classification_id'         => $data->classification->id,
-                'submitted_as_classification_name'       => $data->classification->name,
-                'submitted_as_date'                      => $data->report->display_date,
-                'submitted_as_public_report_url'         => $data->report->ext_url,
-                'submitted_as_notes'                     => $data->notes->display,
-                'submitted_as_pmids'                     => implode(',', $evidences),
-                'submitted_as_assertion_criteria_url'    => $data->criteria->url,
-                'status'                                 => 1
-            ]);
+        $submissionData = [
+            'uuid'                                   => $data->submission_id,
+            'order'                                  => $classification->order,
+            'submitted_run_date'                     => $record->input('publish_date'),
+            'submitted_as_hgnc_id'                   => $data->gene->id,
+            'submitted_as_disease_id'                => $data->disease->id,
+            'submitted_as_moi_id'                    => $data->moi->id,
+            'submitted_as_submitter_id'              => $data->submitter->id,
+            'submitted_as_submission_id'             => $data->local_key,
+            'submitted_as_hgnc_symbol'               => $data->gene->symbol,
+            'submitted_as_disease_name'              => $data->disease->name,
+            'submitted_as_moi_name'                  => $data->moi->name,
+            'submitted_as_submitter_name'            => $data->submitter->name,
+            'submitted_as_classification_id'         => $data->classification->id,
+            'submitted_as_classification_name'       => $data->classification->name,
+            'submitted_as_date'                      => $data->report->display_date,
+            'submitted_as_public_report_url'         => $data->report->ext_url,
+            'submitted_as_notes'                     => $data->notes->display,
+            'submitted_as_pmids'                     => implode(',', $evidences),
+            'submitted_as_assertion_criteria_url'    => $data->criteria->url,
+            'status'                                 => 1
+        ];
 
-        // shouldn't happen but check anyway
-        if ($submission === null)
-            return "Submission not created";
+        // Find by submission_id with status = 1
+        Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
+        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status',1)->first();
+        if ($submission === null) {
+            Log::info( "Looking for submission by submitted_as_submission_id=local_key: " . $data->local_key);
+            $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status',1)->first();
+        }
+
+        if ($submission) {
+            Log::info( "updating submission: " . $data->submission_id);
+            $submission->update($submissionData);
+        } else {
+            Log::info( "creating submission: " . $data->submission_id);
+            $submission = Submission::create($submissionData);
+        }
 
         // associate the submissions as needed
         $submission->submitter()->associate($submitter);
         $submission->gene()->associate($gene);
         $submission->disease_original()->associate($disease);
         $submission->disease()->associate($disease);
-            
+
         // set up the equivs.
         $relate_options[$disease->id] = [
             'type'          => 'original',

@@ -346,7 +346,7 @@ trait ModelTransform
     //dd("start");
     $row_disease_id   = $data["disease_id"];
 
-    //echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
+    echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
 
     // Get the query ready for MONDO API
     $query = preg_replace("/[^a-zA-Z0-9:]/", "", $row_disease_id);
