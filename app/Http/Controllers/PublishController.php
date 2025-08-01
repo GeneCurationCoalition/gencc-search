@@ -280,7 +280,12 @@ class PublishController extends Controller
         if ($submitter === null)
             return "Submitter not found";
 
-        $submission = Submission::where('uuid', $data->submission_id)->where('status', 1)->where('submitter_id', $submitter->id)->first();
+        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status', 1)->first();
+        \Log::info('PublishController@unpublish_submission looking up uuid=submission_id: ' . $data->submission_id);
+        if ($submission === null) {
+            \Log::info('PublishController@unpublish_submission looking up submitted_as_submission_id=local_key: ' . $data->local_key);
+            $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status', 1)->first();
+        }
 
         if ($submission === null)
             return "Submission not found";
