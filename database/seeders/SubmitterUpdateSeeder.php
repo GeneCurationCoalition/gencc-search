@@ -3,6 +3,7 @@
  * Do not include in DatabaseSeeder - should only be executed standalone.
  * Execute with: php artisan db:seed --class=SubmitterUpdateSeeder
  */
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -19,10 +20,10 @@ class SubmitterUpdateSeeder extends Seeder
     public function run()
     {
         DB::table('submitters')
-            ->where("uuid", "GENCC_000115")
+            ->where("uuid", "GENCC_000117")
             ->update(
                 [
-                    'text_contact' => "Stephanie DiTroia<br>Email: sditroia@broadinstitute.org",
+                    'text_contact' => "Dr. Bader Alhaddad<br>Email: balhaddad@liferaomics.com.sa",
                 ]
             );
     }
