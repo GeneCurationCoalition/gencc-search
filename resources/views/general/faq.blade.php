@@ -105,9 +105,6 @@
 
         <img src="{{ asset('img/faq/gencc-faq-1.jpeg') }}" alt="GenCC FAQ Screenshot 1" class="w-full h-auto rounded shadow-md my-3 mb-3">
 
-
-        <img src="{{ asset('img/faq/landingpage-demo.jpg') }}" alt="GenCC FAQ Screenshot 1" class="w-full h-auto rounded shadow-md my-3 mb-3">
-
         <h3>Landing Page</h3>
         <p class="mb-4">
           This is the landing page. All curated genes are listed. Numbers on the image correspond to descriptions below. All entries are collapsed but can be opened to see details. The detailed screenshot is found below:
