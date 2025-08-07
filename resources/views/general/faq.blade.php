@@ -13,7 +13,7 @@
 <div class="grid grid-cols-1 gap-8 mt-6">
     <div>
         <h3>GenCC FAQ Sections</h3>
-        <ul class="space-y-2 ml-6 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
             <li><a href="#common-questions" class="text-blue-600 hover:text-blue-800">Common Questions</a></li>
             <li><a href="#website-pages-faq" class="text-blue-600 hover:text-blue-800">Website Pages FAQ</a></li>
             <li><a href="#validity-termsdelphi-survey" class="text-blue-600 hover:text-blue-800">Validity terms/Delphi Survey</a></li>
@@ -170,7 +170,7 @@
         <p class="mb-4">
           6) This is the curation details section for each entry. The submitter is listed, along with an evidence summary, and all link outs (if available):
         </p>
-        <ul class="space-y-2 ml-6 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
           <li>
             Public report: public location of further curation information for this submission (website entry or publication)
           </li>
@@ -211,7 +211,7 @@
         <p class="mb-4">
           6) This is the curation details section for each entry. The submitter is listed, along with an evidence summary, and all link outs (if available):
         </p>
-        <ul class="space-y-2 ml-6 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
           <li>
             Public report: public location of further curation information for this submission (website entry or publication)
           </li>
@@ -232,25 +232,43 @@
         <img src="{{ asset('img/faq/gencc-faq-5.jpeg') }}" alt="GenCC FAQ Screenshot 5" class="w-full h-auto rounded shadow-md my-3 mb-3">
         <h3>Gene Page By Submitter</h3>
 
+        <p class="mb-4">
         Above is a screenshot of a gene page where entries are displayed by submitter. Numbers on the image correspond to descriptions below:
+        </p>
 
+        <p class="mb-4">
         1) From these drop downs, users can filter the displayed list by Classification (e.g. only display Strong entries), Disease, Mode of Inheritance (MOI), or Submitter
-
+        </p>
+        <p class="mb-4">
         2) The standardized clinical validity term is displayed with its corresponding color with the highest classifications listed first (e.g. Strong, then Moderate, then Limited)
-
+        </p>
+        <p class="mb-4">
         3) All entries are mapped to Monarch Disease Ontology (MONDO) and the MONDO ID is displayed. If a submitter used a different ontology for submission (such as the PanelApp Australia classification), the original term or ID is displayed with “Submitted as:” (the OMIM ID boxed in red in the image)
-
+        </p>
+        <p class="mb-4">
         4) The mode of inheritance.
-
+        </p>
+        <p class="mb-4">
         5) The top date is the date the curation was evaluated. The bottom date listed in gray is the date that the curation was submitted to the GenCC.
-
+        </p>
+        <p class="mb-4">
         6) This is the curation details section for each entry. The submitter is listed, along with an evidence summary, and all link outs (if available):
+        </p>
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+          <li>
+            Public report: public location of further curation information for this submission (website entry or publication)
+          </li>
+          <li>
+            Assertion criteria: further information on the curation framework used for this entry
+          </li>
+          <li>
+            More details: a link that will bring you to a specific page with more information about this group’s curation
+          </li>
+        </ul>
 
-        Public report: public location of further curation information for this submission (website entry or publication)
-        Assertion criteria: further information on the curation framework used for this entry
-        More details: A link that will bring you to a specific page with more information about this group’s curation
+        <p class="mb-4">
         7) The return to list button will take you back to the home page with the list of all curations.
-
+        </p>
 
         <div class="col-12 mt-10"><hr /></div>
 
