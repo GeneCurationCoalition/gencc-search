@@ -217,19 +217,15 @@ class PublishController extends Controller
             'status'                                 => 1
         ];
 
-        // Find by submission_id with status = 1
+        // Find by uuid = submission_id (which is SGC-id from gencc-sub) with status = 1
         Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
         $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status',1)->first();
-        if ($submission === null) {
-            Log::info( "Looking for submission by submitted_as_submission_id=local_key: " . $data->local_key);
-            $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status',1)->first();
-        }
 
         if ($submission) {
             Log::info( "updating submission: " . $data->submission_id);
             $submission->update($submissionData);
         } else {
-            Log::info( "creating submission: " . $data->submission_id);
+            Log::info( "creating new submission: " . $data->submission_id);
             $submission = Submission::create($submissionData);
         }
 
@@ -257,7 +253,7 @@ class PublishController extends Controller
 
         $check = $submission->save();
 
-        return ($check ? $check : "Submission not associated");
+        return ($check ? $check : "Submission " . $data->submission_id . " not associated");
     }
 
 
