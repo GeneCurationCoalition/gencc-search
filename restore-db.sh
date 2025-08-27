@@ -27,11 +27,8 @@ echo "📥 Downloading and restoring from: $BACKUP_PATH"
 echo "⚠️  This will overwrite the current 'laravel' database!"
 
 echo "🔄 Restoring database (this may take a few minutes)..."
-# Use password from .env file
 DB_PASSWORD=$(grep "^DB_PASSWORD=" .env | cut -d '=' -f2)
-DB_USERNAME=$(grep "^DB_USERNAME=" .env | cut -d '=' -f2)
-DB_DATABASE=$(grep "^DB_DATABASE=" .env | cut -d '=' -f2)
-gsutil cat "$BACKUP_PATH" | gunzip -c | mysql -u $DB_USERNAME -p"$DB_PASSWORD" $DB_DATABASE
+gsutil cat "$BACKUP_PATH" | gunzip -c | mysql -u root -p"$DB_PASSWORD" laravel
 
 echo "✅ Database restore completed"
 
