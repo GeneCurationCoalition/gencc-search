@@ -1,0 +1,146 @@
+================================================================================
+LIVEWIRE ANALYSIS REPORT - GenCC Search Application
+Generated: 2025-08-14
+================================================================================
+
+# A. Composer dependency (v2 or v3)
+Command: jq -r '.require["livewire/livewire"] // empty' composer.json
+
+Output:
+^2.2
+
+# B. List registered components
+Command: php artisan livewire:list || true
+
+Output:
+Command "livewire:list" is not defined.   
+                                            
+  Did you mean one of these?                
+      event:list                            
+      livewire:configure-s3-upload-cleanup  
+      livewire:copy                         
+      livewire:delete                       
+      livewire:discover                     
+      livewire:make                         
+      livewire:move                         
+      livewire:publish                      
+      livewire:stubs                        
+      make:listener                         
+      queue:listen                          
+      route:list                            
+      schedule:list
+
+# C. PHP classes using Livewire Component
+Command: grep pattern 'extends\s+Livewire\\Component|use\s+Livewire\\Component'
+
+Output:
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Submitter/ListingOfSubmissions.php:10:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Modal/Welcome.php:5:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Gene/ListingByDisease.php:10:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Genes/Listing.php:5:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Gene/ListingBySubmitter.php:10:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Gene/ListingByClassification.php:10:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/ManageListingOfSubmissions.php:10:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/SubmitterFileList.php:6:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/SubmitterSubmissionManage.php:5:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/ToggleSubmitterStatus.php:6:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/SubmitterFileManage.php:5:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/ProcessSubmissions.php:6:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/SubmissionFileUpload.php:8:use Livewire\Component;
+/Users/lbabb/Development/gencc/gencc-search/app/Http/Livewire/Dashboard/Submitter/ManageSubmitterProfile.php:6:use Livewire\Component;
+
+# D. Blade template markers
+Command: grep pattern '@livewire\(|<livewire:|wire:(click|change|keyup|keydown|model|submit|loading|poll|ignore|init)'
+
+Output (showing first 50 lines of usage):
+/Users/lbabb/Development/gencc/gencc-search/resources/views/submitters/show.blade.php:83:            @livewire('submitter.listing-of-submissions', ['submitter' => $submitter])
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:34:                    <button wire:click="filterByClassifications(['{{ $item['ref'] }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:63:                    <button wire:click="filterByGenes(['{{ $item['ref'] }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:93:                    <button wire:click="filterByDiseases(['{{ $item['ref'] }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:107:            <input class="input input-text" wire:model.debounce.500ms="query_gene" type="text" value="{{ $query_gene }}" placeholder="Filter by gene symbol...">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:110:            <input class="input input-text" wire:model.debounce.500ms="query_disease" type="text" value="{{ $query_disease }}" placeholder="Filter by disease name...">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:129:                    <button wire:click="filterByInheritances(['{{ $item['ref'] }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:158:                    <button wire:click="filterBySubmitters(['{{ $item['ref'] }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/submitter/listing-of-submissions.blade.php:177:              <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-20">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/partials/modal/welcome.blade.php:68:        <button  wire:click="dismiss" type="button" class="inline-flex justify-center w-full rounded-lg shadow-sm px-4 py-2 border-4 bg-gray-200 border-blue-600 text-xl text-blue-800 hover:text-white hover:bg-blue-800">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:5:            <input class="input input-text" wire:model.debounce.500ms="title" type="text" value="{{ $title }}" placeholder="Filter by gene symbol...">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:8:            <input class="input input-text" wire:model.debounce.500ms="hasDisease" type="text" value="{{ $hasDisease }}" placeholder="Filter by submitted disease...">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:31:{{-- wire:click="addTodo({{ $todo->id }}, '{{ $todo->name }}')" --}}
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:32:                        {{-- <button wire:click="$set('curations_from_submitters', '{{ $submitter->uuid }}')"  --}}
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:33:                        <button wire:click="curationsFromSubmitters(['{{ $submitter->uuid }}'])"
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:57:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_definitive', '0')">Definitive</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:59:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_definitive', '1')">Definitive</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:62:                    <span class="transform xl:-rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_strong', '0')">Strong</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:64:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_strong', '1')">Strong</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:67:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_moderate', '0')">Moderate</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:69:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_moderate', '1')">Moderate</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:72:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_supportive', '0')">Supportive</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:74:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_supportive', '1')">Supportive</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:77:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_limited', '0')">Limited</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:79:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_limited', '1')">Limited</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:82:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_disputed', '0')">Disputed</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:84:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_disputed', '1')">Disputed</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:87:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_refuted', '0')">Refuted</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:89:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_refuted', '1')">Refuted</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:92:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_animal', '0')">Animal</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:94:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer" wire:click="$set('curations_animal', '1')">Animal</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:97:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer whitespace-no-wrap" wire:click="$set('curations_noknown', '0')">No Known</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:99:                    <span class="transform -rotate-45 pl-3 text-sm text-gray-600 cursor-pointer whitespace-no-wrap" wire:click="$set('curations_noknown', '1')">No Known</span>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:104:                    <button class="text-gencc-definitive rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_definitive', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:106:                    <button class="text-gencc-definitive rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-definitive bg-gray-200" wire:click="$set('curations_definitive', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:109:                    <button class="text-gencc-strong rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_strong', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:111:                    <button class="text-gencc-strong rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-strong bg-gray-200" wire:click="$set('curations_strong', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:115:                    <button class="text-gencc-moderate rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_moderate', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:117:                    <button class="text-gencc-moderate rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-moderate bg-gray-200" wire:click="$set('curations_moderate', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:121:                    <button class="text-gencc-supportive rounded-full h-6 border-2 mt-1 w-100 border-gray-300 bg-gray-200" wire:click="$set('curations_supportive', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:123:                    <button class="text-gencc-supportive rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-supportive bg-gray-200" wire:click="$set('curations_supportive', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:127:                    <button class="text-gencc-limited rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_limited', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:129:                    <button class="text-gencc-limited rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-limited bg-gray-200" wire:click="$set('curations_limited', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:133:                    <button class="text-gencc-disputed rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_disputed', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:135:                    <button class="text-gencc-disputed rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-disputed bg-gray-200" wire:click="$set('curations_disputed', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:139:                    <button class="text-gencc-refuted rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_refuted', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:141:                    <button class="text-gencc-refuted rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-refuted bg-gray-200" wire:click="$set('curations_refuted', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:145:                    <button class="text-gencc-animalmodelonly rounded-full h-6 border-2 mt-1 w-100 border-gray-300  bg-gray-200" wire:click="$set('curations_animal', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:147:                    <button class="text-gencc-animalmodelonly rounded-full h-6 border-2 mt-1 w-100  font-bold text-sm border-gencc-animal bg-gray-200" wire:click="$set('curations_animal', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:150:                    <button class="text-gencc-noknown rounded-full h-6 border-2 mt-1 w-100 border-gray-300 bg-gray-200" wire:click="$set('curations_noknown', '1')" ></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:152:                    <button class="text-gencc-noknown rounded-full h-6 border-2 mt-1 w-100 font-bold text-sm border-gencc-noknown bg-gray-200" wire:click="$set('curations_noknown', '0')" ><i class="fas fa-check"></i></button>
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:161:        <div wire:loading class="w-full h-full absolute block top-0 left-0 bg-white opacity-75 z-10">
+/Users/lbabb/Development/gencc/gencc-search/resources/views/livewire/genes/listing.blade.php:273:        {{-- @livewire('genes.listing-row', compact('item'), key($item->id)) --}}
+/Users/lbabb/Development/gencc/gencc-search/resources/views/partials/dashboard/manage-submission-row-common.blade.php:59:                                <button wire:click="disable('{{ $item->uuid }}')" class=" bg-green-800 hover:bg-green-400 text-gray-100 font-bold mx-auto p-1/2 px-2 rounded-full focus:outline-none focus:shadow-outline" type="button">Enabled</button>
+
+[... continues with more wire directive usage ...]
+
+# E. Asset usage
+Command: grep pattern '@livewireStyles|@livewireScripts|livewire\.js'
+
+Output:
+/Users/lbabb/Development/gencc/gencc-search/public/vendor/livewire/manifest.json:1:{"/livewire.js":"/livewire.js?id=5cdaa3ec393c09829366"}
+/Users/lbabb/Development/gencc/gencc-search/public/vendor/livewire/livewire.js:14://# sourceMappingURL=livewire.js.map
+/Users/lbabb/Development/gencc/gencc-search/public/vendor/livewire/livewire.js.map:1:{"version":3,"file":"livewire.js","sources":["../js/util/debounce.js",...
+
+================================================================================
+ANALYSIS SUMMARY
+================================================================================
+
+LIVEWIRE VERSION: v2.2
+COMPONENT COUNT: 14 components found
+USAGE INTENSITY: Heavy (100+ wire directives across templates)
+
+COMPONENT BREAKDOWN:
+- Dashboard/Submitter management: 8 components
+- Public gene/submitter listings: 4 components  
+- Modal/utility components: 2 components
+
+KEY FEATURES USING LIVEWIRE:
+- Real-time search and filtering
+- File upload management
+- Form handling with validation
+- Interactive dashboard controls
+- Status toggling (enable/disable)
+- Loading states and feedback
+
+ASSET INTEGRATION: ✅ Properly configured
+- Livewire JS assets published and versioned
+- Manifest file present for cache busting
+
+================================================================================
