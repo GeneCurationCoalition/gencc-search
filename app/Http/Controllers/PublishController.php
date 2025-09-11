@@ -167,6 +167,9 @@ class PublishController extends Controller
         $data = json_decode($data);
 
         // confirm the required information is all present
+        if (!isset($data->sid) || empty($data->sid))
+            return "SID is required";
+
         $gene = Gene::curie($data->gene->id)->first();
         if ($gene === null)
             return "Gene not found";
@@ -194,21 +197,90 @@ class PublishController extends Controller
             if (!empty($evidence->pmid))
                 $evidences[] = $evidence->pmid;
 
+        // Process original_data if present to get original submission values
+        $originalData = null;
+        if (isset($data->original_data) && !empty($data->original_data)) {
+            if (is_string($data->original_data)) {
+                $originalData = json_decode($data->original_data);
+            } else {
+                $originalData = $data->original_data;
+            }
+        }
+
+        // Use original_data values for submitted_as_ fields if they exist and differ from normalized values
+        $submitted_gene_id = $data->gene->id;
+        $submitted_gene_symbol = $data->gene->symbol;
+        $submitted_disease_id = $data->disease->id;
+        $submitted_disease_name = $data->disease->name;
+        $submitted_moi_id = $data->moi->id;
+        $submitted_moi_name = $data->moi->name;
+        $submitted_classification_id = $data->classification->id;
+        $submitted_classification_name = $data->classification->name;
+        $submitted_local_key = $data->local_key;
+
+        if ($originalData !== null) {
+            // Check gene values
+            if (isset($originalData->gene) && !empty($originalData->gene->id) && 
+                $originalData->gene->id !== $data->gene->id) {
+                $submitted_gene_id = $originalData->gene->id;
+            }
+            if (isset($originalData->gene) && !empty($originalData->gene->symbol) && 
+                $originalData->gene->symbol !== $data->gene->symbol) {
+                $submitted_gene_symbol = $originalData->gene->symbol;
+            }
+
+            // Check disease values
+            if (isset($originalData->disease) && !empty($originalData->disease->id) && 
+                $originalData->disease->id !== $data->disease->id) {
+                $submitted_disease_id = $originalData->disease->id;
+            }
+            if (isset($originalData->disease) && !empty($originalData->disease->name) && 
+                $originalData->disease->name !== $data->disease->name) {
+                $submitted_disease_name = $originalData->disease->name;
+            }
+
+            // Check moi values
+            if (isset($originalData->moi) && !empty($originalData->moi->id) && 
+                $originalData->moi->id !== $data->moi->id) {
+                $submitted_moi_id = $originalData->moi->id;
+            }
+            if (isset($originalData->moi) && !empty($originalData->moi->name) && 
+                $originalData->moi->name !== $data->moi->name) {
+                $submitted_moi_name = $originalData->moi->name;
+            }
+
+            // Check classification values
+            if (isset($originalData->classification) && !empty($originalData->classification->id) && 
+                $originalData->classification->id !== $data->classification->id) {
+                $submitted_classification_id = $originalData->classification->id;
+            }
+            if (isset($originalData->classification) && !empty($originalData->classification->name) && 
+                $originalData->classification->name !== $data->classification->name) {
+                $submitted_classification_name = $originalData->classification->name;
+            }
+
+            // Check local_key
+            if (isset($originalData->local_key) && !empty($originalData->local_key) && 
+                $originalData->local_key !== $data->local_key) {
+                $submitted_local_key = $originalData->local_key;
+            }
+        }
+
         $submissionData = [
-            'uuid'                                   => $data->submission_id,
+            'uuid'                                   => $data->sid,
             'order'                                  => $classification->order,
             'submitted_run_date'                     => $record->input('publish_date'),
-            'submitted_as_hgnc_id'                   => $data->gene->id,
-            'submitted_as_disease_id'                => $data->disease->id,
-            'submitted_as_moi_id'                    => $data->moi->id,
+            'submitted_as_hgnc_id'                   => $submitted_gene_id,
+            'submitted_as_disease_id'                => $submitted_disease_id,
+            'submitted_as_moi_id'                    => $submitted_moi_id,
             'submitted_as_submitter_id'              => $data->submitter->id,
-            'submitted_as_submission_id'             => $data->local_key,
-            'submitted_as_hgnc_symbol'               => $data->gene->symbol,
-            'submitted_as_disease_name'              => $data->disease->name,
-            'submitted_as_moi_name'                  => $data->moi->name,
+            'submitted_as_submission_id'             => $submitted_local_key,
+            'submitted_as_hgnc_symbol'               => $submitted_gene_symbol,
+            'submitted_as_disease_name'              => $submitted_disease_name,
+            'submitted_as_moi_name'                  => $submitted_moi_name,
             'submitted_as_submitter_name'            => $data->submitter->name,
-            'submitted_as_classification_id'         => $data->classification->id,
-            'submitted_as_classification_name'       => $data->classification->name,
+            'submitted_as_classification_id'         => $submitted_classification_id,
+            'submitted_as_classification_name'       => $submitted_classification_name,
             'submitted_as_date'                      => $data->report->display_date,
             'submitted_as_public_report_url'         => $data->report->ext_url,
             'submitted_as_notes'                     => $data->notes->display,
@@ -217,9 +289,13 @@ class PublishController extends Controller
             'status'                                 => 1
         ];
 
-        // Find by uuid = submission_id (which is SGC-id from gencc-sub) with status = 1
-        Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
-        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status',1)->first();
+        // Find by uuid (sid) with status = 1
+        Log::info( "Looking for submission by uuid=sid: " . $data->sid);
+        $submission = $submitter->submissions()->where('uuid', $data->sid)->where('status',1)->first();
+        if ($submission === null) {
+            Log::info( "Looking for submission by submitted_as_submission_id=local_key: " . $data->local_key);
+            $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status',1)->first();
+        }
 
         if ($submission) {
             Log::info( "updating submission: " . $data->submission_id);
@@ -276,8 +352,8 @@ class PublishController extends Controller
         if ($submitter === null)
             return "Submitter not found";
 
-        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status', 1)->first();
-        \Log::info('PublishController@unpublish_submission looking up uuid=submission_id: ' . $data->submission_id);
+        $submission = $submitter->submissions()->where('uuid', $data->sid)->where('status', 1)->first();
+        \Log::info('PublishController@unpublish_submission looking up uuid=sid: ' . $data->sid);
         if ($submission === null) {
             \Log::info('PublishController@unpublish_submission looking up submitted_as_submission_id=local_key: ' . $data->local_key);
             $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status', 1)->first();
