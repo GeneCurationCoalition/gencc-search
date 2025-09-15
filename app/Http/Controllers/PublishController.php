@@ -66,7 +66,7 @@ class PublishController extends Controller
                 // we've already checked above, so just respond
                 return response()->json(['success' => 'true',
                             'status_code' => 200,
-                            'sid' => $request->input('action'),
+                            'action' => $request->input('action'),
                             'message' => 'Ready for jobs'],
                             200);
                 break;
@@ -84,7 +84,7 @@ class PublishController extends Controller
                     Setting::save();
                     return response()->json(['success' => 'true',
                                 'status_code' => 200,
-                                'sid' => $data['submission_id'],
+                                'submission_id' => $data['submission_id'],
                                 'message' => 'Submission accepted'],
                                 200);
                 }
@@ -93,7 +93,7 @@ class PublishController extends Controller
                     Log::error("Submission " . $data['submission_id'] . " failed with error: " . $check);
                     return response()->json(['success' => 'false',
                                 'status_code' => 9007,
-                                'sid' => $data['submission_id'],
+                                'submission_id' => $data['submission_id'],
                                 'message' => 'Submission failed:  ' . $check],
                                 501);
                 }
@@ -112,7 +112,7 @@ class PublishController extends Controller
 
                     return response()->json(['success' => 'true',
                                 'status_code' => 200,
-                                'sid' => $data['submission_id'],
+                                'submission_id' => $data['submission_id'],
                                 'message' => 'Submission unpublished'],
                                 200);
                 }
@@ -121,7 +121,7 @@ class PublishController extends Controller
                     Log::error("Submission " . $data['submission_id'] . " failed removal error: " . $check);
                     return response()->json(['success' => 'false',
                                 'status_code' => 9008,
-                                'sid' => $data['submission_id'],
+                                'submission_id' => $data['submission_id'],
                                 'message' => 'Submission remove failed:  ' . $check],
                                 501);
                 }
@@ -167,8 +167,8 @@ class PublishController extends Controller
         $data = json_decode($data);
 
         // confirm the required information is all present
-        if (!isset($data->sid) || empty($data->sid))
-            return "SID is required";
+        if (!isset($data->submission_id) || empty($data->submission_id))
+            return "Submission ID is required";
 
         $gene = Gene::curie($data->gene->id)->first();
         if ($gene === null)
@@ -199,12 +199,26 @@ class PublishController extends Controller
 
         // Process original_data if present to get original submission values
         $originalData = null;
-        if (isset($data->original_data) && !empty($data->original_data)) {
-            if (is_string($data->original_data)) {
-                $originalData = json_decode($data->original_data);
+        Log::info("Processing original_data check", [
+            'has_original_data' => $record->has('original_data'),
+            'original_data_input' => $record->input('original_data')
+        ]);
+        
+        if ($record->has('original_data') && !empty($record->input('original_data'))) {
+            $originalDataInput = $record->input('original_data');
+            if (is_string($originalDataInput)) {
+                $originalData = json_decode($originalDataInput);
             } else {
-                $originalData = $data->original_data;
+                // Convert array to object properly by encoding/decoding as JSON
+                $originalData = json_decode(json_encode($originalDataInput));
             }
+            Log::info("Original data processed", [
+                'original_data' => $originalData,
+                'disease_id' => isset($originalData->disease) && is_object($originalData->disease) ? $originalData->disease->id : 'not set',
+                'disease_name' => isset($originalData->disease) && is_object($originalData->disease) ? $originalData->disease->name : 'not set'
+            ]);
+        } else {
+            Log::info("No original_data found or empty");
         }
 
         // Use original_data values for submitted_as_ fields if they exist and differ from normalized values
@@ -219,55 +233,48 @@ class PublishController extends Controller
         $submitted_local_key = $data->local_key;
 
         if ($originalData !== null) {
-            // Check gene values
-            if (isset($originalData->gene) && !empty($originalData->gene->id) && 
-                $originalData->gene->id !== $data->gene->id) {
+            // Use original data values for submitted_as_ fields when present
+            if (isset($originalData->gene) && !empty($originalData->gene->id)) {
                 $submitted_gene_id = $originalData->gene->id;
             }
-            if (isset($originalData->gene) && !empty($originalData->gene->symbol) && 
-                $originalData->gene->symbol !== $data->gene->symbol) {
+            if (isset($originalData->gene) && !empty($originalData->gene->symbol)) {
                 $submitted_gene_symbol = $originalData->gene->symbol;
             }
 
-            // Check disease values
-            if (isset($originalData->disease) && !empty($originalData->disease->id) && 
-                $originalData->disease->id !== $data->disease->id) {
+            // Use original disease values
+            if (isset($originalData->disease) && is_object($originalData->disease) && !empty($originalData->disease->id)) {
                 $submitted_disease_id = $originalData->disease->id;
+                Log::info("Using original disease ID", ['original_id' => $originalData->disease->id]);
             }
-            if (isset($originalData->disease) && !empty($originalData->disease->name) && 
-                $originalData->disease->name !== $data->disease->name) {
+            if (isset($originalData->disease) && is_object($originalData->disease) && !empty($originalData->disease->name)) {
                 $submitted_disease_name = $originalData->disease->name;
+                Log::info("Using original disease name", ['original_name' => $originalData->disease->name]);
             }
 
-            // Check moi values
-            if (isset($originalData->moi) && !empty($originalData->moi->id) && 
-                $originalData->moi->id !== $data->moi->id) {
+            // Use original moi values
+            if (isset($originalData->moi) && !empty($originalData->moi->id)) {
                 $submitted_moi_id = $originalData->moi->id;
             }
-            if (isset($originalData->moi) && !empty($originalData->moi->name) && 
-                $originalData->moi->name !== $data->moi->name) {
+            if (isset($originalData->moi) && !empty($originalData->moi->name)) {
                 $submitted_moi_name = $originalData->moi->name;
             }
 
-            // Check classification values
-            if (isset($originalData->classification) && !empty($originalData->classification->id) && 
-                $originalData->classification->id !== $data->classification->id) {
+            // Use original classification values
+            if (isset($originalData->classification) && !empty($originalData->classification->id)) {
                 $submitted_classification_id = $originalData->classification->id;
             }
-            if (isset($originalData->classification) && !empty($originalData->classification->name) && 
-                $originalData->classification->name !== $data->classification->name) {
+            if (isset($originalData->classification) && !empty($originalData->classification->name)) {
                 $submitted_classification_name = $originalData->classification->name;
             }
 
-            // Check local_key
-            if (isset($originalData->local_key) && !empty($originalData->local_key) && 
-                $originalData->local_key !== $data->local_key) {
+            // Use original local_key
+            if (isset($originalData->local_key) && !empty($originalData->local_key)) {
                 $submitted_local_key = $originalData->local_key;
             }
         }
 
         $submissionData = [
-            'uuid'                                   => $data->sid,
+            'uuid'                                   => $data->submission_id,
             'order'                                  => $classification->order,
             'submitted_run_date'                     => $record->input('publish_date'),
             'submitted_as_hgnc_id'                   => $submitted_gene_id,
@@ -289,9 +296,9 @@ class PublishController extends Controller
             'status'                                 => 1
         ];
 
-        // Find by uuid (sid) with status = 1
-        Log::info( "Looking for submission by uuid=sid: " . $data->sid);
-        $submission = $submitter->submissions()->where('uuid', $data->sid)->where('status',1)->first();
+        // Find by uuid (submission_id) with status = 1
+        Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
+        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status',1)->first();
         if ($submission === null) {
             Log::info( "Looking for submission by submitted_as_submission_id=local_key: " . $data->local_key);
             $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status',1)->first();
@@ -305,10 +312,20 @@ class PublishController extends Controller
             $submission = Submission::create($submissionData);
         }
 
+        // Find the original disease if different from normalized disease
+        $originalDisease = $disease; // Default to normalized disease
+        if ($originalData !== null && isset($originalData->disease) && is_object($originalData->disease) && !empty($originalData->disease->id)) {
+            $originalDiseaseFound = Disease::curie($originalData->disease->id)->first();
+            if ($originalDiseaseFound !== null) {
+                $originalDisease = $originalDiseaseFound;
+                Log::info("Found original disease", ['original_disease_id' => $originalDisease->id, 'original_curie' => $originalData->disease->id]);
+            }
+        }
+
         // associate the submissions as needed
         $submission->submitter()->associate($submitter);
         $submission->gene()->associate($gene);
-        $submission->disease_original()->associate($disease);
+        $submission->disease_original()->associate($originalDisease);
         $submission->disease()->associate($disease);
 
         // set up the equivs.
@@ -352,8 +369,8 @@ class PublishController extends Controller
         if ($submitter === null)
             return "Submitter not found";
 
-        $submission = $submitter->submissions()->where('uuid', $data->sid)->where('status', 1)->first();
-        \Log::info('PublishController@unpublish_submission looking up uuid=sid: ' . $data->sid);
+        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status', 1)->first();
+        \Log::info('PublishController@unpublish_submission looking up uuid=submission_id: ' . $data->submission_id);
         if ($submission === null) {
             \Log::info('PublishController@unpublish_submission looking up submitted_as_submission_id=local_key: ' . $data->local_key);
             $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status', 1)->first();
