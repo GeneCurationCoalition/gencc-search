@@ -19,11 +19,14 @@ class SubmitterUpdateSeeder extends Seeder
      */
     public function run()
     {
+        /*
+         * Ticket search #137 fix Baylor assertion criteria URL.
+         */
         DB::table('submitters')
-            ->where("uuid", "GENCC_000117")
+            ->where("uuid", "GENCC_000116")
             ->update(
                 [
-                    'text_contact' => "Dr. Bader Alhaddad<br>Email: balhaddad@liferaomics.com.sa",
+                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
                 ]
             );
     }
