@@ -29,5 +29,25 @@ class SubmitterUpdateSeeder extends Seeder
                     'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
                 ]
             );
+        /*
+         * Fix LiferaOmics assertion criteria URL.
+         */
+        DB::table('submitters')
+            ->where("uuid", "GENCC_000117")
+            ->update(
+                [
+                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
+                ]
+            );
+        /*
+         * Fix UW assertion criteria URL.
+         */
+        DB::table('submitters')
+            ->where("uuid", "GENCC_000118")
+            ->update(
+                [
+                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
+                ]
+            );
     }
 }
