@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Exports\SubmissionExport;
 use App\Exports\SubmissionTSVExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -44,6 +43,6 @@ class DownloadController extends Controller
 
     public function export_XLS()
     {
-        return Excel::download(new SubmissionExport, 'gencc-submissions.xls', \Maatwebsite\Excel\Excel::XLS);
+        return Excel::download(new SubmissionExport, 'gencc-submissions.xlsx', \Maatwebsite\Excel\Excel::XLS);
     }
 }
