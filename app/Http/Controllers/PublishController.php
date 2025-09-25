@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -36,6 +37,8 @@ class PublishController extends Controller
      */
     public function process(Request $request)
     {
+        // Log::info("Received request: " . $request);
+
         // check if posting is allowed
         $reject = Setting::get('allow_posts', "no");
 
@@ -51,6 +54,7 @@ class PublishController extends Controller
         // confirm token
         $ptoken = Setting::get('token_posts', false);
 
+        // Log::info("Setting token: " . $ptoken . " Input token: " . $request->input('token') . " Input action: " . $request->input('action'));
         if ($ptoken === false || $request->input('token') != $ptoken)
         {
             Log::error("Attempt to add submission with invalid token");
@@ -66,7 +70,7 @@ class PublishController extends Controller
                 // we've already checked above, so just respond
                 return response()->json(['success' => 'true',
                             'status_code' => 200,
-                            'sid' => $request->input('action'),
+                            'action' => $request->input('action'),
                             'message' => 'Ready for jobs'],
                             200);
                 break;
@@ -90,7 +94,6 @@ class PublishController extends Controller
                 }
                 else
                 {
-                    Log::error("Submission " . $data['submission_id'] . " failed with error: " . $check);
                     return response()->json(['success' => 'false',
                                 'status_code' => 9007,
                                 'sid' => $data['submission_id'],
@@ -118,7 +121,6 @@ class PublishController extends Controller
                 }
                 else
                 {
-                    Log::error("Submission " . $data['submission_id'] . " failed removal error: " . $check);
                     return response()->json(['success' => 'false',
                                 'status_code' => 9008,
                                 'sid' => $data['submission_id'],
@@ -126,6 +128,27 @@ class PublishController extends Controller
                                 501);
                 }
                 break;
+            case 'sgc_id':
+                // Update the sgc_id of a submission from sub
+                $data = $request->input('data');
+
+                $check = $this->update_sgc_id($request);
+                if ($check === true) {
+                    Log::info("Submission " . $data['submission_id'] . " sgc_id updated.");
+                    return response()->json(['success' => 'true',
+                        'status_code' => 200,
+                        'sid' => $data['submission_id'],
+                        'message' => 'SGC ID updated'],
+                        200);
+                } else {
+                    Log::error("Submission " . $data['submission_id'] . " failed sgc_id update error.");
+                    return response()->json(['success' => 'false',
+                        'status_code' => 9009,
+                        'message' => 'SGC ID update failed: ' . $check],
+                        501);
+                }
+                break;
+
             case 'end':
                 // update all the counters
                 Log::info("Remote Session completed");
@@ -290,5 +313,27 @@ class PublishController extends Controller
 
         return ($check ? $check : "Submission not removed");
 
+    }
+
+    /**
+     * Update the sgc_id associated with a record originally sent from search
+     * added to the submission portal. SGC_IDs are created
+     * in the submission portal on creation and is the only unique id we
+     * have between the two independent systems.
+     */
+    public function update_sgc_id($record) {
+        $data = $record->input('data');
+        $data = json_encode($data);
+        $data = json_decode($data);
+        // unique find by db row id
+        $submission = Submission::find($data->search_row_id);
+        if ($submission === null) {
+            Log::error("Submission " . $data->submission_id . " not found error updating sgc_id: " . $data->search_row_id);
+            throw new Exception("Submission not found");
+        }
+        Log::info("Submission " . $data->submission_id . " updated with sgc_id: " . $data->search_row_id);
+        $submission->uuid = $data->submission_id;
+        $check = $submission->save();
+        return ($check ? true : "Failed to save submission " . $data->submission_id . " with sgc_id: " . $data->search_row_id);
     }
 }

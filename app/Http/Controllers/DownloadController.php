@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Exports\SubmissionExport;
 use App\Exports\SubmissionTSVExport;
 use Maatwebsite\Excel\Facades\Excel;
