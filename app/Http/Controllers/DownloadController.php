@@ -43,6 +43,6 @@ class DownloadController extends Controller
 
     public function export_XLS()
     {
-        return Excel::download(new SubmissionExport, 'gencc-submissions.xlsx', \Maatwebsite\Excel\Excel::XLS);
+        return Excel::download(new SubmissionExport, 'gencc-submissions.xls', \Maatwebsite\Excel\Excel::XLS);
     }
 }
