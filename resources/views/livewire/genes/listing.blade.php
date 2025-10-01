@@ -1,4 +1,5 @@
 <div class="">
+    <div class="g-recaptcha mb-3" data-sitekey="6LfuMtorAAAAAPHl0fyM8pHbSEE7NcLlpy7r4dbV"></div>
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
         <div class="col-span-4 xl:col-span-2 mt-3">

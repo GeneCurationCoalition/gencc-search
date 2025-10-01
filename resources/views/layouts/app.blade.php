@@ -20,6 +20,8 @@
 	<link href="{{ asset('css/app.css') }}" rel="stylesheet">
 	@livewireStyles
 
+	<script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+
   <!-- Global site tag (gtag.js) - Google Analytics -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-Y9ZHWJMZNK"></script>
 	<script>
