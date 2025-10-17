@@ -189,6 +189,22 @@ class PublishController extends Controller
 
         $data = json_decode($data);
 
+        // Get original_data from the top level of the request, not from inside data
+        $original_data = $record->input('original_data');
+
+        // If original_data is a JSON string, decode it as object
+        if ($original_data && is_string($original_data)) {
+            $original_data = json_decode($original_data);
+        }
+
+        // If original_data is an array, convert it to object (Laravel may cast it to array)
+        if ($original_data && is_array($original_data)) {
+            $original_data = json_decode(json_encode($original_data));
+        }
+
+        // Attach original_data to the data object for use in the rest of the method
+        $data->original_data = $original_data;
+
         // confirm the required information is all present
         $gene = Gene::curie($data->gene->id)->first();
         if ($gene === null)
@@ -197,6 +213,20 @@ class PublishController extends Controller
         $disease = Disease::curie($data->disease->id)->first();
         if ($disease === null)
             return "Disease not found";
+
+        // Check for original disease data
+        $disease_original = null;
+        if (isset($data->original_data) && isset($data->original_data->disease) && isset($data->original_data->disease->id)) {
+            $disease_original = Disease::curie($data->original_data->disease->id)->first();
+            // If original disease not found, log warning but continue (use normalized disease as fallback)
+            if ($disease_original === null) {
+                Log::warning("Original disease not found: " . $data->original_data->disease->id . ", using normalized disease as fallback");
+                $disease_original = $disease;
+            }
+        } else {
+            // No original_data provided, use normalized disease
+            $disease_original = $disease;
+        }
 
         $classification = Classification::curie($data->classification->id)->first();
         if ($classification === null)
@@ -217,21 +247,24 @@ class PublishController extends Controller
             if (!empty($evidence->pmid))
                 $evidences[] = $evidence->pmid;
 
+        // Use original_data for submitted_as_* fields when available, otherwise fall back to normalized data
+        $original = isset($data->original_data) ? $data->original_data : $data;
+
         $submissionData = [
             'uuid'                                   => $data->submission_id,
             'order'                                  => $classification->order,
             'submitted_run_date'                     => $record->input('publish_date'),
-            'submitted_as_hgnc_id'                   => $data->gene->id,
-            'submitted_as_disease_id'                => $data->disease->id,
-            'submitted_as_moi_id'                    => $data->moi->id,
-            'submitted_as_submitter_id'              => $data->submitter->id,
+            'submitted_as_hgnc_id'                   => isset($original->gene->id) ? $original->gene->id : $data->gene->id,
+            'submitted_as_disease_id'                => isset($original->disease->id) ? $original->disease->id : $data->disease->id,
+            'submitted_as_moi_id'                    => isset($original->moi->id) ? $original->moi->id : $data->moi->id,
+            'submitted_as_submitter_id'              => isset($original->submitter->id) ? $original->submitter->id : $data->submitter->id,
             'submitted_as_submission_id'             => $data->local_key,
-            'submitted_as_hgnc_symbol'               => $data->gene->symbol,
-            'submitted_as_disease_name'              => $data->disease->name,
-            'submitted_as_moi_name'                  => $data->moi->name,
-            'submitted_as_submitter_name'            => $data->submitter->name,
-            'submitted_as_classification_id'         => $data->classification->id,
-            'submitted_as_classification_name'       => $data->classification->name,
+            'submitted_as_hgnc_symbol'               => isset($original->gene->symbol) ? $original->gene->symbol : $data->gene->symbol,
+            'submitted_as_disease_name'              => isset($original->disease->name) ? $original->disease->name : $data->disease->name,
+            'submitted_as_moi_name'                  => isset($original->moi->name) ? $original->moi->name : $data->moi->name,
+            'submitted_as_submitter_name'            => isset($original->submitter->name) ? $original->submitter->name : $data->submitter->name,
+            'submitted_as_classification_id'         => isset($original->classification->id) ? $original->classification->id : $data->classification->id,
+            'submitted_as_classification_name'       => isset($original->classification->name) ? $original->classification->name : $data->classification->name,
             'submitted_as_date'                      => $data->report->display_date,
             'submitted_as_public_report_url'         => $data->report->ext_url,
             'submitted_as_notes'                     => $data->notes->display,
@@ -255,7 +288,7 @@ class PublishController extends Controller
         // associate the submissions as needed
         $submission->submitter()->associate($submitter);
         $submission->gene()->associate($gene);
-        $submission->disease_original()->associate($disease);
+        $submission->disease_original()->associate($disease_original);
         $submission->disease()->associate($disease);
 
         // set up the equivs.
