@@ -100,9 +100,11 @@
              @if (strpos(strtoupper($submission->submitted_as_assertion_criteria_url), 'HTTP') !== false)
               <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
               <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="{{ $submission->submitted_as_assertion_criteria_url }}">{{ $submission->submitted_as_assertion_criteria_url }} <i class="fas fa-external-link-alt"></i></a></div>
+            @elseif(preg_match('/PMID:.*?(\d+)/', $submission->submitted_as_assertion_criteria_url, $matches))
+              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria'  target="_blank" href="https://pubmed.ncbi.nlm.nih.gov/{{ $matches[1] }}/">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
+              <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  target="_blank" href="https://pubmed.ncbi.nlm.nih.gov/{{ $matches[1] }}/">PMID: {{ $matches[1] }} <i class="fas fa-external-link-alt"></i></a></div>
             @elseif($submission->submitted_as_assertion_criteria_url)
-              <div class="font-normal"><a class="underline" id='click-exit-assertion-criteria' href="{{ route('submitter-show', $submission->submitter->uuid) }}">Click here to view assertion criteria <i class="fas fa-external-link-alt"></i></a></div>
-              <div class="text-xs"><a class="" id='click-exit-assertion-criteria'  href="{{ route('submitter-show', $submission->submitter->uuid) }}">{{route('submitter-show', $submission->submitter->uuid)  }} <i class="fas fa-external-link-alt"></i></a></div>
+              <div class="font-normal">{{ $submission->submitted_as_assertion_criteria_url }}</div>
             @endif
 
 
