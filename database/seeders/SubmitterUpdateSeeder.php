@@ -3,7 +3,6 @@
  * Do not include in DatabaseSeeder - should only be executed standalone.
  * Execute with: php artisan db:seed --class=SubmitterUpdateSeeder
  */
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -19,35 +18,16 @@ class SubmitterUpdateSeeder extends Seeder
      */
     public function run()
     {
-        /*
-         * Ticket search #137 fix Baylor assertion criteria URL.
-         */
-        DB::table('submitters')
-            ->where("uuid", "GENCC_000116")
-            ->update(
-                [
-                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
-                ]
-            );
-        /*
-         * Fix LiferaOmics assertion criteria URL.
-         */
-        DB::table('submitters')
-            ->where("uuid", "GENCC_000117")
-            ->update(
-                [
-                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
-                ]
-            );
-        /*
-         * Fix UW assertion criteria URL.
-         */
-        DB::table('submitters')
-            ->where("uuid", "GENCC_000118")
-            ->update(
-                [
-                    'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/",
-                ]
-            );
+        DB::table('submitters')->insert([
+            [
+                'uuid' => "GENCC_000119",
+                'curie' => "GENCC:000119",
+                'title' => "Stanford Center for Undiagnosed Diseases",
+                'website' => "https://gregor.stanford.edu",
+                'text_descriptions' => "The Stanford Center for Undiagnosed Diseases at Stanford University is a member of the GREGoR Consortium (Genomics Research to Elucidate the Genetics of Rare Disease) and a clinical site of the Undiagnosed Diseases Network. The Stanford Center for Undiagnosed Diseases aims to identify and provide answers for patients with complex, undiagnosed medical conditions through a collaborative, multidisciplinary approach. Its objectives include leveraging advanced genomic technologies to diagnose suspected Mendelian disease through gene discovery, functional validation, and piloting new diagnostic tools.",
+                'text_contact' => "gregorsite@stanford.edu",
+                'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/"
+            ],
+        ]);
     }
 }
