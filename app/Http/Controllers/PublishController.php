@@ -83,12 +83,12 @@ class PublishController extends Controller
                 // respond accordingly
                 if ($check === true)
                 {
-                    Log::info("Submission " . $data['submission_id'] . " processed.");
+                    Log::info("Submission " . $data['local_key'] . " processed.");
                     Setting::set('update_counts', 1);
                     Setting::save();
                     return response()->json(['success' => 'true',
                                 'status_code' => 200,
-                                'sid' => $data['submission_id'],
+                                'sid' => $data['local_key'],
                                 'message' => 'Submission accepted'],
                                 200);
                 }
@@ -96,7 +96,7 @@ class PublishController extends Controller
                 {
                     return response()->json(['success' => 'false',
                                 'status_code' => 9007,
-                                'sid' => $data['submission_id'],
+                                'sid' => $data['local_key'],
                                 'message' => 'Submission failed:  ' . $check],
                                 501);
                 }
@@ -109,13 +109,13 @@ class PublishController extends Controller
 
                 if ($check === true)
                 {
-                    Log::info("Submission " . $data['submission_id'] . " unpublished");
+                    Log::info("Submission " . $data['local_key'] . " unpublished");
                     Setting::set('update_counts', 1);
                     Setting::save();
 
                     return response()->json(['success' => 'true',
                                 'status_code' => 200,
-                                'sid' => $data['submission_id'],
+                                'sid' => $data['local_key'],
                                 'message' => 'Submission unpublished'],
                                 200);
                 }
@@ -123,7 +123,7 @@ class PublishController extends Controller
                 {
                     return response()->json(['success' => 'false',
                                 'status_code' => 9008,
-                                'sid' => $data['submission_id'],
+                                'sid' => $data['local_key'],
                                 'message' => 'Submission remove failed:  ' . $check],
                                 501);
                 }
@@ -134,14 +134,14 @@ class PublishController extends Controller
 
                 $check = $this->update_sgc_id($request);
                 if ($check === true) {
-                    Log::info("Submission " . $data['submission_id'] . " sgc_id updated.");
+                    Log::info("Submission " . $data['local_key'] . " sgc_id updated.");
                     return response()->json(['success' => 'true',
                         'status_code' => 200,
-                        'sid' => $data['submission_id'],
+                        'sid' => $data['local_key'],
                         'message' => 'SGC ID updated'],
                         200);
                 } else {
-                    Log::error("Submission " . $data['submission_id'] . " failed sgc_id update error.");
+                    Log::error("Submission " . $data['local_key'] . " failed sgc_id update error.");
                     return response()->json(['success' => 'false',
                         'status_code' => 9009,
                         'message' => 'SGC ID update failed: ' . $check],
@@ -361,12 +361,12 @@ class PublishController extends Controller
         // unique find by db row id
         $submission = Submission::find($data->search_row_id);
         if ($submission === null) {
-            Log::error("Submission " . $data->submission_id . " not found error updating sgc_id: " . $data->search_row_id);
+            Log::error("Submission with local_key " . $data->local_key . " not found error updating sgc_id: " . $data->search_row_id);
             throw new Exception("Submission not found");
         }
-        Log::info("Submission " . $data->submission_id . " updated with sgc_id: " . $data->search_row_id);
+        Log::info("Submission with local_key " . $data->local_key . " updated with sgc_id (submission_id): " . $data->submission_id);
         $submission->uuid = $data->submission_id;
         $check = $submission->save();
-        return ($check ? true : "Failed to save submission " . $data->submission_id . " with sgc_id: " . $data->search_row_id);
+        return ($check ? true : "Failed to save submission with local_key " . $data->local_key . " with sgc_id: " . $data->search_row_id);
     }
 }
