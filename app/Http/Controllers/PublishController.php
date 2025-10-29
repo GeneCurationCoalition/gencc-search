@@ -39,6 +39,27 @@ class PublishController extends Controller
     {
         // Log::info("Received request: " . $request);
 
+        // Handle cases where Laravel doesn't parse JSON request body
+        // This can happen with certain Content-Type variations
+        $all_inputs = $request->all();
+        if (empty($all_inputs) && $request->getContent()) {
+            $raw_body = $request->getContent();
+            $parsed = json_decode($raw_body, true);
+
+            if ($parsed !== null && json_last_error() === JSON_ERROR_NONE) {
+                $request->merge($parsed);
+                Log::info("Manually parsed JSON request body", [
+                    'content_type' => $request->header('Content-Type'),
+                    'parsed_keys' => array_keys($parsed)
+                ]);
+            } else {
+                Log::error("Failed to parse JSON request body", [
+                    'content_type' => $request->header('Content-Type'),
+                    'json_error' => json_last_error_msg()
+                ]);
+            }
+        }
+
         // check if posting is allowed
         $reject = Setting::get('allow_posts', "no");
 
@@ -57,7 +78,39 @@ class PublishController extends Controller
         // Log::info("Setting token: " . $ptoken . " Input token: " . $request->input('token') . " Input action: " . $request->input('action'));
         if ($ptoken === false || $request->input('token') != $ptoken)
         {
-            Log::error("Attempt to add submission with invalid token");
+            $data = $request->input('data');
+            $sgc_id = 'UNKNOWN';
+            $local_key = 'UNKNOWN';
+            $action = $request->input('action', 'UNKNOWN');
+            $provided_token = $request->input('token', 'NONE');
+            $all_inputs = $request->all();
+            $raw_body = $request->getContent();
+
+            if ($data) {
+                if (is_array($data)) {
+                    $sgc_id = $data['submission_id'] ?? 'UNKNOWN';
+                    $local_key = $data['local_key'] ?? 'UNKNOWN';
+                } elseif (is_object($data)) {
+                    $sgc_id = $data->submission_id ?? 'UNKNOWN';
+                    $local_key = $data->local_key ?? 'UNKNOWN';
+                }
+            }
+
+            Log::error("Attempt to add submission with invalid token", [
+                'action' => $action,
+                'sgc_id' => $sgc_id,
+                'local_key' => $local_key,
+                'token_provided' => substr($provided_token, 0, 10) . '...',
+                'token_valid' => $ptoken !== false,
+                'request_keys' => array_keys($all_inputs),
+                'ip' => $request->ip(),
+                'method' => $request->method(),
+                'url' => $request->fullUrl(),
+                'content_type' => $request->header('Content-Type'),
+                'content_length' => $request->header('Content-Length'),
+                'raw_body_length' => strlen($raw_body),
+                'raw_body_preview' => substr($raw_body, 0, 500)
+            ]);
             return response()->json(['success' => 'false',
                         'status_code' => 9001,
                         'message' => 'No auth'],
@@ -182,12 +235,17 @@ class PublishController extends Controller
      */
     public function process_submission($record)
     {
-        $data = $record->input('data');
+        try {
+            $data = $record->input('data');
 
-        // web1 (and probably web2) are casting inputs to arrays, so we need to cast back.
-        $data = json_encode($data);
+            // web1 (and probably web2) are casting inputs to arrays, so we need to cast back.
+            $data = json_encode($data);
 
-        $data = json_decode($data);
+            $data = json_decode($data);
+
+            // Get SGC ID early for error logging
+            $sgc_id = isset($data->submission_id) ? $data->submission_id : 'UNKNOWN';
+            $local_key = isset($data->local_key) ? $data->local_key : 'UNKNOWN';
 
         // Get original_data from the top level of the request, not from inside data
         $original_data = $record->input('original_data');
@@ -207,12 +265,18 @@ class PublishController extends Controller
 
         // confirm the required information is all present
         $gene = Gene::curie($data->gene->id)->first();
-        if ($gene === null)
-            return "Gene not found";
+        if ($gene === null) {
+            $error = "Gene not found: " . $data->gene->id;
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
+            return $error;
+        }
 
         $disease = Disease::curie($data->disease->id)->first();
-        if ($disease === null)
-            return "Disease not found";
+        if ($disease === null) {
+            $error = "Disease not found: " . $data->disease->id;
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
+            return $error;
+        }
 
         // Check for original disease data
         $disease_original = null;
@@ -229,16 +293,25 @@ class PublishController extends Controller
         }
 
         $classification = Classification::curie($data->classification->id)->first();
-        if ($classification === null)
-            return "Classification not found";
+        if ($classification === null) {
+            $error = "Classification not found: " . $data->classification->id;
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
+            return $error;
+        }
 
         $moi = Inheritance::curie($data->moi->id)->first();
-        if ($moi === null)
-            return "Inheritance not found";
+        if ($moi === null) {
+            $error = "Inheritance (MOI) not found: " . $data->moi->id;
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
+            return $error;
+        }
 
         $submitter = Submitter::curie($data->submitter->id)->first();
-        if ($submitter === null)
-            return "Submitter not found";
+        if ($submitter === null) {
+            $error = "Submitter not found: " . $data->submitter->id;
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
+            return $error;
+        }
 
         // repack any evidence lines
         $evidences = [];
@@ -307,9 +380,33 @@ class PublishController extends Controller
         $submission->inheritance()->associate($moi);
         $submission->classification()->associate($classification);
 
-        $check = $submission->save();
+            $check = $submission->save();
 
-        return ($check ? $check : "Submission " . $data->submission_id . " not associated");
+            return ($check ? $check : "Submission " . $data->submission_id . " not associated");
+        } catch (\Exception $e) {
+            // Extract SGC ID from data if available, otherwise use UNKNOWN
+            $sgc_id = 'UNKNOWN';
+            $local_key = 'UNKNOWN';
+            try {
+                $data = $record->input('data');
+                if (is_array($data)) {
+                    $sgc_id = $data['submission_id'] ?? 'UNKNOWN';
+                    $local_key = $data['local_key'] ?? 'UNKNOWN';
+                } elseif (is_object($data)) {
+                    $sgc_id = $data->submission_id ?? 'UNKNOWN';
+                    $local_key = $data->local_key ?? 'UNKNOWN';
+                }
+            } catch (\Exception $inner) {
+                // Ignore errors trying to extract IDs
+            }
+
+            $error = "Exception processing submission: " . $e->getMessage();
+            Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}", [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $error;
+        }
     }
 
 
