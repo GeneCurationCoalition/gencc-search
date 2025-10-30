@@ -34,7 +34,7 @@ class DownloadController extends Controller
 
     public function export_rowid_XLSX()
     {
-        return Excel::download(new SubmissionWithRowIDExport, 'gencc-submissions-with-rowid.xlsx');
+        return Excel::download(new SubmissionWithRowIDExport, 'gencc-submissions.xlsx');
     }
 
     public function export_CSV()
