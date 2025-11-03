@@ -3,8 +3,6 @@
 # Script to restore gencc-search database from latest production backup
 # Usage: ./restore-db.sh
 
-set -e  # Exit on any error
-
 echo "🔄 Starting database restore from production backup..."
 
 # Step 1: Find the latest backup date
@@ -18,13 +16,40 @@ fi
 
 echo "✅ Latest backup date found: $LATEST_DATE"
 
-# Step 2: Restore database from latest backup
+# Step 2: Restore database from latest backup with retry logic
 echo "🗄️  Restoring database from backup..."
 BACKUP_FILE="WB${LATEST_DATE}S_web2_genccv1.sql.gz"
 BACKUP_PATH="gs://web-prod-backups/${LATEST_DATE}/${BACKUP_FILE}"
 
-echo "📥 Downloading and restoring from: $BACKUP_PATH"
+echo "📥 Attempting to download from: $BACKUP_PATH"
 echo "⚠️  This will overwrite the current 'laravel' database!"
+
+# Check if the backup file exists
+if ! gsutil ls "$BACKUP_PATH" &> /dev/null; then
+    echo "⚠️  Backup file not found for $LATEST_DATE, trying previous day..."
+
+    # Calculate previous day (works on both macOS and Linux)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        PREVIOUS_DATE=$(date -j -v-1d -f "%Y%m%d" "$LATEST_DATE" +"%Y%m%d")
+    else
+        # Linux
+        PREVIOUS_DATE=$(date -d "$LATEST_DATE -1 day" +"%Y%m%d")
+    fi
+
+    BACKUP_FILE="WB${PREVIOUS_DATE}S_web2_genccv1.sql.gz"
+    BACKUP_PATH="gs://web-prod-backups/${PREVIOUS_DATE}/${BACKUP_FILE}"
+
+    echo "📥 Attempting to download from: $BACKUP_PATH"
+
+    # Check if previous day's backup exists
+    if ! gsutil ls "$BACKUP_PATH" &> /dev/null; then
+        echo "❌ Error: Backup file not found for $LATEST_DATE or $PREVIOUS_DATE"
+        exit 1
+    fi
+
+    echo "✅ Found backup from previous day: $PREVIOUS_DATE"
+fi
 
 echo "🔄 Restoring database (this may take a few minutes)..."
 DB_PASSWORD=$(grep "^DB_PASSWORD=" .env | cut -d '=' -f2)
