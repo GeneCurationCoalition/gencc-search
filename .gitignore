@@ -4,6 +4,7 @@
 /storage/*.key
 #/database/seeders/UsersSeeder.php
 /storage/framework/laravel-excel/
+/storage/backups/
 /vendor
 .env
 .env.backup
