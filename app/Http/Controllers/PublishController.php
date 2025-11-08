@@ -346,12 +346,13 @@ class PublishController extends Controller
             'status'                                 => 1
         ];
 
-        // Find by uuid = submission_id (which is SGC-id from gencc-sub) with status = 1
+        // Find by uuid = submission_id (which is SGC-id from gencc-sub) regardless of status
+        // This prevents duplicate records when re-publishing a soft-deleted submission
         Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
-        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status',1)->first();
+        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->first();
 
         if ($submission) {
-            Log::info( "updating submission: " . $data->submission_id);
+            Log::info( "updating submission: " . $data->submission_id . " (previous status: " . $submission->status . ")");
             $submission->update($submissionData);
         } else {
             Log::info( "creating new submission: " . $data->submission_id);
