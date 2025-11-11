@@ -463,5 +463,41 @@ The API token is stored in the `settings` table with key `token_posts`. This sho
 
 ---
 
-*Last Updated: 2025-10-31*
+## Verified Workflows
+
+The following workflows have been tested and verified in production:
+
+### ✅ New Submission Workflow
+```
+gencc-sub: submitted_new → sends action: "publish"
+gencc-search: Creates new record with status=1
+Result: Publicly visible submission
+```
+
+### ✅ Republish/Update Workflow
+```
+gencc-sub: submitted_republish → sends action: "publish"
+gencc-search: Updates existing record, maintains status=1
+Result: Updated publicly visible submission (no duplicates)
+```
+
+### ✅ Unpublish Workflow
+```
+gencc-sub: submitted_unpublish → sends action: "unpublish"
+gencc-search: Soft-deletes record (status=0)
+Result: Hidden from public queries, data preserved
+```
+
+### ✅ Re-publish After Unpublish
+```
+gencc-sub: submitted_republish → sends action: "publish"
+gencc-search: Updates existing record, sets status=1
+Result: Submission visible again (no duplicate created)
+```
+
+**Verification Details:** See [VERIFICATION_UNPUBLISH_WORKFLOW.md](./VERIFICATION_UNPUBLISH_WORKFLOW.md)
+
+---
+
+*Last Updated: 2025-11-08*
 *Based on: app/Http/Controllers/PublishController.php*
