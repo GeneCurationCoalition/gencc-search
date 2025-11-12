@@ -120,7 +120,7 @@
             <div class="">{{ $submission->submitted_as_submission_id }}</div>
 
         </div> --}}
-        <div class="col-span-3 pt-3 text-right pr-3">Submitter Submitted Date:</div>
+        <div class="col-span-3 pt-3 text-right pr-3">Submitted Date:</div>
         <div class="col-span-9 py-1 my-2 border-l-8 pl-3">
             <div class="">@if($submission->submitted_run_date) {{ Carbon\Carbon::parse($submission->submitted_run_date)->format('m/d/Y') }} @else N/A @endif</div>
 
