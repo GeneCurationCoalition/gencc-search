@@ -50,7 +50,7 @@
                               </ul>
                             </div>
                             @if($item->submitted_as_notes)
-                            <div class="ml-4 pt-1 text-sm text-gray-800">Evidence: {!! \Illuminate\Support\Str::limit($item->submitted_as_notes, 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->uuid) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
+                            <div class="ml-4 pt-1 text-sm text-gray-800 prose prose-sm max-w-none">Evidence: {!! \Illuminate\Support\Str::limit(strip_tags($item->renderMarkdown($item->submitted_as_notes)), 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->uuid) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
                             @endif
 
 
