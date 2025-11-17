@@ -69,7 +69,7 @@
         <div class="col-span-2 pt-3 text-right pr-3">Evidence/Notes:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
 
-            <div class="font-normal">{{ $submission->submitted_as_notes }}</div>
+            <div class="font-normal prose prose-sm max-w-none">{!! $submission->renderMarkdown($submission->submitted_as_notes) !!}</div>
 
         </div>
         @endif
@@ -78,7 +78,105 @@
           @if (strlen($submission->submitted_as_pmids)>4)
         <div class="col-span-2 pt-3 text-right pr-3">PubMed IDs:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal">{{ preg_replace('/\D/', ' ', $submission->submitted_as_pmids) }}</div>
+            @php
+                $pmids = preg_split('/\D+/', $submission->submitted_as_pmids, -1, PREG_SPLIT_NO_EMPTY);
+                $pubmedArticles = $submission->getPubmedArticles();
+
+                // Create a map of PMIDs that have metadata
+                $pmidsWithMetadata = [];
+                if ($pubmedArticles) {
+                    foreach ($pubmedArticles as $article) {
+                        $pmidsWithMetadata[$article['pmid']] = $article;
+                    }
+                }
+
+                $totalPmids = count($pmids);
+                $showLimit = 5;
+                $hasMore = $totalPmids > $showLimit;
+            @endphp
+
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PMID</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($pmids as $index => $pmid)
+                            @php
+                                $pmid = trim($pmid);
+                                $hasMetadata = isset($pmidsWithMetadata[$pmid]);
+                                $article = $hasMetadata ? $pmidsWithMetadata[$pmid] : null;
+                                $isHidden = $hasMore && $index >= $showLimit;
+                            @endphp
+                            <tr class="hover:bg-gray-50 pubmed-row @if($isHidden) pubmed-extra hidden @endif">
+                                <td class="px-3 py-3 whitespace-nowrap text-sm">
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/{{ $pmid }}/" target="_blank" class="text-blue-700 underline font-semibold hover:text-blue-900">{{ $pmid }}</a>
+                                </td>
+                                <td class="px-3 py-3 text-sm text-gray-700">
+                                    @if($hasMetadata && !empty($article['firstAuthor']))
+                                        {{ $article['firstAuthor'] }} et al.
+                                    @else
+                                        <span class="text-gray-400 italic">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">
+                                    @if($hasMetadata && !empty($article['year']))
+                                        {{ $article['year'] }}
+                                    @else
+                                        <span class="text-gray-400 italic">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 text-sm text-gray-700">
+                                    @if($hasMetadata && !empty($article['title']))
+                                        {{ $article['title'] }}
+                                    @else
+                                        <span class="text-gray-400 italic text-xs">Metadata needs to be refreshed</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if($hasMore)
+                <div class="mt-3 text-center">
+                    <button
+                        onclick="togglePubmedRows(this)"
+                        class="text-blue-700 hover:text-blue-900 text-sm font-medium focus:outline-none"
+                        data-total="{{ $totalPmids }}"
+                        data-shown="{{ $showLimit }}"
+                    >
+                        <span class="show-more-text">Show {{ $totalPmids - $showLimit }} more PubMed {{ $totalPmids - $showLimit === 1 ? 'article' : 'articles' }} <i class="fas fa-chevron-down ml-1"></i></span>
+                        <span class="show-less-text hidden">Show less <i class="fas fa-chevron-up ml-1"></i></span>
+                    </button>
+                </div>
+
+                <script>
+                    function togglePubmedRows(button) {
+                        const extraRows = document.querySelectorAll('.pubmed-extra');
+                        const showMoreText = button.querySelector('.show-more-text');
+                        const showLessText = button.querySelector('.show-less-text');
+                        const isExpanded = !extraRows[0].classList.contains('hidden');
+
+                        extraRows.forEach(row => {
+                            if (isExpanded) {
+                                row.classList.add('hidden');
+                            } else {
+                                row.classList.remove('hidden');
+                            }
+                        });
+
+                        showMoreText.classList.toggle('hidden');
+                        showLessText.classList.toggle('hidden');
+                    }
+                </script>
+            @endif
 
         </div>
          @endif
