@@ -16,3 +16,7 @@ yarn-error.log
 /DATA/EXCLUDE/*
 .notes.txt
 .htpasswd
+-- Requires MySQL 8.sql
+.envrc
+CLAUDE.md
+.claude/settings.local.json
