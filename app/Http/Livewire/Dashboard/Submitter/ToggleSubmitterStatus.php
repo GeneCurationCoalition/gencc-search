@@ -14,7 +14,22 @@ class ToggleSubmitterStatus extends Component
 
     public function mount($submitter)
     {
-        $submitter = $submitter;
+        $this->submitter = $submitter;
+        $this->status = $submitter->status;
+    }
+
+    public function updatedStatus($value)
+    {
+        // Convert radio button value to integer (1 or 0)
+        $this->status = $value ? 1 : 0;
+
+        // Save the status to the database
+        $submitter = Submitter::uuid($this->submitter->uuid)->first();
+        $submitter->status = $this->status;
+        $submitter->save();
+
+        // Update the local submitter instance
+        $this->submitter = $submitter;
     }
 
     public function enable($uuid)

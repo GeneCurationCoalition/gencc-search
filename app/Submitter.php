@@ -44,6 +44,7 @@ class Submitter extends Model
         'text_assertions',
         'text_disclaimer',
         'status',
-        'downloadable'
+        'downloadable',
+        'member'
     ];
 }
