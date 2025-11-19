@@ -20,6 +20,7 @@ class ManageSubmitterProfile extends Component
     public $text_assertions;
     public $text_disclaimer;
     public $downloadable;
+    public $member;
 
     public function mount($submitter)
     {
@@ -35,6 +36,8 @@ class ManageSubmitterProfile extends Component
             $this->text_assertions     = $submitter->text_assertions;
             $this->text_disclaimer     = $submitter->text_disclaimer;
             $this->downloadable        = $submitter->downloadable;
+            $this->status              = $submitter->status;
+            $this->member              = $submitter->member;
         } else {
 
             $submitter = Submitter::latest('id')->first();
@@ -52,25 +55,52 @@ class ManageSubmitterProfile extends Component
             $this->text_contact        = "";
             $this->text_assertions     = "";
             $this->text_disclaimer     = "";
-            $this->downloadable        = "1";
+            $this->downloadable        = 1;
+            $this->status              = 1;
+            $this->member              = 0;
 
             $submitter->curie               = $newCurie;
             $submitter->uuid                = $newUuid;
         }
     }
 
-    protected $rules = [
-        'title' => 'required|min:2',
-        'curie' => 'required',
-        'website' => 'required',
-        'text_contact' => 'required',
-        'text_assertions' => 'required',
-        'downloadable' => 'required|integer',
-    ];
+    protected function getRules()
+    {
+        // Website, Contact Text, and Assertions Text are only required when:
+        // - Status is 1 (Show) AND Member is 0 (Submitter)
+        $conditionallyRequired = ($this->status == 1 && $this->member == 0) ? 'required' : 'nullable';
+
+        return [
+            'title' => 'required|min:2',
+            'curie' => 'required',
+            'website' => $conditionallyRequired,
+            'text_contact' => $conditionallyRequired,
+            'text_assertions' => $conditionallyRequired,
+            'downloadable' => 'required|integer',
+        ];
+    }
+
+    public function updatedDownloadable($value)
+    {
+        // Convert checkbox boolean to integer (1 or 0)
+        $this->downloadable = $value ? 1 : 0;
+    }
+
+    public function updatedStatus($value)
+    {
+        // Convert radio button value to integer (1 or 0)
+        $this->status = $value ? 1 : 0;
+    }
+
+    public function updatedMember($value)
+    {
+        // Convert radio button value to integer (1 or 0)
+        $this->member = $value ? 1 : 0;
+    }
 
     public function create()
     {
-        $this->validate();
+        $this->validate($this->getRules());
         //dd("dfsdfdf");
         $submitter = Submitter::updateOrCreate(
             ['uuid'                     =>  $this->uuid],
@@ -84,7 +114,8 @@ class ManageSubmitterProfile extends Component
                 'text_assertions'       => $this->text_assertions,
                 'text_disclaimer'       => $this->text_disclaimer,
                 'downloadable'          => $this->downloadable,
-                'status'                => 0,
+                'status'                => $this->status,
+                'member'                => $this->member,
             ]
         );
         return redirect()->to('/dashboard/admin/'.$this->curie.'/profile');
@@ -93,7 +124,7 @@ class ManageSubmitterProfile extends Component
 
     public function submit()
     {
-        $this->validate();
+        $this->validate($this->getRules());
 
         //dd(request());
         $submitter = Submitter::updateOrCreate(
@@ -108,6 +139,8 @@ class ManageSubmitterProfile extends Component
                 'text_assertions'       => $this->text_assertions,
                 'text_disclaimer'       => $this->text_disclaimer,
                 'downloadable'          => $this->downloadable,
+                'status'                => $this->status,
+                'member'                => $this->member,
             ]
         );
         session()->flash('message', 'Record Saved...');
