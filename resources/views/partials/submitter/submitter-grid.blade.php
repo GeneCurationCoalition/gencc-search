@@ -63,9 +63,13 @@
           </div>
         </div>
 
-          @else
+          @elseif($submitter->member == 0)
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 Submission Data Coming Soon
+            </p>
+          @else
+            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+                Member
             </p>
           @endif
       </div>
