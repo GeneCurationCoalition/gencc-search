@@ -18,12 +18,14 @@
       <div class="mb-1">
         <a href="{{ $submitter->website }}" id="click-submitter-website" class="text-blue-700 underline" target="_blank" >{{ $submitter->website }} <i class="fas fa-external-link-alt"></i></a></div>
       @endif
+      @if(!($submitter->member == 1 && empty($submitter->text_contact)))
       <hr class="mt-3 mb-3 border" />
       <strong>Personnel</strong>
       <div class="mb-2">
         {!! $submitter->text_contact !!}
       </div>
-        @isset($submitter->text_assertions)
+      @endif
+      @if(!empty($submitter->text_assertions) && !($submitter->member == 1 && empty(trim($submitter->text_assertions))))
         <hr class="mt-3 mb-3 border" />
         <strong>Assertion Criteria</strong>
         <div class="mb-2">
@@ -31,7 +33,7 @@
               <div class="truncate"><a class="text-blue-700 underline" href="{{ $item }}">{{ $item }} <i class="fas fa-external-link-alt"></i></a></div>
           @endforeach
         </div>
-        @endisset
+      @endif
 
     </div>
     @if($submitter->count_submissions != 0)
@@ -68,11 +70,20 @@
     @endforeach
     </div>
     </div>
-    @else
+    @elseif($submitter->member == 0)
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 Submission Coming Soon
             </p>
-          @endif
+    @else
+    <div class="col-span-12 xl:col-span-1">
+      <div class="flex flex-col items-center justify-center">
+        <img class="h-32 max-w-md object-contain mb-4" src="/brand/submitters/{{ $submitter->uuid }}.png" alt="{{ $submitter->title }}">
+        <p class="text-sm leading-5 text-center font-medium text-gray-500">
+            Member
+        </p>
+      </div>
+    </div>
+    @endif
 
 
 
