@@ -20,13 +20,22 @@ class SubmitterUpdateSeeder extends Seeder
     {
         DB::table('submitters')->insert([
             [
-                'uuid' => "GENCC_000119",
-                'curie' => "GENCC:000119",
-                'title' => "Stanford Center for Undiagnosed Diseases",
-                'website' => "https://gregor.stanford.edu",
-                'text_descriptions' => "The Stanford Center for Undiagnosed Diseases at Stanford University is a member of the GREGoR Consortium (Genomics Research to Elucidate the Genetics of Rare Disease) and a clinical site of the Undiagnosed Diseases Network. The Stanford Center for Undiagnosed Diseases aims to identify and provide answers for patients with complex, undiagnosed medical conditions through a collaborative, multidisciplinary approach. Its objectives include leveraging advanced genomic technologies to diagnose suspected Mendelian disease through gene discovery, functional validation, and piloting new diagnostic tools.",
-                'text_contact' => "gregorsite@stanford.edu",
-                'text_assertions' => "https://www.clinicalgenome.org/docs/gene-disease-validity-standard-operating-procedure/"
+                'uuid' => "GENCC_000120",
+                'curie' => "GENCC:000120",
+                'title' => "ClinPGx",
+                'website' => "https://www.clinpgx.org/",
+                'text_descriptions' => "The Pharmacogenomics Knowledge Base (PharmGKB) is a publicly available resource for pharmacogenomics discovery and implementation. PharmGKB collects, curates and disseminates knowledge about the impact of human genetic variation on drug response phenotypes. Its content encompasses information to catalyze scientific research such as variant annotations and drug-centered pathways, and clinically relevant information including high-level clinical annotations, clinical guideline annotations, and drug label annotations.",
+                'member' => 1,
+                'status' => 1,
+            ],
+            [
+                'uuid' => "GENCC_000121",
+                'curie' => "GENCC:000121",
+                'title' => "HGNC",
+                'website' => "https://www.genenames.org/",
+                'text_descriptions' => "The HGNC (HUGO Gene Nomenclature Committee) is the sole worldwide authority for providing approved symbols and names for human genes.",
+                'member' => 1,
+                'status' => 1,
             ],
         ]);
     }
