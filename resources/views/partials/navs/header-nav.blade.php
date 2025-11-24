@@ -21,7 +21,7 @@
 							<i class="far fa-disease text-gray-400"></i> Diseases
 						</a> --}}
 						<a href="{{ route('submitters')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="far fa-building text-gray-400"></i> Submitters
+							<i class="far fa-building text-gray-400"></i> GenCC Members
 						</a>
 
 						<a href="{{ route('statistics')}}" class="no-underline hover:underline text-gray-800 p-2">
