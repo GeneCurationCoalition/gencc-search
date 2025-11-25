@@ -37,9 +37,9 @@ Route::group(['prefix' => 'submissions'], function () {
   Route::get('/{id?}', 'SubmissionController@show')->name('submission-show');
 });
 
-Route::group(['prefix' => 'submitters'], function () {
-  Route::get('/', 'SubmitterController@index')->name('submitters');
-  Route::get('/{id?}', 'SubmitterController@show')->name('submitter-show');
+Route::group(['prefix' => 'members'], function () {
+  Route::get('/', 'SubmitterController@index')->name('members');
+  Route::get('/{id?}', 'SubmitterController@show')->name('member-show');
 });
 
 Route::group(['prefix' => 'disease'], function () {
