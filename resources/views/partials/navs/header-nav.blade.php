@@ -20,7 +20,7 @@
 					{{-- <a href="{{ route('diseases')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-disease text-gray-400"></i> Diseases
 						</a> --}}
-						<a href="{{ route('submitters')}}" class="no-underline hover:underline text-gray-800 p-2">
+						<a href="{{ route('members')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-building text-gray-400"></i> GenCC Members
 						</a>
 
@@ -109,8 +109,8 @@
 										{{-- <a href="{{ route('diseases')}}" class="no-underline hover:underline text-gray-800 p-2">
 												<i class="far fa-disease text-gray-400"></i> Diseases
 											</a> --}}
-											<a href="{{ route('submitters')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-building text-gray-400"></i> Submitters
+											<a href="{{ route('members')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="far fa-building text-gray-400"></i> GenCC Members
 											</a>
 
 											<a href="{{ route('statistics')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
