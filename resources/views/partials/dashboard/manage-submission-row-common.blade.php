@@ -32,7 +32,7 @@
                           <div class="col-span-11 xl:col-span-2"><span class="list-text-label">{{ Carbon\Carbon::parse($item->submitted_as_date)->format('m/d/Y') }}</span><div class="text-sm text-gray-600">Evaluated</div>
                         <div class="text-sm mt-3 text-gray-600 font-semibold leading-snug">@if($item->submitted_run_date) {{ Carbon\Carbon::parse($item->submitted_run_date)->format('m/d/Y') }} @else N/A @endif<div class=" font-normal">Submitted</div></div>
                       </div>
-                          <div class="col-span-8 xl:col-span-2 "><a href="{{ route('submitter-show', $item->submitter->uuid) }}" class="list-text-label"><span class=" text-blue-700">{{ $item->submitter->title }}</span></a>
+                          <div class="col-span-8 xl:col-span-2 "><a href="{{ route('member-show', $item->submitter->uuid) }}" class="list-text-label"><span class=" text-blue-700">{{ $item->submitter->title }}</span></a>
                             <div class="pt-1 text-sm ">
                               <ul>
                                 @if($item->submitted_as_public_report_url)
@@ -41,7 +41,7 @@
                                 @if (strpos(strtoupper($item->submitted_as_assertion_criteria_url), 'HTTP') !== false)
                                   <li><a id='click-exit-assertion-criteria'  target="_blank" href="{{ $item->submitted_as_assertion_criteria_url }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @elseif($item->submitted_as_assertion_criteria_url)
-                                  <li><a id='click-exit-assertion-criteria' href="{{ route('submitter-show', $item->submitter->uuid) }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
+                                  <li><a id='click-exit-assertion-criteria' href="{{ route('member-show', $item->submitter->uuid) }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
                               <li><a class="text-blue-700" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
                               </ul>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('headline')
   <div class="grid grid-cols-12 gap-0">
-      <div class="col-span-10 text-white"><h1 class=" truncate">GenCC Submitters</h1></div>
+      <div class="col-span-10 text-white"><h1 class=" truncate">GenCC Members</h1></div>
       <div class="col-span-2 pt-5">
                 <div class="text-right mt-6"><a class="px-3" target="_blank" href="{{ route('faq') }}"><i class="fas fa-question-circle"></i> Help</a></div>
 
