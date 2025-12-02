@@ -26,8 +26,6 @@ class AddMoreToGenesTable extends Migration
 
             $table->jsonb('gene_group')->nullable()->after('locus_group');
 
-            $table->string('uniprot_id')->nullable()->after('omim_id');
-
             //$table->json('omim_id')->nullable();
 
             $table->json('lsdb')->nullable()->after('locus_type');

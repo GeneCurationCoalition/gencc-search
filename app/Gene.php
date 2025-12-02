@@ -51,7 +51,7 @@ class Gene extends Model
         'curie', 'type', 'title', 'description', 'status', 'date_modified', 'uuid', 'is_morbid',
         'hgnc_uuid', 'hgnc_id', 'symbol', 'name', 'location', 'locus_group', 'locus_type',
         'date_symbol_changed', 'hi', 'plof', 'pli', 'lsdb', 'haplo', 'triplo', 'curation_status',
-        'entrez_id', 'uniprot_id', 'function',
+        'entrez_id', 'function',
         'chr', 'start37', 'stop37', 'seqid37', 'stop38', 'start38', 'seqid38', 'history',
         'notes', 'date_last_curated', 'nstatus', 'mane_select', 'mane_plus', 'acmg59',
         'prev_symbol', 'alias_symbol', 'omim_id', 'ucsc_id', 'ensembl_gene_id', 'date_approved_reserved'
@@ -194,18 +194,6 @@ class Gene extends Model
            return $query;
 
        return $query->whereJsonContains('omim_id', $value);
-    }
-
-
-    /**
-    * Query scope by uniprot id
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeUniprot($query, $id)
-    {
-        return $query->where('uniprot_id', $id);
     }
 
 
@@ -533,9 +521,6 @@ class Gene extends Model
                    break;
                case 'UCSC':
                    $check = Gene::ucsc($id)->first();
-                   break;
-               case 'UNIPROT':
-                   $check = Gene::uniprot($id)->first();
                    break;
                default:
                    $check = null;
