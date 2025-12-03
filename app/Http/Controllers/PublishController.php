@@ -271,25 +271,58 @@ class PublishController extends Controller
             return $error;
         }
 
-        $disease = Disease::curie($data->disease->id)->first();
-        if ($disease === null) {
-            $error = "Disease not found: " . $data->disease->id;
+        // Get the submitted disease curie - this is ALWAYS the disease_original_id
+        // Check original_data first (if gencc-sub sends it), otherwise use normalized data
+        $submittedDiseaseCurie = isset($data->original_data) && isset($data->original_data->disease) && isset($data->original_data->disease->id)
+            ? $data->original_data->disease->id
+            : $data->disease->id;
+
+        Log::info("Processing disease - Submitted curie: {$submittedDiseaseCurie}");
+
+        // Find the submitted disease record
+        $disease_original = Disease::curie($submittedDiseaseCurie)->first();
+        if ($disease_original === null) {
+            $error = "Disease not found: " . $submittedDiseaseCurie;
             Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
             return $error;
         }
 
-        // Check for original disease data
-        $disease_original = null;
-        if (isset($data->original_data) && isset($data->original_data->disease) && isset($data->original_data->disease->id)) {
-            $disease_original = Disease::curie($data->original_data->disease->id)->first();
-            // If original disease not found, log warning but continue (use normalized disease as fallback)
-            if ($disease_original === null) {
-                Log::warning("Original disease not found: " . $data->original_data->disease->id . ", using normalized disease as fallback");
-                $disease_original = $disease;
-            }
+        // Now determine disease_id based on the submitted disease type
+        if ($disease_original->type === 'MONDO') {
+            // Submitted disease is MONDO - use it for both disease_id and disease_original_id
+            $disease = $disease_original;
+            Log::info("Submitted disease is MONDO: {$disease->curie} - using for both disease_id and disease_original_id");
         } else {
-            // No original_data provided, use normalized disease
-            $disease_original = $disease;
+            // Submitted disease is Orphanet or OMIM - find MONDO equivalent for disease_id
+            Log::info("Submitted disease is {$disease_original->type}: {$disease_original->curie} - looking for MONDO equivalent");
+
+            // Look for MONDO equivalent via equivalents relationship
+            $mondoEquivalent = null;
+            foreach ($disease_original->equivalents as $equiv) {
+                if ($equiv->type === 'MONDO') {
+                    $mondoEquivalent = $equiv;
+                    Log::info("Found MONDO equivalent via equivalents: {$equiv->curie}");
+                    break;
+                }
+            }
+
+            // If not found via equivalents, try xrefs field
+            if (!$mondoEquivalent && !empty($disease_original->xrefs)) {
+                $xrefDisease = Disease::find($disease_original->xrefs);
+                if ($xrefDisease && $xrefDisease->type === 'MONDO') {
+                    $mondoEquivalent = $xrefDisease;
+                    Log::info("Found MONDO equivalent via xrefs: {$xrefDisease->curie}");
+                }
+            }
+
+            if ($mondoEquivalent) {
+                $disease = $mondoEquivalent;
+                Log::info("Mapping: disease_original_id={$disease_original->curie}, disease_id={$disease->curie}");
+            } else {
+                // No MONDO equivalent found - use submitted disease for both
+                $disease = $disease_original;
+                Log::warning("No MONDO equivalent found for {$disease_original->curie} - using submitted disease for both IDs");
+            }
         }
 
         $classification = Classification::curie($data->classification->id)->first();

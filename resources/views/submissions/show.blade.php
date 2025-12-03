@@ -46,7 +46,7 @@
               <div class="font-normal">{{ $submission->disease->title }}</div>
               <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease->curie, $submission->disease->curie) !!}</div>
             </div>
-            @if($submission->disease->id != $submission->disease_original->id)
+            @if($submission->disease_id != $submission->disease_original_id)
             <div class="mb-2">
               <div class="font-normal">{{ $submission->disease_original->title }}</div>
                 <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease_original->curie, $submission->disease_original->curie) !!}</div>
