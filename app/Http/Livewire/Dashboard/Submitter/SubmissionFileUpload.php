@@ -34,7 +34,7 @@ class SubmissionFileUpload extends Component
     public function save()
     {
         $this->validate([
-            'file' => 'required|mimes:xls,xlsx|max:1024', // 1MB Max
+            'file' => 'required|mimes:xls,xlsx|max:20480', // 20MB Max
             'submitted_run_date' => 'date|required'
         ]);
 
