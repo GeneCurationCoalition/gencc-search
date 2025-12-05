@@ -69,7 +69,7 @@
         <div class="col-span-2 pt-3 text-right pr-3">Evidence/Notes:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
 
-            <div class="font-normal">{{ $submission->submitted_as_notes }}</div>
+            <div class="font-normal">{!! $submission->submitted_as_notes !!}</div>
 
         </div>
         @endif

@@ -11,6 +11,7 @@ use App\Submitter;
 use App\Traits\ModelTransform;
 use Carbon\Carbon;
 use DateTime;
+use League\CommonMark\CommonMarkConverter;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -191,7 +192,7 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
                         'submitted_as_classification_name'       => $row['classification_name'] ?? '',
                         'submitted_as_date'                      => $date,
                         'submitted_as_public_report_url'         => $row['public_report_url'] ?? '',
-                        'submitted_as_notes'                     => $row['notes'] ?? '',
+                        'submitted_as_notes'                     => $this->renderMarkdown($row['notes']),
                         'submitted_as_pmids'                     => $row['pmids'] ?? '',
                         'submitted_as_assertion_criteria_url'    => $row['assertion_criteria_url'] ?? '',
                         'status'                                 => $row['status'] ?? '1'
@@ -328,6 +329,21 @@ class SubmissionsImport implements OnEachRow, WithHeadingRow
             }
         }
     }
+
+    public function renderMarkdown($text)
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        $converter = new CommonMarkConverter([
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ]);
+
+        return $converter->convert($text);
+    }
+
 
     public function headingRow(): int
     {
