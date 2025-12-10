@@ -20,3 +20,6 @@ yarn-error.log
 .envrc
 CLAUDE.md
 .claude/settings.local.json
+DATA/en_product1.xml
+DATA/mimTitles.txt
+DATA/mondo-with-equivalents.json
