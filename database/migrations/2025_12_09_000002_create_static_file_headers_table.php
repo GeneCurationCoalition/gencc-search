@@ -15,6 +15,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('static_file_headers')) {
+            return;
+        }
+
         Schema::create('static_file_headers', function (Blueprint $table) {
             $table->id();
             $table->string('file_identifier')->index();
