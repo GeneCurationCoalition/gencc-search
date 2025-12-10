@@ -16,12 +16,12 @@
                               </div>
                               <div class="flex-initial break-words">
                                 <div class="list-text-label"> {{ $item->disease->title }}</div>
-                                <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}</div>
+                                <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}{!! $item->displayDeprecationIndicator($item->disease) !!}</div>
                                 {{-- @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
                                 <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToOmim($item->disease->curie, $item->disease->curie) !!}</div>
                                 @endif --}}
                                 @if($item->disease->id != $item->disease_original->id)
-                                  <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}</div>
+                                  <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}{!! $item->displayDeprecationIndicator($item->disease_original) !!}</div>
                                   @endif
                               </div>
                             </div>

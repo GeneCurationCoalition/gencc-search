@@ -44,12 +44,13 @@
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           <div class="mb-2">
               <div class="font-normal">{{ $submission->disease->title }}</div>
-              <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease->curie, $submission->disease->curie) !!}</div>
+              <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease->curie, $submission->disease->curie) !!}{!! $submission->displayDeprecationIndicator($submission->disease) !!}</div>
             </div>
             @if($submission->disease_id != $submission->disease_original_id)
             <div class="mb-2">
+              <div class="text-xs text-gray-500 font-semibold">Submitted as:</div>
               <div class="font-normal">{{ $submission->disease_original->title }}</div>
-                <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease_original->curie, $submission->disease_original->curie) !!}</div>
+                <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease_original->curie, $submission->disease_original->curie) !!}{!! $submission->displayDeprecationIndicator($submission->disease_original) !!}</div>
             </div>
             @endif
         </div>

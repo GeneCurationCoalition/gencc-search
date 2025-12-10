@@ -9,7 +9,7 @@
     <div class="col-span-12 mb-4 mt-4"><hr /></div>
       <div class="col-span-2 text-gray-600">Disease Name:</div>
       <div class="col-span-10">
-        <div class="font-normal text-gray-600 font-bold">{{ $disease->title }}</div>
+        <div class="font-normal text-gray-600 font-bold">{{ $disease->title }}{!! $disease->displayDeprecationIndicator($disease) !!}</div>
           <div class="text-xs">{{ $disease->curie }}</div>
       </div>
       @if($disease->description)

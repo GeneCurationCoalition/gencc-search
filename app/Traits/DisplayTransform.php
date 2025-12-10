@@ -135,7 +135,10 @@ trait DisplayTransform
   public function displayDiseaseMondo($item,  $var = null)
   {
     $item = collect($item);
-    $item = $item->where('type', 'MONDO')->first();
+    // Support both old string type ('MONDO') and new integer type constant
+    $item = $item->filter(function ($disease) {
+        return $disease->type === 'MONDO' || $disease->type === \App\Disease::TYPE_MONDO;
+    })->first();
     return $item;
   }
 
@@ -151,6 +154,29 @@ trait DisplayTransform
   {
     $test = '<button class="text-green-600 rounded-full h-8 border-2 mt-1 w-100 border-gray-300 bg-gray-200" wire:click="toggle_curations_definitive">'.$var.'</button>';
     return $test;
+  }
+
+  /**
+   * Return a deprecation indicator icon for deprecated diseases
+   *
+   * Displays an orange warning icon with tooltip when a disease has
+   * STATUS_DEPRECATED (8). The tooltip shows the deprecated_name if available.
+   *
+   * @param \App\Disease|null $disease The disease object to check
+   * @return string HTML for the deprecation indicator, or empty string if not deprecated
+   */
+  public function displayDeprecationIndicator($disease)
+  {
+    if (!$disease || $disease->status !== \App\Disease::STATUS_DEPRECATED) {
+      return '';
+    }
+
+    $tooltip = 'DEPRECATED: This disease term is deprecated';
+    if (!empty($disease->deprecated_name)) {
+      $tooltip = 'DEPRECATED: ' . e($disease->deprecated_name);
+    }
+
+    return '<span class="ml-1" style="color: #f97316; cursor: help;" title="' . $tooltip . '">⚠</span>';
   }
 
 }
