@@ -5,6 +5,7 @@ namespace App;
 use App\Traits\DisplayTransform;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use App\Traits\ModelTransform;
 
@@ -27,6 +28,7 @@ use App\Traits\ModelTransform;
  * */
 class Disease extends Model
 {
+    use HasFactory;
     use ModelTransform;
     use DisplayTransform;
     use SoftDeletes;

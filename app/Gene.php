@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use Uuid;
 
@@ -27,7 +28,7 @@ use App\Traits\DisplayTransform;
  * */
 class Gene extends Model
 {
-    //
+    use HasFactory;
     use ModelTransform;
     use DisplayTransform;
 

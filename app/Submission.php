@@ -4,11 +4,13 @@ namespace App;
 
 use App\Traits\DisplayTransform;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\ModelTransform;
 use League\CommonMark\CommonMarkConverter;
 
 class Submission extends Model
 {
+    use HasFactory;
     use ModelTransform;
     use DisplayTransform;
 
