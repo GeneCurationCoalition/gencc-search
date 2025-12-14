@@ -13,9 +13,11 @@ class DropUniprotIdFromGenesTable extends Migration
      */
     public function up()
     {
-        Schema::table('genes', function (Blueprint $table) {
-            $table->dropColumn('uniprot_id');
-        });
+        if (Schema::hasColumn('genes', 'uniprot_id')) {
+            Schema::table('genes', function (Blueprint $table) {
+                $table->dropColumn('uniprot_id');
+            });
+        }
     }
 
     /**

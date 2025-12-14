@@ -19,6 +19,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip this migration on SQLite (testing) - it requires MySQL-specific operations
+        if (DB::getDriverName() === 'sqlite') {
+            echo "Skipping finalize_disease_schema_migration on SQLite\n";
+            return;
+        }
+
         // Drop old columns that will be replaced by renamed columns
         // type (varchar) -> type_new (tinyint) renamed to type
         // status (varchar) -> status_new (tinyint) renamed to status
