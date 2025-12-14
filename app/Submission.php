@@ -93,7 +93,7 @@ class Submission extends Model
         }
 
         $converter = new CommonMarkConverter([
-            'html_input' => 'allow',
+            'html_input' => 'escape',
             'allow_unsafe_links' => false,
         ]);
 
