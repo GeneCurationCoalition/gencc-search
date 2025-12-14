@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class Stats200Test extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic feature test example.
      *
