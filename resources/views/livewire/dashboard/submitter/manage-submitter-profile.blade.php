@@ -128,14 +128,64 @@
 
               <div class="md:flex md:items-center mb-6">
                 <div class="md:w-1/6">
-                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                    Submissions Are Downloadable
+                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                    Submissions are Downloadable
                   </label>
                 </div>
                 <div class="md:w-5/6">
-                  <input wire:model="downloadable" class="w-100 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" id="inline-full-name" type="text" value="">
-                  @error('downloadable') <span class="text-sm text-red-500">{{ $message }}</span> @enderror
-                  <div class="text-sm text-gray-600 ml-5 mt-1">1= Downloadable | 0= NOT Downloadable</div>
+                  <div class="flex flex-col space-y-2">
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="downloadable" value="1" {{ $downloadable == 1 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Downloadable</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="downloadable" value="0" {{ $downloadable == 0 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Not Downloadable</span>
+                    </label>
+                  </div>
+                  @error('downloadable') <span class="block text-sm text-red-500 ml-4">{{ $message }}</span> @enderror
+                </div>
+              </div>
+
+              <div class="md:flex md:items-center mb-6">
+                <div class="md:w-1/6">
+                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                    Hide from Submitter List
+                  </label>
+                </div>
+                <div class="md:w-5/6">
+                  <div class="flex flex-col space-y-2">
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="status" value="1" {{ $status == 1 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Show</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="status" value="0" {{ $status == 0 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Hide</span>
+                    </label>
+                  </div>
+                  @error('status') <span class="block text-sm text-red-500 ml-4">{{ $message }}</span> @enderror
+                </div>
+              </div>
+
+              <div class="md:flex md:items-center mb-6">
+                <div class="md:w-1/6">
+                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                    Participation Type
+                  </label>
+                </div>
+                <div class="md:w-5/6">
+                  <div class="flex flex-col space-y-2">
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="member" value="0" {{ $member == 0 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Submitter</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="radio" wire:model="member" value="1" {{ $member == 1 ? 'checked' : '' }} class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                      <span class="ml-2 text-sm font-medium text-gray-700">Member</span>
+                    </label>
+                  </div>
+                  @error('member') <span class="block text-sm text-red-500 ml-4">{{ $message }}</span> @enderror
                 </div>
               </div>
 
@@ -150,8 +200,6 @@
                   @endif
                 </div>
               </div>
-
-
-
-            </form>
+      </form>
+      </form>
 </div>

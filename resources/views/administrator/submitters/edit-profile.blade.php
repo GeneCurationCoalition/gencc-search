@@ -39,19 +39,6 @@
         </div>
       </div>
 
-
-      @if($submitter != null)
-            <!-- Projects table (small breakpoint and up) -->
-      <div class="sm:block" id="link_status">
-        <div class="align-middle inline-block min-w-full border-gray-200">
-          <div class="px-8 py-4">
-            <h3>Manage Status</h3>
-            @livewire('dashboard.submitter.toggle-submitter-status', ['submitter' => $submitter])
-
-          </div>
-        </div>
-      </div>
-      @endif
     </main>
   </div>
 </div>

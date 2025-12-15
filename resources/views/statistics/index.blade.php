@@ -21,7 +21,7 @@
           </a>
         </div>
         <div class="rounded-full py-5 text-xs px-1 text-center text-blue-800 border-solid border-8 border-blue-800 bg-gray-200">
-          <a href="{{ route('submitters') }}">
+          <a href="{{ route('members') }}">
             <div class="text-2xl xl:text-6xl mb-0 pb-0 leading-none">{{ $submitters_with_submissions->count() }}</div>
             <i class="fas fa-disease"></i> Submitters with submissions
             <div class="underline">Learn about GenCC's submitters</div>
