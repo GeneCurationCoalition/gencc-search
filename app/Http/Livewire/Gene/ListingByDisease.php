@@ -115,7 +115,7 @@ class ListingByDisease extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('status', '=', 1)->get();
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_current', '=', true)->get();
 
         $count_submissions = $records->count();
         $this->filter = [];

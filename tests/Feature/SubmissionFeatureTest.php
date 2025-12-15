@@ -24,7 +24,7 @@ class SubmissionFeatureTest extends TestCase
     }
 
     /** @test */
-    public function submission_show_page_returns_200_for_valid_submission()
+    public function submission_show_page_returns_200_for_valid_submission_with_version()
     {
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -34,20 +34,49 @@ class SubmissionFeatureTest extends TestCase
 
         $submission = Submission::factory()->create([
             'uuid' => 'test-uuid-12345',
+            'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'disease_original_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
-        $response = $this->get('/submissions/test-uuid-12345');
+        // Request with versioned URL
+        $response = $this->get('/submissions/test-uuid-12345.1');
 
         $response->assertStatus(200);
         $response->assertViewIs('submissions.show');
         $response->assertViewHas('submission');
+    }
+
+    /** @test */
+    public function submission_show_redirects_non_versioned_url_to_versioned()
+    {
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $classification = Classification::factory()->create();
+        $submitter = Submitter::factory()->create();
+        $inheritance = Inheritance::factory()->create();
+
+        $submission = Submission::factory()->create([
+            'uuid' => 'test-uuid-redirect',
+            'version_number' => 2,
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'disease_original_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter->id,
+            'moi_id' => $inheritance->id,
+            'is_current' => true,
+        ]);
+
+        // Request without version should redirect to versioned URL
+        $response = $this->get('/submissions/test-uuid-redirect');
+
+        $response->assertRedirect('/submissions/test-uuid-redirect.2');
     }
 
     /** @test */
@@ -69,16 +98,17 @@ class SubmissionFeatureTest extends TestCase
 
         $submission = Submission::factory()->create([
             'uuid' => 'test-uuid-67890',
+            'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'disease_original_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
-        $response = $this->get('/submissions/test-uuid-67890');
+        $response = $this->get('/submissions/test-uuid-67890.1');
 
         $response->assertStatus(200);
         $response->assertViewHas('submission', function ($sub) use ($gene, $disease, $submitter) {
@@ -99,16 +129,17 @@ class SubmissionFeatureTest extends TestCase
 
         $submission = Submission::factory()->create([
             'uuid' => 'test-uuid-meta',
+            'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'disease_original_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
-        $response = $this->get('/submissions/test-uuid-meta');
+        $response = $this->get('/submissions/test-uuid-meta.1');
 
         $response->assertStatus(200);
         $response->assertViewHas('page_meta');

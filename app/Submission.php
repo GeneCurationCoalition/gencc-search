@@ -61,12 +61,69 @@ class Submission extends Model
 
     public function scopeCurie($query, $id)
     {
-        return $query->where('curie', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
+        return $query->where('curie', '=', $id)->where('is_current', '=', true)->orderBy('updated_at', 'asc');
     }
 
     public function scopeUuid($query, $id)
     {
-        return $query->where('uuid', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
+        return $query->where('uuid', '=', $id)->where('is_current', '=', true)->orderBy('updated_at', 'asc');
+    }
+
+    /**
+     * Scope to find a submission by display ID (uuid.version format).
+     * Supports both "SGC-107616.2" and "SGC-107616" formats.
+     * If no version is specified, returns the current version.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $displayId The display ID (e.g., "SGC-107616.2" or "SGC-107616")
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByDisplayId($query, $displayId)
+    {
+        // Check if the display ID contains a version number
+        if (preg_match('/^(.+)\.(\d+)$/', $displayId, $matches)) {
+            // Has version number - look up specific version
+            $uuid = $matches[1];
+            $version = (int) $matches[2];
+            return $query->where('uuid', '=', $uuid)->where('version_number', '=', $version);
+        }
+
+        // No version number - return the current version
+        return $query->where('uuid', '=', $displayId)->where('is_current', '=', true);
+    }
+
+    /**
+     * Scope to only include current (active) submissions.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCurrent($query)
+    {
+        return $query->where('is_current', '=', true);
+    }
+
+    /**
+     * Scope to get all versions of a specific SGC ID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $uuid The SGC ID (uuid)
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAllVersions($query, $uuid)
+    {
+        return $query->where('uuid', '=', $uuid)->orderBy('version_number', 'desc');
+    }
+
+    /**
+     * Get the display ID (SGC ID with version number).
+     * Format: SGC-XXXXXX.N (e.g., SGC-100001.2)
+     *
+     * @return string
+     */
+    public function getDisplayIdAttribute(): string
+    {
+        return $this->uuid . '.' . ($this->version_number ?? 1);
     }
 
 
@@ -150,7 +207,10 @@ class Submission extends Model
     }
 
     protected $casts = [
-        'date' => 'date:Y-m-d'
+        'date' => 'date:Y-m-d',
+        'unpublished_at' => 'datetime',
+        'is_current' => 'boolean',
+        'version_number' => 'integer'
     ];
 
 
@@ -163,6 +223,9 @@ class Submission extends Model
 
     protected $fillable = [
         'uuid',
+        'version_number',
+        'is_current',
+        'unpublished_at',
         'order',
         'submitted_as_submission_id' ,
         'submitted_as_hgnc_id',
@@ -183,7 +246,6 @@ class Submission extends Model
         'submitted_run_date',
         'from_submission_file_name',
         'from_submission_file_id',
-        'private_notes',
-        'status'
+        'private_notes'
     ];
 }

@@ -55,7 +55,7 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         Submission::factory()->create([
@@ -64,7 +64,7 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/statistics');
@@ -90,7 +90,7 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $submission2 = Submission::factory()->create([
@@ -100,7 +100,7 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         // Attach submissions to diseases via pivot table (disease_submission)
@@ -122,24 +122,24 @@ class StatisticsFeatureTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        // Create 3 published submissions
+        // Create 3 current submissions
         Submission::factory()->count(3)->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
-        // Create 1 unpublished submission
+        // Create 1 non-current submission (superseded or unpublished)
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 0,
+            'is_current' => false,
         ]);
 
         $response = $this->get('/statistics');

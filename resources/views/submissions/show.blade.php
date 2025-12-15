@@ -15,12 +15,12 @@
           {{-- <div class="text-xs">{{ $submission->submitter->curie }}</div> --}}
         </div>
 
-        {{-- <div class="col-span-2 pt-3 text-right pr-3">GenCC Submission ID:</div>
-        <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          <div class="font-normal font-bold">{{ $submission->uuid }}</a></div>
-        </div> --}}
-
         <hr class="col-span-12 my-4" />
+
+        <div class="col-span-2 pt-3 text-right pr-3">Accession:</div>
+        <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
+          <div class="font-normal">{{ $submission->display_id }}</div>
+        </div>
 
         <div class="col-span-2 pt-3 text-right pr-3">Classification:</div>
         <div class="col-span-4 py-1 my-2 border-l-8 pl-3">

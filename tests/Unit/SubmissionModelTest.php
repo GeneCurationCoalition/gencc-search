@@ -80,19 +80,19 @@ class SubmissionModelTest extends TestCase
     }
 
     /** @test */
-    public function submission_can_be_published()
+    public function submission_can_be_current()
     {
-        $submission = Submission::factory()->create(['status' => 1]);
+        $submission = Submission::factory()->create(['is_current' => true]);
 
-        $this->assertEquals(1, $submission->status);
+        $this->assertTrue($submission->is_current);
     }
 
     /** @test */
-    public function submission_can_be_unpublished()
+    public function submission_can_be_non_current()
     {
-        $submission = Submission::factory()->unpublished()->create();
+        $submission = Submission::factory()->create(['is_current' => false]);
 
-        $this->assertEquals(0, $submission->status);
+        $this->assertFalse($submission->is_current);
     }
 
     /** @test */

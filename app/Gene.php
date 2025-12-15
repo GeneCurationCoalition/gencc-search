@@ -82,12 +82,12 @@ class Gene extends Model
 
 
     /**
-     * Get all the published submissions associated with this gene.
+     * Get all the current (active) submissions associated with this gene.
      *
      */
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('status', '=', 1);
+        return $this->hasMany('App\Submission')->where('is_current', '=', true);
     }
 
 

@@ -123,14 +123,14 @@ class GeneModelTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $this->assertCount(1, $gene->submissions);
     }
 
     /** @test */
-    public function gene_submissions_only_returns_published()
+    public function gene_submissions_only_returns_current()
     {
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -138,24 +138,24 @@ class GeneModelTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        // Published submission
+        // Current submission
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
-        // Unpublished submission
+        // Non-current submission (superseded or unpublished)
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 0,
+            'is_current' => false,
         ]);
 
         $this->assertCount(1, $gene->submissions);

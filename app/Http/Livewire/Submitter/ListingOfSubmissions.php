@@ -134,7 +134,7 @@ class ListingOfSubmissions extends Component
     {
 
         $submitter_id = $this->submitter_id;
-        $records = Submission::where('submitter_id', '=', $submitter_id)->where('status', '=', 1)->get();
+        $records = Submission::where('submitter_id', '=', $submitter_id)->where('is_current', '=', true)->get();
 
         $count_submissions = $records->count();
 
@@ -202,7 +202,7 @@ class ListingOfSubmissions extends Component
         }
             //dd($filter_set);
             //dd($filter);
-            $has_records = Submission::where('submitter_id', '=', $submitter_id)->where('status', '=', 1)->count();
+            $has_records = Submission::where('submitter_id', '=', $submitter_id)->where('is_current', '=', true)->count();
             //dd($has_records);
             $records = Submission::where('submitter_id', '=', $submitter_id)
                 ->whereHas('classification', function (Builder $query) use ($filter, $filter_set) {
@@ -243,7 +243,7 @@ class ListingOfSubmissions extends Component
                 // ->with(['classification' => function ($q) {
                 //         $q->orderBy('title', 'DESC');
                 //     }])
-                ->where('status', '=', 1)
+                ->where('is_current', '=', true)
                 ->orderBy('order', 'ASC')
                 ->paginate(20);
         // }

@@ -15,6 +15,7 @@ use App\Disease;
 use App\Inheritance;
 use App\Submitter;
 use App\Submission;
+use Carbon\Carbon;
 
 class PublishController extends Controller
 {
@@ -353,10 +354,43 @@ class PublishController extends Controller
             if (!empty($evidence->pmid))
                 $evidences[] = $evidence->pmid;
 
+        // Find the current version of this submission (if any exists)
+        // Use is_current=TRUE to find the active version
+        Log::info("Looking for current submission by uuid: " . $data->submission_id);
+        $currentSubmission = $submitter->submissions()
+            ->where('uuid', $data->submission_id)
+            ->where('is_current', true)
+            ->first();
+
+        // Determine the version number for this submission
+        $versionNumber = 1;
+        if ($currentSubmission) {
+            // Mark the previous version as no longer current
+            $currentSubmission->is_current = false;
+            $currentSubmission->save();
+
+            // Increment version number
+            $versionNumber = ($currentSubmission->version_number ?? 1) + 1;
+            Log::info("Superseding submission {$data->submission_id} v{$currentSubmission->version_number} with v{$versionNumber}");
+        } else {
+            // Check if there are any previous versions (could be republishing after unpublish)
+            $maxVersion = $submitter->submissions()
+                ->where('uuid', $data->submission_id)
+                ->max('version_number');
+            if ($maxVersion) {
+                $versionNumber = $maxVersion + 1;
+                Log::info("Creating new version {$versionNumber} for previously unpublished submission {$data->submission_id}");
+            } else {
+                Log::info("Creating new submission: " . $data->submission_id);
+            }
+        }
+
         // All submitted_as_* fields come directly from the payload data
         // gencc-sub sends submission_data values which represent what was submitted
         $submissionData = [
             'uuid'                                   => $data->submission_id,
+            'version_number'                         => $versionNumber,
+            'is_current'                             => true,
             'order'                                  => $classification->order,
             'submitted_run_date'                     => $record->input('publish_date'),
             'submitted_as_hgnc_id'                   => $data->gene->id,
@@ -374,22 +408,11 @@ class PublishController extends Controller
             'submitted_as_public_report_url'         => $data->report->ext_url,
             'submitted_as_notes'                     => $data->notes->display,
             'submitted_as_pmids'                     => implode(',', $evidences),
-            'submitted_as_assertion_criteria_url'    => $data->criteria->url,
-            'status'                                 => 1
+            'submitted_as_assertion_criteria_url'    => $data->criteria->url
         ];
 
-        // Find by uuid = submission_id (which is SGC-id from gencc-sub) regardless of status
-        // This prevents duplicate records when re-publishing a soft-deleted submission
-        Log::info( "Looking for submission by uuid=submission_id: " . $data->submission_id);
-        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->first();
-
-        if ($submission) {
-            Log::info( "updating submission: " . $data->submission_id . " (previous status: " . $submission->status . ")");
-            $submission->update($submissionData);
-        } else {
-            Log::info( "creating new submission: " . $data->submission_id);
-            $submission = Submission::create($submissionData);
-        }
+        // Always create a new record for versioning (immutable records)
+        $submission = Submission::create($submissionData);
 
         // associate the submissions as needed
         $submission->submitter()->associate($submitter);
@@ -445,6 +468,7 @@ class PublishController extends Controller
 
     /**
      * Unpublish a submission record.
+     * Sets is_current=FALSE and unpublished_at=now() to mark explicit unpublish.
      *
      * @param  object  $record
      * @return \Illuminate\Http\Response
@@ -462,17 +486,33 @@ class PublishController extends Controller
         if ($submitter === null)
             return "Submitter not found";
 
-        $submission = $submitter->submissions()->where('uuid', $data->submission_id)->where('status', 1)->first();
+        // Find the current version of this submission using is_current flag
+        $submission = $submitter->submissions()
+            ->where('uuid', $data->submission_id)
+            ->where('is_current', true)
+            ->first();
         \Log::info('PublishController@unpublish_submission looking up uuid=submission_id: ' . $data->submission_id);
+
         if ($submission === null) {
             \Log::info('PublishController@unpublish_submission looking up submitted_as_submission_id=local_key: ' . $data->local_key);
-            $submission = $submitter->submissions()->where('submitted_as_submission_id', $data->local_key)->where('status', 1)->first();
+            $submission = $submitter->submissions()
+                ->where('submitted_as_submission_id', $data->local_key)
+                ->where('is_current', true)
+                ->first();
         }
 
         if ($submission === null)
             return "Submission not found";
 
-        $check = $submission->update(['status' => 0]);
+        // Mark as explicitly unpublished with timestamp
+        // is_current=FALSE indicates no longer active
+        // unpublished_at timestamp indicates explicit unpublish (not just superseded)
+        $check = $submission->update([
+            'is_current' => false,
+            'unpublished_at' => Carbon::now()
+        ]);
+
+        \Log::info("Unpublished submission {$submission->uuid} v{$submission->version_number}");
 
         return ($check ? $check : "Submission not removed");
 

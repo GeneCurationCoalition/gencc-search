@@ -16,10 +16,10 @@
         @endif
 
 
-        <div class="col-span-3 pt-3 text-right pr-3">UUID:</div>
+        <div class="col-span-3 pt-3 text-right pr-3">SGC ID:</div>
         <div class="col-span-9 py-1 my-2 border-l-8 pl-3">
-          <div class="font-normal ">{{ $submission->uuid }}</div>
-          <div class="text-xs">ID: {{ $submission->id }}</div>
+          <div class="font-normal ">{{ $submission->display_id }}</div>
+          <div class="text-xs">Version: {{ $submission->version_number ?? 1 }}</div>
         </div>
 
         <div class="col-span-3 pt-3 text-right pr-3">Submitter:</div>

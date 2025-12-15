@@ -32,13 +32,27 @@ class SubmissionFactory extends Factory
             'submitted_as_pmids' => (string) $this->faker->numberBetween(10000000, 39999999),
             'submitted_as_assertion_criteria_url' => $this->faker->url,
             'submitted_run_date' => $this->faker->dateTimeThisYear(),
-            'status' => 1,
+            'version_number' => 1,
+            'is_current' => true,
         ];
     }
 
     public function unpublished()
     {
-        return $this->state(fn () => ['status' => 0]);
+        return $this->state(fn () => [
+            'is_current' => false,
+            'unpublished_at' => now(),
+        ]);
+    }
+
+    public function version(int $version)
+    {
+        return $this->state(fn () => ['version_number' => $version]);
+    }
+
+    public function notCurrent()
+    {
+        return $this->state(fn () => ['is_current' => false]);
     }
 
     public function forGene(Gene $gene)

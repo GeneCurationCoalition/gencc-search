@@ -30,7 +30,7 @@ class Submitter extends Model
 
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('status', '=', 1)->orderBy('classification_id')->orderBy('submitted_as_date');
+        return $this->hasMany('App\Submission')->where('is_current', '=', true)->orderBy('classification_id')->orderBy('submitted_as_date');
     }
 
     protected $fillable = [

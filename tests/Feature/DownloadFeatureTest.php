@@ -39,7 +39,7 @@ class DownloadFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/download/action/submissions-export-csv');
@@ -63,7 +63,7 @@ class DownloadFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/download/action/submissions-export-tsv');
@@ -86,7 +86,7 @@ class DownloadFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/download/action/submissions-export-xlsx');
@@ -109,7 +109,7 @@ class DownloadFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/download/action/submissions-export-xls');

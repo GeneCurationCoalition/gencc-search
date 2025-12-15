@@ -44,17 +44,24 @@ class SubmissionController extends Controller
 
     /**
      * Display the specified resource.
+     * Supports both versioned (SGC-107616.2) and non-versioned (SGC-107616) IDs.
+     * Non-versioned requests redirect to the versioned URL for the current version.
      *
-     * @param  int  $id
+     * @param  string  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        //
-        $sortPram = ['classification_id', 'DESC'];
-        $submission = Submission::uuid($id)->with('gene', 'disease', 'submitter')->firstOrFail();
+        // Look up submission by display ID (handles both formats)
+        $submission = Submission::byDisplayId($id)->with('gene', 'disease', 'submitter')->firstOrFail();
+
+        // If the URL doesn't include a version, redirect to the versioned URL
+        if (!preg_match('/\.\d+$/', $id)) {
+            return redirect()->route('submission-show', ['id' => $submission->display_id]);
+        }
+
         $page_meta['seo']['title'] = $submission->gene->title . " | " . $submission->disease->title . " | " . $submission->inheritance->title . " by " . $submission->submitter->title . " submission information facts";
-        //dd($submission);
+
         return view('submissions.show', ['submission' => $submission, 'page' => 'submitter', 'page_meta' => $page_meta]);
     }
 

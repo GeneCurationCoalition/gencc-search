@@ -136,12 +136,12 @@ class Disease extends Model
     }
 
     /**
-     * Get all the submissions associated with this disease
+     * Get all the current (active) submissions associated with this disease
      */
     public function submissions()
     {
         return $this->belongsToMany('App\Submission', 'disease_submission')
-            ->where('status', '=', 1)
+            ->where('is_current', '=', true)
             ->withTimestamps()
             ->withPivot('type');
     }
