@@ -19,3 +19,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 // Publish endpoint
 Route::post('/publish', 'PublishController@process');
+
+// Export endpoints
+Route::get('/export/submissions', 'DownloadController@export_XLSX');
+Route::get('/export/submissions-with-rowid', 'DownloadController@export_rowid_XLSX');

@@ -4,11 +4,12 @@ namespace App;
 
 use App\Traits\DisplayTransform;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\ModelTransform;
 
 class Classification extends Model
 {
-    //
+    use HasFactory;
     use ModelTransform;
     use DisplayTransform;
 

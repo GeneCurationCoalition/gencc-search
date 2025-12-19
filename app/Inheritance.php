@@ -3,11 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\ModelTransform;
 
 class Inheritance extends Model
 {
-    //
+    use HasFactory;
     use ModelTransform;
 
     public function submissions()

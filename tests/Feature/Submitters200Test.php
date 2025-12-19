@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class Submitters200Test extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic feature test example.
      *
@@ -15,7 +17,7 @@ class Submitters200Test extends TestCase
      */
     public function testSubmittersReturnsSuccess()
     {
-        $response = $this->get('/submitters');
+        $response = $this->get('/members');
 
         $response->assertStatus(200);
     }

@@ -16,12 +16,12 @@
                               </div>
                               <div class="flex-initial break-words">
                                 <div class="list-text-label"> {{ $item->disease->title }}</div>
-                                <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}</div>
+                                <div class="text-sm text-gray-600">{!! $item->displayLinkToDisease($item->disease->curie, $item->disease->curie) !!}{!! $item->displayDeprecationIndicator($item->disease) !!}</div>
                                 {{-- @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
                                 <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToOmim($item->disease->curie, $item->disease->curie) !!}</div>
                                 @endif --}}
                                 @if($item->disease->id != $item->disease_original->id)
-                                  <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}</div>
+                                  <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}{!! $item->displayDeprecationIndicator($item->disease_original) !!}</div>
                                   @endif
                               </div>
                             </div>
@@ -47,7 +47,7 @@
                               </ul>
                             </div>
                             @if($item->submitted_as_notes)
-                            <div class="ml-4 pt-1 text-sm text-gray-800">Evidence: {!! \Illuminate\Support\Str::limit($item->submitted_as_notes, 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->uuid) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
+                            <div class="ml-4 pt-1 text-sm text-gray-800 prose prose-sm max-w-none">Evidence: {!! \Illuminate\Support\Str::limit(strip_tags($item->renderMarkdown($item->submitted_as_notes)), 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->uuid) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
                             @endif
 
 

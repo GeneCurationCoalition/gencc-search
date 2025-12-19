@@ -73,9 +73,14 @@ trait ModelTransform
     // $data->whereHas('diseases', function (Builder $data) use ($value) {
 
     //dd($data);
+    $mondo = [];
     foreach($data as $item) {
       //dd($item);
-      foreach ($item->diseases->where("type", "MONDO") as $element) {
+      // Support both old string type ('MONDO') and new integer type constant
+      $mondoDiseases = $item->diseases->filter(function ($disease) {
+          return $disease->type === 'MONDO' || $disease->type === Disease::TYPE_MONDO;
+      });
+      foreach ($mondoDiseases as $element) {
         //  dd($element);
         $mondo[$element->id]["title"] =  $element->title;
         $mondo[$element->id]["curie"] =  $element->curie;
@@ -216,7 +221,10 @@ trait ModelTransform
    */
   public function displayMondoDisease($data)
   {
-    $filtered = $data->where('type', "MONDO");
+    // Support both old string type ('MONDO') and new integer type constant
+    $filtered = $data->filter(function ($disease) {
+        return $disease->type === 'MONDO' || $disease->type === Disease::TYPE_MONDO;
+    });
     return $filtered;
     //dd($data);
   }
@@ -336,10 +344,14 @@ trait ModelTransform
   // }
 
   /**
-   * Return a displayable string of date parameter
+   * Process disease via Monarch Initiative API
    *
-   * @param
-   * @return string
+   * @deprecated Use Disease::rosetta($curie) instead for disease resolution.
+   *             This method is kept for backward compatibility during the migration
+   *             but should not be used for new code.
+   *
+   * @param array $data Row data containing 'disease_id'
+   * @return void
    */
   public function processMondoApi($data)
   {

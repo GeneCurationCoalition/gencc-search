@@ -1,78 +1,132 @@
-<p align="center"><img src="https://res.cloudinary.com/dtfbvvkyp/image/upload/v1566331377/laravel-logolockup-cmyk-red.svg" width="400"></p>
+# GenCC Search
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+The public-facing search portal for the Gene Curation Coalition (GenCC), providing a searchable interface for gene-disease relationship curations submitted by member organizations worldwide.
 
-## About Laravel
+**Live Site:** [https://search.thegencc.org](https://search.thegencc.org)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## About GenCC
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+The Gene Curation Coalition (GenCC) is an international collaboration of genetic and genomic database resources working together to harmonize gene-level resources and provide consistent information about the clinical validity of gene-disease relationships.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Features
 
-## Learning Laravel
+- **Gene Search** - Search by gene symbol, HGNC ID, OMIM ID, Ensembl ID, or other identifiers
+- **Disease Search** - Search by disease name or ontology ID (MONDO, OMIM, Orphanet)
+- **Genomic Region Search** - Search by genomic coordinates (GRCh37/GRCh38)
+- **Submission Browser** - View and filter gene-disease curations from all member organizations
+- **Classification Summary** - Aggregate view of curation classifications (Definitive, Strong, Moderate, Limited, etc.)
+- **Data Export** - Download curations in CSV, TSV, or Excel format
+- **Statistics Dashboard** - Overview of submissions, genes, and diseases in the database
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Technology Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend:** PHP 7.3+ with Laravel 8
+- **Frontend:** Livewire, Alpine.js, Tailwind CSS
+- **Database:** MySQL 8
+- **Asset Compilation:** Laravel Mix (Webpack)
 
-## Laravel Sponsors
+## Requirements
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+- PHP 7.3 or higher
+- Composer
+- Node.js and npm
+- MySQL 8.0+
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
-- [We Are The Robots Inc.](https://watr.mx/)
-- [Understand.io](https://www.understand.io/)
-- [Abdel Elrafa](https://abdelelrafa.com)
-- [Hyper Host](https://hyper.host)
-- [Appoly](https://www.appoly.co.uk)
-- [OP.GG](https://op.gg)
+## Installation
 
-## Contributing
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/GeneCurationCoalition/gencc-search.git
+   cd gencc-search
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. Install PHP dependencies:
+   ```bash
+   composer install
+   ```
 
-## Code of Conduct
+3. Install Node dependencies:
+   ```bash
+   npm install
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. Copy the environment file and configure:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-## Security Vulnerabilities
+5. Configure your database connection in `.env`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+6. Run migrations:
+   ```bash
+   php artisan migrate
+   ```
+
+7. Build frontend assets:
+   ```bash
+   npm run dev
+   ```
+
+8. Start the development server:
+   ```bash
+   php artisan serve
+   ```
+
+## Data Management Commands
+
+The application includes several artisan commands for managing external data sources:
+
+| Command | Description |
+|---------|-------------|
+| `php artisan update:diseases` | Update disease data from MONDO, OMIM, and Orphanet |
+| `php artisan update:mondo` | Update MONDO disease ontology |
+| `php artisan update:mim` | Update OMIM gene map data |
+| `php artisan update:sources` | Master command to update all data sources |
+| `php artisan run:report` | Generate reports |
+
+## Project Structure
+
+```
+app/
+├── Console/Commands/     # Artisan commands for data management
+├── Http/
+│   ├── Controllers/      # Request handlers
+│   └── Livewire/         # Livewire components
+├── Traits/               # Shared model functionality
+├── Disease.php           # Disease model with cross-ontology resolution
+├── Gene.php              # Gene model with multi-ID search
+├── Submission.php        # Gene-disease curation submissions
+├── Submitter.php         # Member organizations
+└── Classification.php    # Curation classification levels
+
+resources/
+├── views/                # Blade templates
+├── css/                  # Stylesheets
+└── js/                   # JavaScript
+
+database/
+├── migrations/           # Database schema
+└── seeders/              # Initial data
+```
+
+## Testing
+
+Run the test suite:
+```bash
+php artisan test
+# or
+vendor/bin/phpunit
+```
+
+## Related Projects
+
+- **[gencc-sub](https://github.com/GeneCurationCoalition/gencc-sub)** - Submission portal for member organizations to submit and manage their curations
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License.
+
+## Contact
+
+For questions about the GenCC database, visit [https://thegencc.org](https://thegencc.org).

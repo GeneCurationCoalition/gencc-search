@@ -247,22 +247,6 @@ class PublishController extends Controller
             $sgc_id = isset($data->submission_id) ? $data->submission_id : 'UNKNOWN';
             $local_key = isset($data->local_key) ? $data->local_key : 'UNKNOWN';
 
-        // Get original_data from the top level of the request, not from inside data
-        $original_data = $record->input('original_data');
-
-        // If original_data is a JSON string, decode it as object
-        if ($original_data && is_string($original_data)) {
-            $original_data = json_decode($original_data);
-        }
-
-        // If original_data is an array, convert it to object (Laravel may cast it to array)
-        if ($original_data && is_array($original_data)) {
-            $original_data = json_decode(json_encode($original_data));
-        }
-
-        // Attach original_data to the data object for use in the rest of the method
-        $data->original_data = $original_data;
-
         // confirm the required information is all present
         $gene = Gene::curie($data->gene->id)->first();
         if ($gene === null) {
@@ -271,25 +255,74 @@ class PublishController extends Controller
             return $error;
         }
 
-        $disease = Disease::curie($data->disease->id)->first();
-        if ($disease === null) {
-            $error = "Disease not found: " . $data->disease->id;
+        // Get the submitted disease curie from the payload
+        // This comes from submission_data->disease->id in gencc-sub
+        $submittedDiseaseCurie = $data->disease->id;
+
+        Log::info("Processing disease - Submitted curie: {$submittedDiseaseCurie}");
+
+        // Find the submitted disease record
+        $disease_original = Disease::curie($submittedDiseaseCurie)->first();
+        if ($disease_original === null) {
+            $error = "Disease not found: " . $submittedDiseaseCurie;
             Log::error("SGC-ID: {$sgc_id}, Local-Key: {$local_key} - {$error}");
             return $error;
         }
 
-        // Check for original disease data
-        $disease_original = null;
-        if (isset($data->original_data) && isset($data->original_data->disease) && isset($data->original_data->disease->id)) {
-            $disease_original = Disease::curie($data->original_data->disease->id)->first();
-            // If original disease not found, log warning but continue (use normalized disease as fallback)
-            if ($disease_original === null) {
-                Log::warning("Original disease not found: " . $data->original_data->disease->id . ", using normalized disease as fallback");
-                $disease_original = $disease;
-            }
+        // Now determine disease_id based on the submitted disease type
+        // Support both old string types ('MONDO', 'OMIM', etc.) and new integer type constants
+        $isMondo = $disease_original->type === 'MONDO' || $disease_original->type === Disease::TYPE_MONDO;
+
+        if ($isMondo) {
+            // Submitted disease is MONDO - use it for both disease_id and disease_original_id
+            $disease = $disease_original;
+            Log::info("Submitted disease is MONDO: {$disease->curie} - using for both disease_id and disease_original_id");
         } else {
-            // No original_data provided, use normalized disease
-            $disease_original = $disease;
+            // Submitted disease is Orphanet or OMIM - find MONDO equivalent for disease_id
+            Log::info("Submitted disease is type={$disease_original->type}: {$disease_original->curie} - looking for MONDO equivalent");
+
+            // Try the new rosetta() method first (uses mondo_id FK)
+            $mondoEquivalent = Disease::rosetta($disease_original->curie);
+
+            // If rosetta found a result, use it
+            if ($mondoEquivalent) {
+                Log::info("Found MONDO equivalent via rosetta(): {$mondoEquivalent->curie}");
+            } else {
+                // Fallback: Look for MONDO equivalent via legacy equivalents relationship
+                foreach ($disease_original->equivalents as $equiv) {
+                    $equivIsMondo = $equiv->type === 'MONDO' || $equiv->type === Disease::TYPE_MONDO;
+                    if ($equivIsMondo) {
+                        $mondoEquivalent = $equiv;
+                        Log::info("Found MONDO equivalent via equivalents: {$equiv->curie}");
+                        break;
+                    }
+                }
+
+                // If not found via equivalents, try xrefs field (legacy)
+                if (!$mondoEquivalent && !empty($disease_original->xrefs)) {
+                    // Handle both old pipe-delimited format and new JSON format
+                    if (is_object($disease_original->xrefs)) {
+                        // New JSON format - can't directly find MONDO from xrefs
+                    } else {
+                        // Old format - xrefs was a disease ID
+                        $xrefDisease = Disease::find($disease_original->xrefs);
+                        $xrefIsMondo = $xrefDisease && ($xrefDisease->type === 'MONDO' || $xrefDisease->type === Disease::TYPE_MONDO);
+                        if ($xrefIsMondo) {
+                            $mondoEquivalent = $xrefDisease;
+                            Log::info("Found MONDO equivalent via xrefs: {$xrefDisease->curie}");
+                        }
+                    }
+                }
+            }
+
+            if ($mondoEquivalent) {
+                $disease = $mondoEquivalent;
+                Log::info("Mapping: disease_original_id={$disease_original->curie}, disease_id={$disease->curie}");
+            } else {
+                // No MONDO equivalent found - use submitted disease for both
+                $disease = $disease_original;
+                Log::warning("No MONDO equivalent found for {$disease_original->curie} - using submitted disease for both IDs");
+            }
         }
 
         $classification = Classification::curie($data->classification->id)->first();
@@ -320,24 +353,23 @@ class PublishController extends Controller
             if (!empty($evidence->pmid))
                 $evidences[] = $evidence->pmid;
 
-        // Use original_data for submitted_as_* fields when available, otherwise fall back to normalized data
-        $original = isset($data->original_data) ? $data->original_data : $data;
-
+        // All submitted_as_* fields come directly from the payload data
+        // gencc-sub sends submission_data values which represent what was submitted
         $submissionData = [
             'uuid'                                   => $data->submission_id,
             'order'                                  => $classification->order,
             'submitted_run_date'                     => $record->input('publish_date'),
-            'submitted_as_hgnc_id'                   => isset($original->gene->id) ? $original->gene->id : $data->gene->id,
-            'submitted_as_disease_id'                => isset($original->disease->id) ? $original->disease->id : $data->disease->id,
-            'submitted_as_moi_id'                    => isset($original->moi->id) ? $original->moi->id : $data->moi->id,
-            'submitted_as_submitter_id'              => isset($original->submitter->id) ? $original->submitter->id : $data->submitter->id,
+            'submitted_as_hgnc_id'                   => $data->gene->id,
+            'submitted_as_disease_id'                => $data->disease->id,
+            'submitted_as_moi_id'                    => $data->moi->id,
+            'submitted_as_submitter_id'              => $data->submitter->id,
             'submitted_as_submission_id'             => $data->local_key,
-            'submitted_as_hgnc_symbol'               => isset($original->gene->symbol) ? $original->gene->symbol : $data->gene->symbol,
-            'submitted_as_disease_name'              => isset($original->disease->name) ? $original->disease->name : $data->disease->name,
-            'submitted_as_moi_name'                  => isset($original->moi->name) ? $original->moi->name : $data->moi->name,
-            'submitted_as_submitter_name'            => isset($original->submitter->name) ? $original->submitter->name : $data->submitter->name,
-            'submitted_as_classification_id'         => isset($original->classification->id) ? $original->classification->id : $data->classification->id,
-            'submitted_as_classification_name'       => isset($original->classification->name) ? $original->classification->name : $data->classification->name,
+            'submitted_as_hgnc_symbol'               => $data->gene->symbol,
+            'submitted_as_disease_name'              => $data->disease->name,
+            'submitted_as_moi_name'                  => $data->moi->name,
+            'submitted_as_submitter_name'            => $data->submitter->name,
+            'submitted_as_classification_id'         => $data->classification->id,
+            'submitted_as_classification_name'       => $data->classification->name,
             'submitted_as_date'                      => $data->report->display_date,
             'submitted_as_public_report_url'         => $data->report->ext_url,
             'submitted_as_notes'                     => $data->notes->display,
