@@ -75,7 +75,7 @@ class SubmitterSeeder extends Seeder
                 'path_logo' => '/brand/submitters/logo_invitae.png',
                 'website' => "https://www.invitae.com/",
                 'text_descriptions' => "Labcorp Genetics (formerly Invitae) is a CLIA-certified fee-for-service clinical testing laboratory.",
-                'text_contact' => "Yunyun Jiang, Coordinator <br>Phone: 800-436-3037<br>Email: yunyun.jiang@invitae.com",
+                'text_contact' => "Yunyun Jiang, Coordinator <br>Phone: 800-436-3037<br>Email: Yunyun.jiang@labcorp.com",
                 'text_assertions' => "https://view.publitas.com/invitae/invitaeposter_nsgc2019_curatingthehumangenome/page/1"
             ],
             [

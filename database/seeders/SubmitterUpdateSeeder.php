@@ -18,25 +18,12 @@ class SubmitterUpdateSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('submitters')->insert([
-            [
-                'uuid' => "GENCC_000120",
-                'curie' => "GENCC:000120",
-                'title' => "ClinPGx",
-                'website' => "https://www.clinpgx.org/",
-                'text_descriptions' => "The Pharmacogenomics Knowledge Base (PharmGKB) is a publicly available resource for pharmacogenomics discovery and implementation. PharmGKB collects, curates and disseminates knowledge about the impact of human genetic variation on drug response phenotypes. Its content encompasses information to catalyze scientific research such as variant annotations and drug-centered pathways, and clinically relevant information including high-level clinical annotations, clinical guideline annotations, and drug label annotations.",
-                'member' => 1,
-                'status' => 1,
-            ],
-            [
-                'uuid' => "GENCC_000121",
-                'curie' => "GENCC:000121",
-                'title' => "HGNC",
-                'website' => "https://www.genenames.org/",
-                'text_descriptions' => "The HGNC (HUGO Gene Nomenclature Committee) is the sole worldwide authority for providing approved symbols and names for human genes.",
-                'member' => 1,
-                'status' => 1,
-            ],
-        ]);
+        DB::table('submitters')
+            ->where("uuid", "GENCC_000106")
+            ->update(
+                [
+                    'text_contact' => "Yunyun Jiang, Coordinator <br>Phone: 800-436-3037<br>Email: Yunyun.jiang@labcorp.com",
+                ]
+            );
     }
 }
