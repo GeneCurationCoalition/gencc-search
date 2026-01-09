@@ -4,15 +4,10 @@ namespace App\Console\Commands;
 
 use App\Disease;
 use App\Gene;
-use App\Http\Livewire\Dashboard\SubmissionUpload;
 use App\Notification;
 use Illuminate\Console\Command;
 
-use Illuminate\Support\Facades\Storage;
-use App\Imports\SubmissionsImport;
-use App\SubmissionFile;
 use App\Submitter;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +28,22 @@ class updateCounts extends Command
      * @var string
      */
     protected $description = '#5 Update counts for submissions, genes, diseases, etc...';
+
+    /**
+     * Classification slug to column mapping
+     */
+    protected $classificationColumns = [
+        'definitive' => 'curations_definitive',
+        'strong' => 'curations_strong',
+        'moderate' => 'curations_moderate',
+        'limited' => 'curations_limited',
+        'disputed' => 'curations_disputed',
+        'refuted' => 'curations_refuted',
+        'animal-model-only' => 'curations_animal',
+        'no-known' => 'curations_noknown',
+        'supportive' => 'curations_supportive',
+        'nul' => 'curations_nul',
+    ];
 
     /**
      * Create a new command instance.
@@ -100,256 +111,23 @@ class updateCounts extends Command
             ['value' => 0]);
         DB::commit();
 
+        $startTime = microtime(true);
 
-        $this->line('Updating Gene Counts... ');
-        Log::channel('slack')->info('Updating Gene Counts... ');
-        $items = Gene::with('submissions.classification')->get();
-        //$items = $items->processSubmissionsForGene();
-        //dd($items);
-        // if (empty($items))
-        //     $this->emit('endImportCount');
+        // Update Gene counts using SQL aggregation
+        $this->updateGeneCounts();
 
-        //dd($list);
-        //dd($data);
-        foreach ($items as $item) {
-            // NOTE for this to work the classificaiton slugs need to be matched to the keys below.
-            $list = array(
-                "definitive"                    => "0",
-                "strong"                        => "0",
-                "moderate"                      => "0",
-                "limited"                       => "0",
-                "disputed"                      => "0",
-                "refuted"                       => "0",
-                "animal-model-only"             => "0",
-                "no-known"                      => "0",
-                "supportive"                    => "0",
-                "count_submissions"             => "0",
-                //"count_unique_submitters"       => "0",
-                "nul"                           => "0"
-            );
+        // Update Submitter counts using SQL aggregation
+        $this->updateSubmitterCounts();
 
-            foreach ($item->submissions as $val) {
-                if ($val->status == 1) {
-                    //$val = strstr(, 'GENCC');
-                    //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
-                    // Take the val and add one to it.
-                    $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
+        // Update Disease counts using SQL aggregation
+        $this->updateDiseaseCounts();
 
-                    // TODO - Make this better
-                    if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
-                        $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
-                    } else {
-                        $list['count_unique_submitters'][$val->submitter->curie]    = 1;
-                    }
-
-                    if (isset($val->disease)) {
-                        if(isset($list['count_unique_diseases'][$val->disease->curie])) {
-                            $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
-                        } else {
-                            $list['count_unique_diseases'][$val->disease->curie]    = 1;
-                        }
-                    }
-                }
-                    //dd($list);
-            }
-
-            $gene = Gene::find($item->id);
-            $gene->curations_definitive     = $list['definitive'];
-            $gene->curations_strong         = $list['strong'];
-            $gene->curations_moderate       = $list['moderate'];
-            $gene->curations_limited        = $list['limited'];
-            $gene->curations_disputed       = $list['disputed'];
-            $gene->curations_refuted        = $list['refuted'];
-            $gene->curations_animal         = $list['animal-model-only'];
-            $gene->curations_noknown        = $list['no-known'];
-            $gene->curations_supportive     = $list['supportive'];
-            $gene->curations_nul            = $list['nul'];
-            $gene->count_submissions        = count($item->submissions);
-            if (isset($list['count_unique_diseases'])) {
-                $gene->count_unique_diseases        = count($list['count_unique_diseases']);
-            }
-            if (isset($list['count_unique_submitters'])) {
-                $gene->count_unique_submitters      = count($list['count_unique_submitters']);
-                //$gene->count_unique_submitters       = $list['count_unique_submitters'];
-            }
-            $gene->save();
-
-        }
-
-
-        Log::channel('slack')->info('Updating Submitter Submission Counts...');
-        $this->line('Updating Submitter Submission Counts... ');
-        $items = Submitter::with('submissions.classification')->get();
-        //$items = $items->processSubmissionsForGene();
-        //dd($items);
-        // if (empty($items))
-        //     $this->emit('endImportCount');
-
-        //dd($list);
-        //dd($data);
-        foreach ($items as $item) {
-            // NOTE for this to work the classificaiton slugs need to be matched to the keys below.
-            $list = array(
-                "definitive"                    => "0",
-                "strong"                        => "0",
-                "moderate"                      => "0",
-                "limited"                       => "0",
-                "disputed"                      => "0",
-                "refuted"                       => "0",
-                "animal-model-only"             => "0",
-                "no-known"                      => "0",
-                "supportive"                    => "0",
-                "count_submissions"             => "0",
-                //"count_unique_submitters"       => "0",
-                "nul"                           => "0"
-            );
-
-            $submission_val_count = 0;
-            foreach ($item->submissions as $val) {
-                if ($val->status == 1) {
-                    $submission_val_count++;
-                    //$val = strstr(, 'GENCC');
-                    //$agent = str_replace("GENCC:AGENT-", "agent", $val->submitter->curie);
-                    // Take the val and add one to it.
-                    $list[$val->classification->slug]                               = $list[$val->classification->slug] + 1;
-
-                    // TODO - Make this better
-                    if (isset($list['count_unique_genes'][$val->submitter->curie])) {
-                        $list['count_unique_genes'][$val->submitter->curie]    = $list['count_unique_genes'][$val->submitter->curie] + 1;
-                    } else {
-                        $list['count_unique_genes'][$val->submitter->curie]    = 1;
-                    }
-
-                    if (isset($val->disease)) {
-                        if (isset($list['count_unique_diseases'][$val->disease->curie])) {
-                            $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
-                        } else {
-                            $list['count_unique_diseases'][$val->disease->curie]    = 1;
-                        }
-                    }
-                }
-                //dd($list);
-            }
-
-            $submitter = Submitter::find($item->id);
-            $submitter->curations_definitive     = $list['definitive'];
-            $submitter->curations_strong         = $list['strong'];
-            $submitter->curations_moderate       = $list['moderate'];
-            $submitter->curations_limited        = $list['limited'];
-            $submitter->curations_disputed       = $list['disputed'];
-            $submitter->curations_refuted        = $list['refuted'];
-            $submitter->curations_animal         = $list['animal-model-only'];
-            $submitter->curations_noknown        = $list['no-known'];
-            $submitter->curations_supportive     = $list['supportive'];
-            $submitter->curations_nul            = $list['nul'];
-            $submitter->count_submissions        = $submission_val_count;
-            if (isset($list['count_unique_diseases'])) {
-                $submitter->count_unique_diseases        = count($list['count_unique_diseases']);
-            } else {
-                $submitter->count_unique_diseases        = 0;
-            }
-            if (isset($list['count_unique_genes'])) {
-                $submitter->count_unique_genes      = count($list['count_unique_genes']);
-                //$gene->count_unique_submitters       = $list['count_unique_submitters'];
-            } else {
-                $submitter->count_unique_genes        = 0;
-            }
-            $submitter->save();
-
-            //dd($gene);
-
-        }
-
-
-        $this->line('Gene Counts Completed... ');
-        Log::channel('slack')->info('Gene Counts Completed...');
-        Log::channel('slack')->info('Updating Diseases Counts...');
-        $this->line('Updating Diseases Counts... ');
-
-        $items = Disease::with('submissions.classification')->get();
-        //$items = $items->processSubmissionsForGene();
-        //dd($items);
-        if (empty($items))
-            $this->emit('endImportCount');
-
-        //dd($list);
-        //dd($data);
-        foreach ($items as $item) {
-            // NOTE for this to work the classificaiton slugs need to be matched to the keys below.
-            $list = array(
-                "definitive"                    => "0",
-                "strong"                        => "0",
-                "moderate"                      => "0",
-                "limited"                       => "0",
-                "disputed"                      => "0",
-                "refuted"                       => "0",
-                "animal-model-only"             => "0",
-                "supportive"                    => "0",
-                "no-known"                      => "0",
-                "count_submissions"             => "0",
-                //"count_unique_submitters"       => "0",
-                "nul"                           => "0"
-            );
-
-            foreach ($item->submissions as $val) {
-                if($val->status == 1) {
-                    //dd($val);
-                    // Take the val and add one to it.
-                    $list[$val->classification->slug]                           = $list[$val->classification->slug] + 1;
-
-                    // TODO - Make this better
-                    if (isset($list['count_unique_submitters'][$val->submitter->curie])) {
-                        $list['count_unique_submitters'][$val->submitter->curie]    = $list['count_unique_submitters'][$val->submitter->curie] + 1;
-                    } else {
-                        $list['count_unique_submitters'][$val->submitter->curie]    = 1;
-                    }
-
-                    // if (isset($val->disease)) {
-                    //     if(isset($list['count_unique_diseases'][$val->disease->curie])) {
-                    //         $list['count_unique_diseases'][$val->disease->curie]    = $list['count_unique_diseases'][$val->disease->curie] + 1;
-                    //     } else {
-                    //         $list['count_unique_diseases'][$val->disease->curie]    = 1;
-                    //     }
-                    // }
-                }
-            }
-            //dd($list);
-
-            $disease = Disease::find($item->id);
-            $disease->curations_definitive     = $list['definitive'];
-            $disease->curations_strong         = $list['strong'];
-            $disease->curations_moderate       = $list['moderate'];
-            $disease->curations_limited        = $list['limited'];
-            $disease->curations_disputed       = $list['disputed'];
-            $disease->curations_refuted        = $list['refuted'];
-            $disease->curations_animal         = $list['animal-model-only'];
-            $disease->curations_noknown        = $list['no-known'];
-            $disease->curations_supportive     = $list['supportive'];
-            $disease->curations_nul            = $list['nul'];
-            $disease->count_submissions        = count($item->submissions);
-            if (isset($list['count_unique_genes'])) {
-                $disease->count_unique_genes            = count($list['count_unique_genes']);
-            }
-            if (isset($list['count_unique_submitters'])) {
-                $disease->count_unique_submitters       = count($list['count_unique_submitters']);
-                //$disease->count_unique_submitters       = $list['count_unique_submitters'];
-            }
-            $disease->save();
-
-            //dd($gene);
-
-        }
-
-        $this->line('Disease Counts Completed... ');
+        $elapsed = round(microtime(true) - $startTime, 2);
+        $this->line("Processing completed in {$elapsed} seconds");
 
         DB::beginTransaction();
         DB::table('settings')->where('key', 'running_counts')->update(['value' => 0]);
         DB::commit();
-
-
-        $this->line('Processing completed');
-
-        Log::channel('slack')->info('Disease Counts Completed...');
 
         Log::channel('slack')->info('Submission Import Completed');
         $notification->status = 0;
@@ -358,5 +136,301 @@ class updateCounts extends Command
 
 
         return 0;
+    }
+
+    /**
+     * Update gene counts using SQL aggregation.
+     */
+    protected function updateGeneCounts()
+    {
+        $this->line('Updating Gene Counts... ');
+        Log::channel('slack')->info('Updating Gene Counts... ');
+
+        // First, reset all gene counts to 0
+        Gene::query()->update([
+            'curations_definitive' => 0,
+            'curations_strong' => 0,
+            'curations_moderate' => 0,
+            'curations_limited' => 0,
+            'curations_disputed' => 0,
+            'curations_refuted' => 0,
+            'curations_animal' => 0,
+            'curations_noknown' => 0,
+            'curations_supportive' => 0,
+            'curations_nul' => 0,
+            'count_submissions' => 0,
+            'count_unique_submitters' => 0,
+            'count_unique_diseases' => 0,
+        ]);
+
+        // Get classification counts per gene using SQL aggregation
+        $classificationCounts = DB::table('submissions')
+            ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
+            ->select(
+                'submissions.gene_id',
+                'classifications.slug',
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('submissions.is_current', true)
+            ->groupBy('submissions.gene_id', 'classifications.slug')
+            ->get();
+
+        // Build update data grouped by gene_id
+        $geneUpdates = [];
+        foreach ($classificationCounts as $row) {
+            if (!isset($geneUpdates[$row->gene_id])) {
+                $geneUpdates[$row->gene_id] = [];
+            }
+            if (isset($this->classificationColumns[$row->slug])) {
+                $geneUpdates[$row->gene_id][$this->classificationColumns[$row->slug]] = $row->count;
+            }
+        }
+
+        // Get total submission counts per gene
+        $submissionCounts = DB::table('submissions')
+            ->select('gene_id', DB::raw('COUNT(*) as count'))
+            ->where('is_current', true)
+            ->groupBy('gene_id')
+            ->get();
+
+        foreach ($submissionCounts as $row) {
+            if (!isset($geneUpdates[$row->gene_id])) {
+                $geneUpdates[$row->gene_id] = [];
+            }
+            $geneUpdates[$row->gene_id]['count_submissions'] = $row->count;
+        }
+
+        // Get unique submitter counts per gene
+        $uniqueSubmitters = DB::table('submissions')
+            ->select('gene_id', DB::raw('COUNT(DISTINCT submitter_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('gene_id')
+            ->get();
+
+        foreach ($uniqueSubmitters as $row) {
+            if (!isset($geneUpdates[$row->gene_id])) {
+                $geneUpdates[$row->gene_id] = [];
+            }
+            $geneUpdates[$row->gene_id]['count_unique_submitters'] = $row->count;
+        }
+
+        // Get unique disease counts per gene
+        $uniqueDiseases = DB::table('submissions')
+            ->select('gene_id', DB::raw('COUNT(DISTINCT disease_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('gene_id')
+            ->get();
+
+        foreach ($uniqueDiseases as $row) {
+            if (!isset($geneUpdates[$row->gene_id])) {
+                $geneUpdates[$row->gene_id] = [];
+            }
+            $geneUpdates[$row->gene_id]['count_unique_diseases'] = $row->count;
+        }
+
+        // Batch update genes
+        foreach ($geneUpdates as $geneId => $updates) {
+            Gene::where('id', $geneId)->update($updates);
+        }
+
+        $this->line('Gene Counts Completed (' . count($geneUpdates) . ' genes updated)');
+        Log::channel('slack')->info('Gene Counts Completed...');
+    }
+
+    /**
+     * Update submitter counts using SQL aggregation.
+     */
+    protected function updateSubmitterCounts()
+    {
+        $this->line('Updating Submitter Submission Counts... ');
+        Log::channel('slack')->info('Updating Submitter Submission Counts...');
+
+        // First, reset all submitter counts to 0
+        Submitter::query()->update([
+            'curations_definitive' => 0,
+            'curations_strong' => 0,
+            'curations_moderate' => 0,
+            'curations_limited' => 0,
+            'curations_disputed' => 0,
+            'curations_refuted' => 0,
+            'curations_animal' => 0,
+            'curations_noknown' => 0,
+            'curations_supportive' => 0,
+            'curations_nul' => 0,
+            'count_submissions' => 0,
+            'count_unique_genes' => 0,
+            'count_unique_diseases' => 0,
+        ]);
+
+        // Get classification counts per submitter using SQL aggregation
+        $classificationCounts = DB::table('submissions')
+            ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
+            ->select(
+                'submissions.submitter_id',
+                'classifications.slug',
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('submissions.is_current', true)
+            ->groupBy('submissions.submitter_id', 'classifications.slug')
+            ->get();
+
+        // Build update data grouped by submitter_id
+        $submitterUpdates = [];
+        foreach ($classificationCounts as $row) {
+            if (!isset($submitterUpdates[$row->submitter_id])) {
+                $submitterUpdates[$row->submitter_id] = [];
+            }
+            if (isset($this->classificationColumns[$row->slug])) {
+                $submitterUpdates[$row->submitter_id][$this->classificationColumns[$row->slug]] = $row->count;
+            }
+        }
+
+        // Get total submission counts per submitter
+        $submissionCounts = DB::table('submissions')
+            ->select('submitter_id', DB::raw('COUNT(*) as count'))
+            ->where('is_current', true)
+            ->groupBy('submitter_id')
+            ->get();
+
+        foreach ($submissionCounts as $row) {
+            if (!isset($submitterUpdates[$row->submitter_id])) {
+                $submitterUpdates[$row->submitter_id] = [];
+            }
+            $submitterUpdates[$row->submitter_id]['count_submissions'] = $row->count;
+        }
+
+        // Get unique gene counts per submitter
+        $uniqueGenes = DB::table('submissions')
+            ->select('submitter_id', DB::raw('COUNT(DISTINCT gene_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('submitter_id')
+            ->get();
+
+        foreach ($uniqueGenes as $row) {
+            if (!isset($submitterUpdates[$row->submitter_id])) {
+                $submitterUpdates[$row->submitter_id] = [];
+            }
+            $submitterUpdates[$row->submitter_id]['count_unique_genes'] = $row->count;
+        }
+
+        // Get unique disease counts per submitter
+        $uniqueDiseases = DB::table('submissions')
+            ->select('submitter_id', DB::raw('COUNT(DISTINCT disease_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('submitter_id')
+            ->get();
+
+        foreach ($uniqueDiseases as $row) {
+            if (!isset($submitterUpdates[$row->submitter_id])) {
+                $submitterUpdates[$row->submitter_id] = [];
+            }
+            $submitterUpdates[$row->submitter_id]['count_unique_diseases'] = $row->count;
+        }
+
+        // Batch update submitters
+        foreach ($submitterUpdates as $submitterId => $updates) {
+            Submitter::where('id', $submitterId)->update($updates);
+        }
+
+        $this->line('Submitter Counts Completed (' . count($submitterUpdates) . ' submitters updated)');
+    }
+
+    /**
+     * Update disease counts using SQL aggregation.
+     */
+    protected function updateDiseaseCounts()
+    {
+        $this->line('Updating Disease Counts... ');
+        Log::channel('slack')->info('Updating Diseases Counts...');
+
+        // First, reset all disease counts to 0
+        Disease::query()->update([
+            'curations_definitive' => 0,
+            'curations_strong' => 0,
+            'curations_moderate' => 0,
+            'curations_limited' => 0,
+            'curations_disputed' => 0,
+            'curations_refuted' => 0,
+            'curations_animal' => 0,
+            'curations_noknown' => 0,
+            'curations_supportive' => 0,
+            'curations_nul' => 0,
+            'count_submissions' => 0,
+            'count_unique_submitters' => 0,
+            'count_unique_genes' => 0,
+        ]);
+
+        // Get classification counts per disease using SQL aggregation
+        $classificationCounts = DB::table('submissions')
+            ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
+            ->select(
+                'submissions.disease_id',
+                'classifications.slug',
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('submissions.is_current', true)
+            ->groupBy('submissions.disease_id', 'classifications.slug')
+            ->get();
+
+        // Build update data grouped by disease_id
+        $diseaseUpdates = [];
+        foreach ($classificationCounts as $row) {
+            if (!isset($diseaseUpdates[$row->disease_id])) {
+                $diseaseUpdates[$row->disease_id] = [];
+            }
+            if (isset($this->classificationColumns[$row->slug])) {
+                $diseaseUpdates[$row->disease_id][$this->classificationColumns[$row->slug]] = $row->count;
+            }
+        }
+
+        // Get total submission counts per disease
+        $submissionCounts = DB::table('submissions')
+            ->select('disease_id', DB::raw('COUNT(*) as count'))
+            ->where('is_current', true)
+            ->groupBy('disease_id')
+            ->get();
+
+        foreach ($submissionCounts as $row) {
+            if (!isset($diseaseUpdates[$row->disease_id])) {
+                $diseaseUpdates[$row->disease_id] = [];
+            }
+            $diseaseUpdates[$row->disease_id]['count_submissions'] = $row->count;
+        }
+
+        // Get unique submitter counts per disease
+        $uniqueSubmitters = DB::table('submissions')
+            ->select('disease_id', DB::raw('COUNT(DISTINCT submitter_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('disease_id')
+            ->get();
+
+        foreach ($uniqueSubmitters as $row) {
+            if (!isset($diseaseUpdates[$row->disease_id])) {
+                $diseaseUpdates[$row->disease_id] = [];
+            }
+            $diseaseUpdates[$row->disease_id]['count_unique_submitters'] = $row->count;
+        }
+
+        // Get unique gene counts per disease
+        $uniqueGenes = DB::table('submissions')
+            ->select('disease_id', DB::raw('COUNT(DISTINCT gene_id) as count'))
+            ->where('is_current', true)
+            ->groupBy('disease_id')
+            ->get();
+
+        foreach ($uniqueGenes as $row) {
+            if (!isset($diseaseUpdates[$row->disease_id])) {
+                $diseaseUpdates[$row->disease_id] = [];
+            }
+            $diseaseUpdates[$row->disease_id]['count_unique_genes'] = $row->count;
+        }
+
+        // Batch update diseases
+        foreach ($diseaseUpdates as $diseaseId => $updates) {
+            Disease::where('id', $diseaseId)->update($updates);
+        }
+
+        $this->line('Disease Counts Completed (' . count($diseaseUpdates) . ' diseases updated)');
+        Log::channel('slack')->info('Disease Counts Completed...');
     }
 }
