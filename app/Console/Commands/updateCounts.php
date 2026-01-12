@@ -8,6 +8,7 @@ use App\Notification;
 use Illuminate\Console\Command;
 
 use App\Submitter;
+use App\Submission;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -164,6 +165,7 @@ class updateCounts extends Command
         ]);
 
         // Get classification counts per gene using SQL aggregation
+        // Only count live (is_live=true) AND published (status='published') submissions
         $classificationCounts = DB::table('submissions')
             ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
             ->select(
@@ -171,7 +173,8 @@ class updateCounts extends Command
                 'classifications.slug',
                 DB::raw('COUNT(*) as count')
             )
-            ->where('submissions.is_current', true)
+            ->where('submissions.is_live', true)
+            ->where('submissions.status', Submission::STATUS_PUBLISHED)
             ->groupBy('submissions.gene_id', 'classifications.slug')
             ->get();
 
@@ -189,7 +192,8 @@ class updateCounts extends Command
         // Get total submission counts per gene
         $submissionCounts = DB::table('submissions')
             ->select('gene_id', DB::raw('COUNT(*) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('gene_id')
             ->get();
 
@@ -203,7 +207,8 @@ class updateCounts extends Command
         // Get unique submitter counts per gene
         $uniqueSubmitters = DB::table('submissions')
             ->select('gene_id', DB::raw('COUNT(DISTINCT submitter_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('gene_id')
             ->get();
 
@@ -217,7 +222,8 @@ class updateCounts extends Command
         // Get unique disease counts per gene
         $uniqueDiseases = DB::table('submissions')
             ->select('gene_id', DB::raw('COUNT(DISTINCT disease_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('gene_id')
             ->get();
 
@@ -263,6 +269,7 @@ class updateCounts extends Command
         ]);
 
         // Get classification counts per submitter using SQL aggregation
+        // Only count live (is_live=true) AND published (status='published') submissions
         $classificationCounts = DB::table('submissions')
             ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
             ->select(
@@ -270,7 +277,8 @@ class updateCounts extends Command
                 'classifications.slug',
                 DB::raw('COUNT(*) as count')
             )
-            ->where('submissions.is_current', true)
+            ->where('submissions.is_live', true)
+            ->where('submissions.status', Submission::STATUS_PUBLISHED)
             ->groupBy('submissions.submitter_id', 'classifications.slug')
             ->get();
 
@@ -288,7 +296,8 @@ class updateCounts extends Command
         // Get total submission counts per submitter
         $submissionCounts = DB::table('submissions')
             ->select('submitter_id', DB::raw('COUNT(*) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('submitter_id')
             ->get();
 
@@ -302,7 +311,8 @@ class updateCounts extends Command
         // Get unique gene counts per submitter
         $uniqueGenes = DB::table('submissions')
             ->select('submitter_id', DB::raw('COUNT(DISTINCT gene_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('submitter_id')
             ->get();
 
@@ -316,7 +326,8 @@ class updateCounts extends Command
         // Get unique disease counts per submitter
         $uniqueDiseases = DB::table('submissions')
             ->select('submitter_id', DB::raw('COUNT(DISTINCT disease_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('submitter_id')
             ->get();
 
@@ -361,6 +372,7 @@ class updateCounts extends Command
         ]);
 
         // Get classification counts per disease using SQL aggregation
+        // Only count live (is_live=true) AND published (status='published') submissions
         $classificationCounts = DB::table('submissions')
             ->join('classifications', 'submissions.classification_id', '=', 'classifications.id')
             ->select(
@@ -368,7 +380,8 @@ class updateCounts extends Command
                 'classifications.slug',
                 DB::raw('COUNT(*) as count')
             )
-            ->where('submissions.is_current', true)
+            ->where('submissions.is_live', true)
+            ->where('submissions.status', Submission::STATUS_PUBLISHED)
             ->groupBy('submissions.disease_id', 'classifications.slug')
             ->get();
 
@@ -386,7 +399,8 @@ class updateCounts extends Command
         // Get total submission counts per disease
         $submissionCounts = DB::table('submissions')
             ->select('disease_id', DB::raw('COUNT(*) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('disease_id')
             ->get();
 
@@ -400,7 +414,8 @@ class updateCounts extends Command
         // Get unique submitter counts per disease
         $uniqueSubmitters = DB::table('submissions')
             ->select('disease_id', DB::raw('COUNT(DISTINCT submitter_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('disease_id')
             ->get();
 
@@ -414,7 +429,8 @@ class updateCounts extends Command
         // Get unique gene counts per disease
         $uniqueGenes = DB::table('submissions')
             ->select('disease_id', DB::raw('COUNT(DISTINCT gene_id) as count'))
-            ->where('is_current', true)
+            ->where('is_live', true)
+            ->where('status', Submission::STATUS_PUBLISHED)
             ->groupBy('disease_id')
             ->get();
 

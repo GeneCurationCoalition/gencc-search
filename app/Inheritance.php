@@ -11,9 +11,15 @@ class Inheritance extends Model
     use HasFactory;
     use ModelTransform;
 
+    /**
+     * Get all the live published (publicly visible) submissions for this inheritance mode.
+     * Filters by is_live=true (most recent version) AND status='published'.
+     */
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('is_current', '=', true);
+        return $this->hasMany('App\Submission')
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED);
     }
 
     public function scopeCurie($query, $id)

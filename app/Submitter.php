@@ -28,9 +28,17 @@ class Submitter extends Model
         return $this->hasMany('App\SubmissionFile')->orderBy('status', 'asc');
     }
 
+    /**
+     * Get all the live published (publicly visible) submissions for this submitter.
+     * Filters by is_live=true (most recent version) AND status='published'.
+     */
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('is_current', '=', true)->orderBy('classification_id')->orderBy('submitted_as_date');
+        return $this->hasMany('App\Submission')
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED)
+            ->orderBy('classification_id')
+            ->orderBy('submitted_as_date');
     }
 
     protected $fillable = [

@@ -68,13 +68,20 @@ class SubmissionController extends Controller
             return redirect()->route('submission-show', ['id' => $submission->display_id]);
         }
 
-        // Find the most recent version of this SGC ID (highest version number)
+        // Find the most recent version of this SGC ID (is_live=true means most recent)
         $mostRecentVersion = Submission::where('uuid', $submission->uuid)
-            ->orderBy('version_number', 'desc')
+            ->where('is_live', true)
             ->first();
 
-        // Check if the most recent version is unpublished (not current and has unpublished_at)
-        $isSgcIdUnpublished = !$mostRecentVersion->is_current && $mostRecentVersion->unpublished_at !== null;
+        // If no is_live found, fallback to highest version number (data migration edge case)
+        if (!$mostRecentVersion) {
+            $mostRecentVersion = Submission::where('uuid', $submission->uuid)
+                ->orderBy('version_number', 'desc')
+                ->first();
+        }
+
+        // Check if this SGC ID is unpublished (most recent version has status='unpublished')
+        $isSgcIdUnpublished = $mostRecentVersion && $mostRecentVersion->isUnpublished();
 
         // Initialize view variables
         $currentVersion = null;
@@ -87,22 +94,17 @@ class SubmissionController extends Controller
             // The entire SGC ID is unpublished - hide details for ALL versions
             $hideDetails = true;
             $isExplicitlyUnpublished = true;
-            $unpublishedDate = $mostRecentVersion->unpublished_at;
-        } elseif (!$submission->is_current) {
-            // This is a previous version
+            // Use released_at as the unpublish date (when the unpublish version was released)
+            $unpublishedDate = $mostRecentVersion->released_at;
+        } elseif ($submission->isHistorical()) {
+            // This is a historical version (superseded by newer version)
             $isPreviousVersion = true;
 
-            // Find the current version
+            // Find the current live published version
             $currentVersion = Submission::where('uuid', $submission->uuid)
-                ->where('is_current', true)
+                ->where('is_live', true)
+                ->where('status', Submission::STATUS_PUBLISHED)
                 ->first();
-
-            // Check if THIS specific version was explicitly unpublished
-            if ($submission->unpublished_at !== null) {
-                $isExplicitlyUnpublished = true;
-                $unpublishedDate = $submission->unpublished_at;
-                $hideDetails = true;
-            }
         }
 
         $page_meta['seo']['title'] = $submission->gene->title . " | " . $submission->disease->title . " | " . $submission->inheritance->title . " by " . $submission->submitter->title . " submission information facts";

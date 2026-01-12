@@ -118,7 +118,7 @@ class ListingByClassification extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('is_current', '=', true)->get()->sortBy('classification.order');
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->get()->sortBy('classification.order');
 
         $count_submissions = $records->count();
         $this->filter = [];
@@ -214,7 +214,7 @@ class ListingByClassification extends Component
                         $query->whereNotIn('id', $filter_set['submitters']);
                     //}
                 })
-                ->where('is_current', '=', true)
+                ->where('is_live', '=', true)
                 ->get();
         }
 

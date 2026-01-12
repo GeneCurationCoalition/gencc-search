@@ -75,7 +75,7 @@ class SubmitterModelTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        // Current submission
+        // Live submission (visible)
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -83,9 +83,10 @@ class SubmitterModelTest extends TestCase
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
             'is_current' => true,
+            'is_live' => true,
         ]);
 
-        // Non-current submission (superseded or unpublished)
+        // Non-live submission (historical or unpublished)
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -93,6 +94,7 @@ class SubmitterModelTest extends TestCase
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
             'is_current' => false,
+            'is_live' => false,
         ]);
 
         $this->assertCount(1, $submitter->submissions);

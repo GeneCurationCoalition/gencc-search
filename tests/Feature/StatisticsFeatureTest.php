@@ -122,7 +122,7 @@ class StatisticsFeatureTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        // Create 3 current submissions
+        // Create 3 live submissions (visible)
         Submission::factory()->count(3)->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -130,9 +130,10 @@ class StatisticsFeatureTest extends TestCase
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
             'is_current' => true,
+            'is_live' => true,
         ]);
 
-        // Create 1 non-current submission (superseded or unpublished)
+        // Create 1 non-live submission (historical or unpublished)
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -140,6 +141,7 @@ class StatisticsFeatureTest extends TestCase
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
             'is_current' => false,
+            'is_live' => false,
         ]);
 
         $response = $this->get('/statistics');

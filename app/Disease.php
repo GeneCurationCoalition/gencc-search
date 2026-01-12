@@ -136,12 +136,14 @@ class Disease extends Model
     }
 
     /**
-     * Get all the current (active) submissions associated with this disease
+     * Get all the live published (publicly visible) submissions associated with this disease.
+     * Filters by is_live=true (most recent version) AND status='published'.
      */
     public function submissions()
     {
         return $this->belongsToMany('App\Submission', 'disease_submission')
-            ->where('is_current', '=', true)
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED)
             ->withTimestamps()
             ->withPivot('type');
     }

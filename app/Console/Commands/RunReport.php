@@ -160,7 +160,7 @@ class RunReport extends Command
     {
         $classifications = Classification::all()->pluck('title')->toArray();
 
-        $records = Submission::where('is_current', true)->get();
+        $records = Submission::where('is_live', true)->get();
         $fd = fopen("/tmp/conflictreport.tsv", "w");
 
         $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +\t";
@@ -251,7 +251,7 @@ class RunReport extends Command
     {
         $subs = Submitter::all()->pluck('title')->toArray();
 
-        $records = Submission::where('is_current', true)->get();
+        $records = Submission::where('is_live', true)->get();
         $fd = fopen("/tmp/conflictreport.tsv", "w");
 
         $header = "Gene\tHGNC\tMONDO\tDisease\tMOI\tLimited -\tModerate +\t";

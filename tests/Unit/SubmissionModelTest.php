@@ -80,19 +80,29 @@ class SubmissionModelTest extends TestCase
     }
 
     /** @test */
-    public function submission_can_be_current()
+    public function submission_can_be_published()
     {
-        $submission = Submission::factory()->create(['is_current' => true]);
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
 
-        $this->assertTrue($submission->is_current);
+        $this->assertTrue($submission->is_live);
+        $this->assertEquals(Submission::STATUS_PUBLISHED, $submission->status);
+        $this->assertTrue($submission->isPublished());
     }
 
     /** @test */
-    public function submission_can_be_non_current()
+    public function submission_can_be_unpublished_status()
     {
-        $submission = Submission::factory()->create(['is_current' => false]);
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_UNPUBLISHED,
+        ]);
 
-        $this->assertFalse($submission->is_current);
+        $this->assertTrue($submission->is_live);
+        $this->assertEquals(Submission::STATUS_UNPUBLISHED, $submission->status);
+        $this->assertTrue($submission->isUnpublished());
     }
 
     /** @test */
@@ -134,5 +144,165 @@ class SubmissionModelTest extends TestCase
         $this->assertEquals('2024-01-15', $submission->submitted_as_date);
         $this->assertEquals('12345678', $submission->submitted_as_pmids);
         $this->assertEquals('Test notes', $submission->submitted_as_notes);
+    }
+
+    /** @test */
+    public function submission_can_be_live()
+    {
+        $submission = Submission::factory()->create(['is_live' => true]);
+
+        $this->assertTrue($submission->is_live);
+    }
+
+    /** @test */
+    public function submission_can_be_not_live()
+    {
+        $submission = Submission::factory()->create(['is_live' => false]);
+
+        $this->assertFalse($submission->is_live);
+    }
+
+    /** @test */
+    public function submission_can_have_released_at()
+    {
+        $releaseDate = now();
+        $submission = Submission::factory()->create(['released_at' => $releaseDate]);
+
+        $this->assertNotNull($submission->released_at);
+    }
+
+    /** @test */
+    public function submission_live_scope_only_returns_live_published_submissions()
+    {
+        // Create a live published submission (should be returned)
+        Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+        // Create a live unpublished submission (should NOT be returned)
+        Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_UNPUBLISHED,
+        ]);
+        // Create a historical submission (should NOT be returned)
+        Submission::factory()->create([
+            'is_live' => false,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        $liveSubmissions = Submission::live()->get();
+
+        $this->assertCount(1, $liveSubmissions);
+        $this->assertTrue($liveSubmissions->first()->is_live);
+        $this->assertEquals(Submission::STATUS_PUBLISHED, $liveSubmissions->first()->status);
+    }
+
+    /** @test */
+    public function submission_most_recent_scope_returns_all_current_versions()
+    {
+        // Create a live published submission (is_live=true)
+        Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+        // Create a live unpublished submission (is_live=true)
+        Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_UNPUBLISHED,
+        ]);
+        // Create a historical submission (is_live=false)
+        Submission::factory()->create([
+            'is_live' => false,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        // mostRecent() should return all is_live=true submissions (both published and unpublished)
+        $mostRecentSubmissions = Submission::mostRecent()->get();
+
+        $this->assertCount(2, $mostRecentSubmissions);
+        $this->assertTrue($mostRecentSubmissions->every(fn ($s) => $s->is_live));
+    }
+
+    /** @test */
+    public function submission_is_unpublished_returns_true_when_live_and_status_unpublished()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_UNPUBLISHED,
+        ]);
+
+        $this->assertTrue($submission->isUnpublished());
+    }
+
+    /** @test */
+    public function submission_is_unpublished_returns_false_when_status_published()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        $this->assertFalse($submission->isUnpublished());
+    }
+
+    /** @test */
+    public function submission_is_historical_returns_true_when_not_live()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => false,
+        ]);
+
+        $this->assertTrue($submission->isHistorical());
+    }
+
+    /** @test */
+    public function submission_is_historical_returns_false_when_live()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+        ]);
+
+        $this->assertFalse($submission->isHistorical());
+    }
+
+    /** @test */
+    public function submission_factory_unpublished_state_creates_correct_values()
+    {
+        $submission = Submission::factory()->unpublished()->create();
+
+        $this->assertFalse($submission->is_current);  // deprecated column
+        $this->assertTrue($submission->is_live);      // is most recent version
+        $this->assertEquals(Submission::STATUS_UNPUBLISHED, $submission->status);
+        $this->assertNotNull($submission->released_at);
+    }
+
+    /** @test */
+    public function submission_factory_historical_state_creates_correct_values()
+    {
+        $submission = Submission::factory()->historical()->create();
+
+        $this->assertFalse($submission->is_live);  // not the most recent version
+    }
+
+    /** @test */
+    public function submission_is_published_returns_true_when_live_and_status_published()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        $this->assertTrue($submission->isPublished());
+    }
+
+    /** @test */
+    public function submission_is_published_returns_false_when_status_unpublished()
+    {
+        $submission = Submission::factory()->create([
+            'is_live' => true,
+            'status' => Submission::STATUS_UNPUBLISHED,
+        ]);
+
+        $this->assertFalse($submission->isPublished());
     }
 }

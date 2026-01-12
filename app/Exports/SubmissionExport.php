@@ -28,7 +28,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function collection()
     {
-        return Submission::where('is_current', '=', true)->get();
+        return Submission::where('is_live', '=', true)->get();
     }
 
     /**
