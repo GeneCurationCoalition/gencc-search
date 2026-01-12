@@ -13,9 +13,15 @@ class Classification extends Model
     use ModelTransform;
     use DisplayTransform;
 
+    /**
+     * Get all the live published (publicly visible) submissions for this classification.
+     * Filters by is_live=true (most recent version) AND status='published'.
+     */
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('status', '=', 1);
+        return $this->hasMany('App\Submission')
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED);
     }
 
     public function scopeCurie($query, $id)

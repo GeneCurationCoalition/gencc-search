@@ -59,14 +59,156 @@ class Submission extends Model
         return $this->belongsTo('App\Disease');
     }
 
+    /**
+     * Status constants
+     */
+    const STATUS_PUBLISHED = 'published';
+    const STATUS_UNPUBLISHED = 'unpublished';
+
     public function scopeCurie($query, $id)
     {
-        return $query->where('curie', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
+        // is_live = most recent version, status = 'published' for publicly visible
+        return $query->where('curie', '=', $id)
+            ->where('is_live', '=', true)
+            ->where('status', '=', self::STATUS_PUBLISHED)
+            ->orderBy('updated_at', 'asc');
     }
 
     public function scopeUuid($query, $id)
     {
-        return $query->where('uuid', '=', $id)->where('status', '=', 1)->orderBy('updated_at', 'asc');
+        // is_live = most recent version, status = 'published' for publicly visible
+        return $query->where('uuid', '=', $id)
+            ->where('is_live', '=', true)
+            ->where('status', '=', self::STATUS_PUBLISHED)
+            ->orderBy('updated_at', 'asc');
+    }
+
+    /**
+     * Scope to find a submission by display ID (uuid.version format).
+     * Supports both "SGC-107616.2" and "SGC-107616" formats.
+     * If no version is specified, returns the most recent version (is_live=true).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $displayId The display ID (e.g., "SGC-107616.2" or "SGC-107616")
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByDisplayId($query, $displayId)
+    {
+        // Check if the display ID contains a version number
+        if (preg_match('/^(.+)\.(\d+)$/', $displayId, $matches)) {
+            // Has version number - look up specific version
+            $uuid = $matches[1];
+            $version = (int) $matches[2];
+            return $query->where('uuid', '=', $uuid)->where('version_number', '=', $version);
+        }
+
+        // No version number - return the most recent version (is_live=true)
+        return $query->where('uuid', '=', $displayId)->where('is_live', '=', true);
+    }
+
+    /**
+     * Scope to only include live published submissions (publicly visible).
+     * These are the most recent versions (is_live=true) with status='published'.
+     * Use this scope for counting and public display.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeLive($query)
+    {
+        return $query->where('is_live', '=', true)
+            ->where('status', '=', self::STATUS_PUBLISHED);
+    }
+
+    /**
+     * Scope to only include published submissions.
+     * Alias for scopeLive() for semantic clarity.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePublished($query)
+    {
+        return $this->scopeLive($query);
+    }
+
+    /**
+     * Scope to only include current (active) submissions.
+     * @deprecated Use scopeLive() instead. This scope is kept for backwards compatibility.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCurrent($query)
+    {
+        return $query->where('is_live', '=', true)
+            ->where('status', '=', self::STATUS_PUBLISHED);
+    }
+
+    /**
+     * Scope to only include the most recent version of each SGC ID.
+     * This includes both published and unpublished submissions (any status where is_live=true).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeMostRecent($query)
+    {
+        return $query->where('is_live', '=', true);
+    }
+
+    /**
+     * Scope to get all versions of a specific SGC ID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $uuid The SGC ID (uuid)
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAllVersions($query, $uuid)
+    {
+        return $query->where('uuid', '=', $uuid)->orderBy('version_number', 'desc');
+    }
+
+    /**
+     * Check if this submission version is unpublished (removed).
+     * A submission is unpublished if it is the most recent version (is_live=true) with status='unpublished'.
+     *
+     * @return bool
+     */
+    public function isUnpublished(): bool
+    {
+        return $this->is_live && $this->status === self::STATUS_UNPUBLISHED;
+    }
+
+    /**
+     * Check if this submission version is published.
+     *
+     * @return bool
+     */
+    public function isPublished(): bool
+    {
+        return $this->is_live && $this->status === self::STATUS_PUBLISHED;
+    }
+
+    /**
+     * Check if this submission version is historical (superseded by a newer version).
+     *
+     * @return bool
+     */
+    public function isHistorical(): bool
+    {
+        return !$this->is_live;
+    }
+
+    /**
+     * Get the display ID (SGC ID with version number).
+     * Format: SGC-XXXXXX.N (e.g., SGC-100001.2)
+     *
+     * @return string
+     */
+    public function getDisplayIdAttribute(): string
+    {
+        return $this->uuid . '.' . ($this->version_number ?? 1);
     }
 
 
@@ -150,7 +292,11 @@ class Submission extends Model
     }
 
     protected $casts = [
-        'date' => 'date:Y-m-d'
+        'date' => 'date:Y-m-d',
+        'released_at' => 'datetime',
+        'is_current' => 'boolean',       // @deprecated - use is_live + status instead
+        'is_live' => 'boolean',
+        'version_number' => 'integer'
     ];
 
 
@@ -163,6 +309,11 @@ class Submission extends Model
 
     protected $fillable = [
         'uuid',
+        'version_number',
+        'is_current',        // @deprecated - use is_live + status instead
+        'is_live',
+        'status',
+        'released_at',
         'order',
         'submitted_as_submission_id' ,
         'submitted_as_hgnc_id',
@@ -183,7 +334,6 @@ class Submission extends Model
         'submitted_run_date',
         'from_submission_file_name',
         'from_submission_file_id',
-        'private_notes',
-        'status'
+        'private_notes'
     ];
 }

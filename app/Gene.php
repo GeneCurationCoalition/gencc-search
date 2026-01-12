@@ -82,12 +82,14 @@ class Gene extends Model
 
 
     /**
-     * Get all the published submissions associated with this gene.
-     *
+     * Get all the live published (publicly visible) submissions associated with this gene.
+     * Filters by is_live=true (most recent version) AND status='published'.
      */
     public function submissions()
     {
-        return $this->hasMany('App\Submission')->where('status', '=', 1);
+        return $this->hasMany('App\Submission')
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED);
     }
 
 

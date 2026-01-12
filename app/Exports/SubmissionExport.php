@@ -28,7 +28,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function collection()
     {
-        return Submission::where('status', '=', 1)->get();
+        return Submission::where('is_live', '=', true)->get();
     }
 
     /**
@@ -38,6 +38,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
     {
         return [
             $submission->uuid,
+            $submission->version_number,
             $submission->gene_curie                 = $submission->gene->curie,
             $submission->gene_symbol                = $submission->gene->title,
             $submission->disease_curie              = $submission->disease->curie ?? '',
@@ -75,7 +76,8 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
     public function headings(): array
     {
         return [
-            'uuid',
+            'sgc_id',
+            'version_number',
             'gene_curie',
             'gene_symbol',
             'disease_curie',

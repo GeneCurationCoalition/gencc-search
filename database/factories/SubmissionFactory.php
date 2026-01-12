@@ -32,13 +32,67 @@ class SubmissionFactory extends Factory
             'submitted_as_pmids' => (string) $this->faker->numberBetween(10000000, 39999999),
             'submitted_as_assertion_criteria_url' => $this->faker->url,
             'submitted_run_date' => $this->faker->dateTimeThisYear(),
-            'status' => 1,
+            'version_number' => 1,
+            'is_current' => true,         // @deprecated - use is_live + status
+            'is_live' => true,            // Most recent version
+            'status' => 'published',      // Publicly visible
+            'released_at' => now(),
         ];
     }
 
+    /**
+     * Create an unpublished submission (most recent version, but hidden from public).
+     * is_live=true (most recent), status='unpublished' (hidden)
+     */
     public function unpublished()
     {
-        return $this->state(fn () => ['status' => 0]);
+        return $this->state(fn () => [
+            'is_current' => false,        // @deprecated
+            'is_live' => true,            // Most recent version
+            'status' => 'unpublished',    // Hidden from public
+            'released_at' => now(),
+        ]);
+    }
+
+    public function version(int $version)
+    {
+        return $this->state(fn () => ['version_number' => $version]);
+    }
+
+    public function notCurrent()
+    {
+        return $this->state(fn () => ['is_current' => false]);
+    }
+
+    /**
+     * Create a live published submission (most recent, publicly visible).
+     */
+    public function live()
+    {
+        return $this->state(fn () => [
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+    }
+
+    /**
+     * Create a non-live submission (historical, superseded by newer version).
+     */
+    public function notLive()
+    {
+        return $this->state(fn () => ['is_live' => false]);
+    }
+
+    /**
+     * Create a historical submission (superseded by a newer version).
+     * is_live=false means this is not the most recent version.
+     */
+    public function historical()
+    {
+        return $this->state(fn () => [
+            'is_live' => false,           // Not the most recent version
+            'status' => 'published',      // Was published before being superseded
+        ]);
     }
 
     public function forGene(Gene $gene)

@@ -90,7 +90,7 @@ class GeneFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'status' => 1,
+            'is_current' => true,
         ]);
 
         $response = $this->get('/genes/' . $gene->curie);

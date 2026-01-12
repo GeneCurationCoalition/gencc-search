@@ -39,7 +39,7 @@ class updateGdms extends Command
      */
     public function handle()
     {
-        $items = Submission::with('gene', 'disease', 'inheritance')->where('status', '=', 1)->get();
+        $items = Submission::with('gene', 'disease', 'inheritance')->where('is_live', '=', true)->get();
         //$items = $items->processSubmissionsForGene();
         //dd($items);
         // if (empty($items))

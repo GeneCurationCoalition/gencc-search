@@ -17,8 +17,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Publish endpoint
-Route::post('/publish', 'PublishController@process');
+// Release endpoint (publish/unpublish submissions)
+Route::post('/release', 'ReleaseController@process');
 
 // Export endpoints
 Route::get('/export/submissions', 'DownloadController@export_XLSX');

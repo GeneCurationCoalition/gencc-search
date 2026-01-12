@@ -4,9 +4,52 @@
   @include("shared/submission-headline")
 @endsection
 @section('content')
-<div class="grid grid-cols-12 mt-4 gap-0">
+<div class="grid grid-cols-12 gap-0">
     <div class="col-span-12">
-      <div class="grid grid-cols-12 gap-0">
+      {{-- Previous Version Warning Banner - shown when viewing a previous version with a current version available --}}
+      @if($isPreviousVersion ?? false)
+      <div class="p-6 mb-4" style="background-color: #FEF3C7; border: 2px solid #92400E;">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6" style="color: #92400E;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-base font-semibold" style="color: #000000;">Previous Version</h3>
+            <p class="mt-1 text-sm" style="color: #000000;">
+              You are looking at a previous version of this record ({{ $submission->display_id }}).
+              @if(isset($currentVersion) && $currentVersion)
+                <a href="{{ route('submission-show', ['id' => $currentVersion->display_id]) }}" class="font-semibold underline" style="color: #0000EE;">Please see the current version</a>.
+              @endif
+            </p>
+          </div>
+        </div>
+      </div>
+      @endif
+
+      {{-- Unpublished Submission Banner - shown when submission is explicitly unpublished --}}
+      @if($isExplicitlyUnpublished ?? false)
+      <div class="p-6 mb-4" style="background-color: #FEE2E2; border: 2px solid #991B1B;">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6" style="color: #991B1B;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-base font-semibold" style="color: #000000;">Unpublished Submission</h3>
+            <p class="mt-1 text-sm" style="color: #000000;">
+              Submission {{ $submission->display_id }} was removed by the submitter on {{ Carbon\Carbon::parse($unpublishedDate)->format('m/d/Y') }}.
+            </p>
+          </div>
+        </div>
+      </div>
+      @endif
+
+      {{-- Show details only if not hidden --}}
+      @if(!($hideDetails ?? false))
+      <div class="grid grid-cols-12 gap-0 mt-4">
 
 
         <div class="col-span-2 pt-3 text-right pr-3">Submitter:</div>
@@ -15,12 +58,12 @@
           {{-- <div class="text-xs">{{ $submission->submitter->curie }}</div> --}}
         </div>
 
-        {{-- <div class="col-span-2 pt-3 text-right pr-3">GenCC Submission ID:</div>
-        <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          <div class="font-normal font-bold">{{ $submission->uuid }}</a></div>
-        </div> --}}
-
         <hr class="col-span-12 my-4" />
+
+        <div class="col-span-2 pt-3 text-right pr-3">Accession:</div>
+        <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
+          <div class="font-normal">{{ $submission->display_id }}</div>
+        </div>
 
         <div class="col-span-2 pt-3 text-right pr-3">Classification:</div>
         <div class="col-span-4 py-1 my-2 border-l-8 pl-3">
@@ -222,6 +265,7 @@
         </div>
 
       </div>
+      @endif
     </div>
 </div>
 
