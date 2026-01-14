@@ -19,7 +19,7 @@
             <h3 class="text-base font-semibold" style="color: #000000;">Previous Version</h3>
             <p class="mt-1 text-sm" style="color: #000000;">
               You are looking at a previous version of this record ({{ $submission->display_id }}).
-              @if(isset($currentVersion) && $currentVersion && !($isExplicitlyUnpublished ?? false))
+              @if(isset($currentVersion) && $currentVersion && $currentVersion->status === 'published')
                 <a href="{{ route('submission-show', ['id' => $currentVersion->display_id]) }}" class="font-semibold underline" style="color: #0000EE;">Please see the current version</a>.
               @endif
             </p>

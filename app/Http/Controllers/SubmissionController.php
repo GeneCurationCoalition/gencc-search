@@ -107,6 +107,13 @@ class SubmissionController extends Controller
             // This is a historical version (superseded by newer version)
             $isPreviousVersion = true;
 
+            // Check if THIS specific version was unpublished (even though a newer published version exists)
+            if ($submission->status === Submission::STATUS_UNPUBLISHED) {
+                $isExplicitlyUnpublished = true;
+                $hideDetails = true;
+                $unpublishedDate = $submission->released_at;
+            }
+
             // Find the current live published version
             $currentVersion = Submission::where('uuid', $submission->uuid)
                 ->where('is_live', true)
