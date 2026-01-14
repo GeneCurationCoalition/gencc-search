@@ -19,7 +19,7 @@
             <h3 class="text-base font-semibold" style="color: #000000;">Previous Version</h3>
             <p class="mt-1 text-sm" style="color: #000000;">
               You are looking at a previous version of this record ({{ $submission->display_id }}).
-              @if(isset($currentVersion) && $currentVersion)
+              @if(isset($currentVersion) && $currentVersion && !($isExplicitlyUnpublished ?? false))
                 <a href="{{ route('submission-show', ['id' => $currentVersion->display_id]) }}" class="font-semibold underline" style="color: #0000EE;">Please see the current version</a>.
               @endif
             </p>
@@ -40,7 +40,7 @@
           <div class="ml-3">
             <h3 class="text-base font-semibold" style="color: #000000;">Unpublished Submission</h3>
             <p class="mt-1 text-sm" style="color: #000000;">
-              Submission {{ $submission->display_id }} was removed by the submitter on {{ Carbon\Carbon::parse($unpublishedDate)->format('m/d/Y') }}.
+              This submission ({{ $submission->display_id }}) was unpublished on {{ Carbon\Carbon::parse($unpublishedDate)->format('m/d/Y') }} by {{ $submission->submitter->title }}.
             </p>
           </div>
         </div>

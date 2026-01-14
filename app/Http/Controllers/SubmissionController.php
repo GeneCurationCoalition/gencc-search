@@ -96,6 +96,13 @@ class SubmissionController extends Controller
             $isExplicitlyUnpublished = true;
             // Use released_at as the unpublish date (when the unpublish version was released)
             $unpublishedDate = $mostRecentVersion->released_at;
+
+            // If viewing a historical version of an unpublished SGC, also show previous version banner
+            if ($submission->isHistorical()) {
+                $isPreviousVersion = true;
+                // The "current version" is the unpublished one (no link will be shown since it's unpublished)
+                $currentVersion = $mostRecentVersion;
+            }
         } elseif ($submission->isHistorical()) {
             // This is a historical version (superseded by newer version)
             $isPreviousVersion = true;
