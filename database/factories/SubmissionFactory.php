@@ -33,7 +33,6 @@ class SubmissionFactory extends Factory
             'submitted_as_assertion_criteria_url' => $this->faker->url,
             'submitted_run_date' => $this->faker->dateTimeThisYear(),
             'version_number' => 1,
-            'is_current' => true,         // @deprecated - use is_live + status
             'is_live' => true,            // Most recent version
             'status' => 'published',      // Publicly visible
             'released_at' => now(),
@@ -47,7 +46,6 @@ class SubmissionFactory extends Factory
     public function unpublished()
     {
         return $this->state(fn () => [
-            'is_current' => false,        // @deprecated
             'is_live' => true,            // Most recent version
             'status' => 'unpublished',    // Hidden from public
             'released_at' => now(),
@@ -57,11 +55,6 @@ class SubmissionFactory extends Factory
     public function version(int $version)
     {
         return $this->state(fn () => ['version_number' => $version]);
-    }
-
-    public function notCurrent()
-    {
-        return $this->state(fn () => ['is_current' => false]);
     }
 
     /**

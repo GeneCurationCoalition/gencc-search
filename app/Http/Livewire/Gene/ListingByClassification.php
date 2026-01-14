@@ -118,7 +118,7 @@ class ListingByClassification extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->get()->sortBy('classification.order');
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get()->sortBy('classification.order');
 
         $count_submissions = $records->count();
         $this->filter = [];
@@ -215,6 +215,7 @@ class ListingByClassification extends Component
                     //}
                 })
                 ->where('is_live', '=', true)
+                ->where('status', '=', Submission::STATUS_PUBLISHED)
                 ->get();
         }
 

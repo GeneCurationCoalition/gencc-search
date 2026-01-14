@@ -102,8 +102,11 @@ class Submission extends Model
             return $query->where('uuid', '=', $uuid)->where('version_number', '=', $version);
         }
 
-        // No version number - return the most recent version (is_live=true)
-        return $query->where('uuid', '=', $displayId)->where('is_live', '=', true);
+        // No version number - return the most recent published version only
+        // Unpublished submissions can only be accessed via explicit versioned URLs
+        return $query->where('uuid', '=', $displayId)
+            ->where('is_live', '=', true)
+            ->where('status', '=', self::STATUS_PUBLISHED);
     }
 
     /**
@@ -294,7 +297,6 @@ class Submission extends Model
     protected $casts = [
         'date' => 'date:Y-m-d',
         'released_at' => 'datetime',
-        'is_current' => 'boolean',       // @deprecated - use is_live + status instead
         'is_live' => 'boolean',
         'version_number' => 'integer'
     ];
@@ -310,7 +312,6 @@ class Submission extends Model
     protected $fillable = [
         'uuid',
         'version_number',
-        'is_current',        // @deprecated - use is_live + status instead
         'is_live',
         'status',
         'released_at',

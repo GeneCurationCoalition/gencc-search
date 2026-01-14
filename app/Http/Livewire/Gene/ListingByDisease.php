@@ -115,7 +115,7 @@ class ListingByDisease extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->get();
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
 
         $count_submissions = $records->count();
         $this->filter = [];
@@ -203,6 +203,8 @@ class ListingByDisease extends Component
                         $query->whereNotIn('id', $filter_set['submitters']);
                     //}
                 })
+                ->where('is_live', '=', true)
+                ->where('status', '=', Submission::STATUS_PUBLISHED)
                 ->get();
         }
 

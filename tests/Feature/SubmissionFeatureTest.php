@@ -41,7 +41,6 @@ class SubmissionFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         // Request with versioned URL
@@ -70,7 +69,6 @@ class SubmissionFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         // Request without version should redirect to versioned URL
@@ -105,7 +103,6 @@ class SubmissionFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         $response = $this->get('/submissions/test-uuid-67890.1');
@@ -136,7 +133,6 @@ class SubmissionFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         $response = $this->get('/submissions/test-uuid-meta.1');

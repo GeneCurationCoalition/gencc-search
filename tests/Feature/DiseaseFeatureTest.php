@@ -36,7 +36,6 @@ class DiseaseFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'is_current' => true,
         ]);
 
         $response = $this->get('/disease');
@@ -94,7 +93,6 @@ class DiseaseFeatureTest extends TestCase
             'disease_original_id' => $diseaseWithSubmission->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'is_current' => true,
         ]);
 
         // Attach submission to disease via pivot table (required for has('submissions') check)

@@ -270,7 +270,6 @@ class SubmissionModelTest extends TestCase
     {
         $submission = Submission::factory()->unpublished()->create();
 
-        $this->assertFalse($submission->is_current);  // deprecated column
         $this->assertTrue($submission->is_live);      // is most recent version
         $this->assertEquals(Submission::STATUS_UNPUBLISHED, $submission->status);
         $this->assertNotNull($submission->released_at);

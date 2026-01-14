@@ -272,8 +272,7 @@ class ReleaseController extends Controller
             // Archive ALL existing versions of this submission (mark as historical)
             $archivedCount = Submission::where('uuid', $data->submission_id)
                 ->update([
-                    'is_live' => false,       // No longer most recent
-                    'is_current' => false     // Keep deprecated column in sync
+                    'is_live' => false        // No longer most recent
                 ]);
 
             if ($archivedCount > 0) {
@@ -288,7 +287,6 @@ class ReleaseController extends Controller
                 'version_number'                         => $versionNumber,
                 'is_live'                                => true,   // Most recent version
                 'status'                                 => Submission::STATUS_PUBLISHED,
-                'is_current'                             => true,   // Keep deprecated column in sync
                 'released_at'                            => $releaseDate,
                 'order'                                  => $classification->order,
                 'submitted_run_date'                     => $releaseDate,
@@ -412,8 +410,7 @@ class ReleaseController extends Controller
             // Archive ALL existing versions of this submission (mark as historical)
             $archivedCount = Submission::where('uuid', $data->submission_id)
                 ->update([
-                    'is_live' => false,       // No longer most recent
-                    'is_current' => false     // Keep deprecated column in sync
+                    'is_live' => false        // No longer most recent
                 ]);
 
             Log::info("Archived {$archivedCount} existing version(s) of {$data->submission_id} for unpublish");
@@ -436,7 +433,6 @@ class ReleaseController extends Controller
                 'version_number'                         => $versionNumber,
                 'is_live'                                => true,   // Most recent version
                 'status'                                 => Submission::STATUS_UNPUBLISHED,
-                'is_current'                             => false,  // Keep deprecated column in sync (false = not visible)
                 'released_at'                            => $releaseDate,  // Serves as unpublish date
                 'order'                                  => $classification->order,
                 'submitted_run_date'                     => $releaseDate,

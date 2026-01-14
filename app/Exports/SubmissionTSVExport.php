@@ -28,7 +28,7 @@ class SubmissionTSVExport implements FromCollection, WithHeadings, WithMapping, 
 
     public function collection()
     {
-        return Submission::where('is_live', '=', true)->get();
+        return Submission::where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
     }
 
     /**
