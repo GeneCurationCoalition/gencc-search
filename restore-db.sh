@@ -16,13 +16,18 @@ if [[ ! -f "$BACKUP_FILE" ]]; then
 fi
 
 echo "📁 Using backup file: $BACKUP_FILE"
-echo "⚠️  This will overwrite the current 'laravel' database!"
 
-# Get database password from .env
+# Get database configuration from .env
+DB_HOST=$(grep "^DB_HOST=" .env | cut -d '=' -f2)
+DB_PORT=$(grep "^DB_PORT=" .env | cut -d '=' -f2)
+DB_DATABASE=$(grep "^DB_DATABASE=" .env | cut -d '=' -f2)
+DB_USERNAME=$(grep "^DB_USERNAME=" .env | cut -d '=' -f2)
 DB_PASSWORD=$(grep "^DB_PASSWORD=" .env | cut -d '=' -f2)
 
+echo "⚠️  This will overwrite the database: $DB_DATABASE"
+
 echo "🔄 Restoring database (this may take a few minutes)..."
-gunzip -c "$BACKUP_FILE" | mysql -u root -p"$DB_PASSWORD" laravel
+gunzip -c "$BACKUP_FILE" | mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE"
 
 echo "✅ Database restore completed"
 
