@@ -60,7 +60,6 @@ class SubmitterModelTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         $this->assertCount(1, $submitter->submissions);
@@ -82,7 +81,6 @@ class SubmitterModelTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
             'is_live' => true,
         ]);
 
@@ -93,7 +91,6 @@ class SubmitterModelTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => false,
             'is_live' => false,
         ]);
 

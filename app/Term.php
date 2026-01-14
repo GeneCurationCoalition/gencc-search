@@ -19,7 +19,6 @@ use App\Gene;
  * @category   Model
  * @package    Search
  * @author     P. Weller <pweller1@geisinger.edu>
- * @copyright  2020 Geisinger
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * @version    Release: @package_version@
  * @link       http://pear.php.net/package/PackageName

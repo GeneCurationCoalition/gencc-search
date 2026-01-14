@@ -14,7 +14,6 @@ use App\Traits\ModelTransform;
  * @category   Model
  * @package    GenCC
  * @author     P. Weller <pweller1@geisinger.edu>
- * @copyright  2022 Geisinger
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * @version    Release: @package_version@
  * @link       http://pear.php.net/package/PackageName

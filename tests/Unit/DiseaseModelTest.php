@@ -87,7 +87,6 @@ class DiseaseModelTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         // Sync the disease to the submission through the pivot table

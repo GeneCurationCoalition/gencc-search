@@ -55,7 +55,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         Submission::factory()->create([
@@ -64,7 +63,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         $response = $this->get('/statistics');
@@ -90,7 +88,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         $submission2 = Submission::factory()->create([
@@ -100,7 +97,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
         ]);
 
         // Attach submissions to diseases via pivot table (disease_submission)
@@ -129,7 +125,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => true,
             'is_live' => true,
         ]);
 
@@ -140,7 +135,6 @@ class StatisticsFeatureTest extends TestCase
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
-            'is_current' => false,
             'is_live' => false,
         ]);
 
