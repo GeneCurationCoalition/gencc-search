@@ -54,6 +54,11 @@ class Submission extends Model
         return $this->belongsToMany('App\Disease', 'disease_submission')->withTimestamps()->withPivot('type');
     }
 
+    public function pubmeds()
+    {
+        return $this->belongsToMany('App\Pubmed', 'pubmed_submission');
+    }
+
     public function disease_normalized()
     {
         return $this->belongsTo('App\Disease');
@@ -246,18 +251,14 @@ class Submission extends Model
     }
 
     /**
-     * Get PubMed articles for this submission's PMIDs from gencc-sub API
+     * Get PubMed articles for this submission's PMIDs from gencc-sub API.
+     * Uses the pubmed_submission pivot table as the source of truth for PMID list.
      *
      * @return array|null Array of PubMed articles or null if no PMIDs or API error
      */
     public function getPubmedArticles()
     {
-        if (empty($this->submitted_as_pmids)) {
-            return null;
-        }
-
-        // Extract PMIDs from the stored format
-        $pmids = preg_split('/\D+/', $this->submitted_as_pmids, -1, PREG_SPLIT_NO_EMPTY);
+        $pmids = $this->pubmeds()->pluck('pmid')->sort()->values()->all();
 
         if (empty($pmids)) {
             return null;

@@ -119,11 +119,13 @@
         @endif
 
 
-          @if (strlen($submission->submitted_as_pmids)>4)
+          @if ($submission->pubmeds->count() > 0)
         <div class="col-span-2 pt-3 text-right pr-3">PubMed IDs:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
             @php
-                $pmids = preg_split('/\D+/', $submission->submitted_as_pmids, -1, PREG_SPLIT_NO_EMPTY);
+                $pmids = $submission->pubmeds->pluck('pmid')->sort(function ($a, $b) {
+                    return intval($a) - intval($b);
+                })->values()->all();
                 $pubmedArticles = $submission->getPubmedArticles();
 
                 // Create a map of PMIDs that have metadata

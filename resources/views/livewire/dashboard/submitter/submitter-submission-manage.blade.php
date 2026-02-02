@@ -81,10 +81,10 @@
         @endif
 
 
-          @if (strlen($submission->submitted_as_pmids)>2)
+          @if ($submission->pubmeds->count() > 0)
         <div class="col-span-3 pt-3 text-right pr-3">PubMed IDs:</div>
         <div class="col-span-9 py-1 my-2 border-l-8 pl-3">
-            <div class="font-normal">{{ $submission->submitted_as_pmids }}</div>
+            <div class="font-normal">{{ $submission->pubmeds->pluck('pmid')->sort(function ($a, $b) { return intval($a) - intval($b); })->implode(', ') }}</div>
 
         </div>
          @endif
