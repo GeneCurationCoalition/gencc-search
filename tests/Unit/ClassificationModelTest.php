@@ -35,14 +35,12 @@ class ClassificationModelTest extends TestCase
     }
 
     /** @test */
-    public function classification_has_uuid_scope()
+    public function classification_title_accessor_returns_title()
     {
-        $classification = Classification::factory()->create(['uuid' => 'test-uuid-123']);
+        // Note: gencc-sub uses 'title' column directly (not 'name')
+        $classification = Classification::factory()->create(['title' => 'Test Classification']);
 
-        $found = Classification::uuid('test-uuid-123')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($classification->id, $found->id);
+        $this->assertEquals('Test Classification', $classification->title);
     }
 
     /** @test */
@@ -133,6 +131,7 @@ class ClassificationModelTest extends TestCase
     /** @test */
     public function classification_has_display_properties()
     {
+        // Note: gencc-sub uses 'title' column directly
         $classification = Classification::factory()->create([
             'title' => 'Definitive',
             'abbreviation' => 'DEF',
@@ -149,6 +148,7 @@ class ClassificationModelTest extends TestCase
     /** @test */
     public function classification_order_determines_sort_order()
     {
+        // Note: gencc-sub uses 'title' column directly
         $definitive = Classification::factory()->create(['order' => 1, 'title' => 'Definitive']);
         $strong = Classification::factory()->create(['order' => 2, 'title' => 'Strong']);
         $moderate = Classification::factory()->create(['order' => 3, 'title' => 'Moderate']);

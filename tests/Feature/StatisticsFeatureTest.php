@@ -84,7 +84,7 @@ class StatisticsFeatureTest extends TestCase
         $submission1 = Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease1->id,
-            'disease_original_id' => $disease1->id,
+            'original_disease_id' => $disease1->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
@@ -93,7 +93,7 @@ class StatisticsFeatureTest extends TestCase
         $submission2 = Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease2->id,
-            'disease_original_id' => $disease2->id,
+            'original_disease_id' => $disease2->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,

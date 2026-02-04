@@ -37,7 +37,7 @@ class SubmissionFeatureTest extends TestCase
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
-            'disease_original_id' => $disease->id,
+            'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
@@ -65,7 +65,7 @@ class SubmissionFeatureTest extends TestCase
             'version_number' => 2,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
-            'disease_original_id' => $disease->id,
+            'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
@@ -89,9 +89,9 @@ class SubmissionFeatureTest extends TestCase
     public function submission_show_includes_related_gene_disease_and_submitter()
     {
         $gene = Gene::factory()->create(['title' => 'BRCA1']);
-        $disease = Disease::factory()->create(['title' => 'Breast Cancer']);
+        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
-        $submitter = Submitter::factory()->create(['title' => 'Test Lab']);
+        $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $inheritance = Inheritance::factory()->create();
 
         $submission = Submission::factory()->create([
@@ -99,7 +99,7 @@ class SubmissionFeatureTest extends TestCase
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
-            'disease_original_id' => $disease->id,
+            'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
@@ -119,17 +119,17 @@ class SubmissionFeatureTest extends TestCase
     public function submission_show_page_has_seo_meta_title()
     {
         $gene = Gene::factory()->create(['title' => 'BRCA1']);
-        $disease = Disease::factory()->create(['title' => 'Breast Cancer']);
+        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
-        $submitter = Submitter::factory()->create(['title' => 'Test Lab']);
-        $inheritance = Inheritance::factory()->create(['title' => 'Autosomal dominant']);
+        $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
+        $inheritance = Inheritance::factory()->create(['name' => 'Autosomal dominant']);
 
         $submission = Submission::factory()->create([
             'uuid' => 'test-uuid-meta',
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
-            'disease_original_id' => $disease->id,
+            'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,

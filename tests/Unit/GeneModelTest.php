@@ -36,14 +36,22 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_has_uuid_scope()
+    public function gene_has_ident_scope()
     {
-        $gene = Gene::factory()->create(['uuid' => 'test-uuid-123']);
+        $gene = Gene::factory()->create(['ident' => 'test-ident-123']);
 
-        $found = Gene::uuid('test-uuid-123')->first();
+        $found = Gene::ident('test-ident-123')->first();
 
         $this->assertNotNull($found);
         $this->assertEquals($gene->id, $found->id);
+    }
+
+    /** @test */
+    public function gene_uuid_accessor_returns_ident()
+    {
+        $gene = Gene::factory()->create(['ident' => 'test-ident-456']);
+
+        $this->assertEquals('test-ident-456', $gene->uuid);
     }
 
     /** @test */
@@ -69,40 +77,11 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_has_ensembl_scope()
+    public function gene_has_name_scope()
     {
-        $gene = Gene::factory()->create(['ensembl_gene_id' => 'ENSG00000012048']);
+        $gene = Gene::factory()->create(['name' => 'breast cancer 1']);
 
-        $found = Gene::ensembl('ENSG00000012048')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
-    public function gene_has_entrez_scope()
-    {
-        $gene = Gene::factory()->create(['entrez_id' => '672']);
-
-        $found = Gene::entrez('672')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /**
-     * @test
-     * @group mysql-only
-     */
-    public function gene_has_omim_scope()
-    {
-        // Skip on SQLite - JSON contains not supported
-        if (DB::getDriverName() === 'sqlite') {
-            $this->markTestSkipped('SQLite does not support JSON contains operations');
-        }
-
-        $gene = Gene::factory()->create(['omim_id' => ['113705']]);
-        $found = Gene::omim('113705')->first();
+        $found = Gene::name('breast cancer 1')->first();
 
         $this->assertNotNull($found);
         $this->assertEquals($gene->id, $found->id);
@@ -161,71 +140,58 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_display_aliases_returns_message_when_empty()
+    public function gene_alias_symbol_accessor_returns_alias_symbols()
+    {
+        // gencc-sub uses 'alias_symbol' column (not alias_symbols)
+        $gene = Gene::factory()->create(['alias_symbol' => 'ABC,DEF']);
+
+        $this->assertEquals(['ABC', 'DEF'], $gene->alias_symbol);
+    }
+
+    /** @test */
+    public function gene_alias_symbol_accessor_returns_empty_array_when_null()
     {
         $gene = Gene::factory()->create(['alias_symbol' => null]);
 
-        $this->assertEquals('No aliases found', $gene->display_aliases);
+        $this->assertEquals([], $gene->alias_symbol);
     }
 
     /** @test */
-    public function gene_display_previous_returns_message_when_empty()
+    public function gene_prev_symbol_accessor_returns_previous_symbols()
+    {
+        // gencc-sub uses 'prev_symbol' column (not previous_symbols)
+        $gene = Gene::factory()->create(['prev_symbol' => 'OLD1,OLD2']);
+
+        $this->assertEquals(['OLD1', 'OLD2'], $gene->prev_symbol);
+    }
+
+    /** @test */
+    public function gene_prev_symbol_accessor_returns_empty_array_when_null()
     {
         $gene = Gene::factory()->create(['prev_symbol' => null]);
 
-        $this->assertEquals('No previous names found', $gene->display_previous);
+        $this->assertEquals([], $gene->prev_symbol);
     }
 
     /** @test */
-    public function gene_rosetta_resolves_by_name()
+    public function gene_curations_accessors_read_from_individual_columns()
     {
-        $gene = Gene::factory()->create(['name' => 'BRCA1']);
-
-        $found = Gene::rosetta('BRCA1');
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
-    public function gene_rosetta_resolves_by_hgnc_prefix()
-    {
-        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:1100']);
-
-        $found = Gene::rosetta('HGNC:1100');
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
-    public function gene_rosetta_resolves_by_entrez_prefix()
-    {
-        $gene = Gene::factory()->create(['entrez_id' => '672']);
-
-        $found = Gene::rosetta('ENTREZ:672');
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
-    public function gene_rosetta_returns_null_for_empty_input()
-    {
-        $found = Gene::rosetta('');
-
-        $this->assertNull($found);
-    }
-
-    /** @test */
-    public function gene_search_list_returns_empty_for_invalid_type()
-    {
-        $result = Gene::searchList([
-            'type' => 'invalid',
-            'region' => 'chr17:43000000-43200000',
+        // gencc-sub uses individual columns (not JSON counts)
+        $gene = Gene::factory()->create([
+            'curations_definitive' => 5,
+            'curations_strong' => 3,
+            'curations_moderate' => 2,
+            'curations_limited' => 1,
+            'curations_disputed' => 0,
+            'curations_refuted' => 0,
         ]);
 
-        $this->assertEquals(0, $result->count);
+        $this->assertEquals(5, $gene->curations_definitive);
+        $this->assertEquals(3, $gene->curations_strong);
+        $this->assertEquals(2, $gene->curations_moderate);
+        $this->assertEquals(1, $gene->curations_limited);
+        $this->assertEquals(0, $gene->curations_disputed);
+        $this->assertEquals(0, $gene->curations_refuted);
     }
 
     /** @test */

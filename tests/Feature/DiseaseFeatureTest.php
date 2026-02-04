@@ -90,7 +90,7 @@ class DiseaseFeatureTest extends TestCase
         $submission = Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $diseaseWithSubmission->id,
-            'disease_original_id' => $diseaseWithSubmission->id,
+            'original_disease_id' => $diseaseWithSubmission->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
         ]);

@@ -24,14 +24,31 @@ class SubmissionModelTest extends TestCase
     }
 
     /** @test */
-    public function submission_has_uuid_scope()
+    public function submission_has_sid_scope()
     {
-        $submission = Submission::factory()->create(['uuid' => 'test-uuid-123']);
+        $submission = Submission::factory()->create(['uuid' => 'test-sid-123']);
 
-        $found = Submission::uuid('test-uuid-123')->first();
+        $found = Submission::sid('test-sid-123')->first();
 
         $this->assertNotNull($found);
         $this->assertEquals($submission->id, $found->id);
+    }
+
+    /** @test */
+    public function submission_uuid_accessor_returns_uuid()
+    {
+        $submission = Submission::factory()->create(['uuid' => 'test-uuid-456']);
+
+        $this->assertEquals('test-uuid-456', $submission->uuid);
+    }
+
+    /** @test */
+    public function submission_sid_accessor_returns_uuid()
+    {
+        $submission = Submission::factory()->create(['uuid' => 'test-uuid-789']);
+
+        // sid accessor should also return the uuid value for backward compatibility
+        $this->assertEquals('test-uuid-789', $submission->sid);
     }
 
     /** @test */
@@ -46,7 +63,7 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_belongs_to_disease()
     {
-        $disease = Disease::factory()->create(['title' => 'Test Disease']);
+        $disease = Disease::factory()->create(['name' => 'Test Disease']);
         $submission = Submission::factory()->create(['disease_id' => $disease->id]);
 
         $this->assertEquals('Test Disease', $submission->disease->title);
@@ -64,7 +81,7 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_belongs_to_submitter()
     {
-        $submitter = Submitter::factory()->create(['title' => 'Test Lab']);
+        $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $submission = Submission::factory()->create(['submitter_id' => $submitter->id]);
 
         $this->assertEquals('Test Lab', $submission->submitter->title);
@@ -120,12 +137,12 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_can_have_disease_original()
     {
-        $originalDisease = Disease::factory()->create(['title' => 'Original Disease']);
-        $mappedDisease = Disease::factory()->create(['title' => 'Mapped Disease']);
+        $originalDisease = Disease::factory()->create(['name' => 'Original Disease']);
+        $mappedDisease = Disease::factory()->create(['name' => 'Mapped Disease']);
 
         $submission = Submission::factory()->create([
             'disease_id' => $mappedDisease->id,
-            'disease_original_id' => $originalDisease->id,
+            'original_disease_id' => $originalDisease->id,
         ]);
 
         $this->assertEquals('Mapped Disease', $submission->disease->title);
@@ -136,9 +153,9 @@ class SubmissionModelTest extends TestCase
     public function submission_has_submitted_as_fields()
     {
         $submission = Submission::factory()->create([
-            'submitted_as_date' => '2024-01-15',
+            'report_date' => '2024-01-15',
             'submitted_as_pmids' => '12345678',
-            'submitted_as_notes' => 'Test notes',
+            'submission_data' => ['notes' => ['display' => 'Test notes']],
         ]);
 
         $this->assertEquals('2024-01-15', $submission->submitted_as_date);
