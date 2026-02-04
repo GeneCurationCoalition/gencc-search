@@ -28,9 +28,6 @@ Route::group(['prefix' => 'genes'], function () {
 
 });
 
-Route::group(['prefix' => 'reports'], function () {
-  Route::get('/', 'ReportController@index')->name('reports');
-});
 
 Route::group(['prefix' => 'submissions'], function () {
   Route::get('/', 'SubmissionController@index')->name('submissions');
@@ -49,21 +46,6 @@ Route::group(['prefix' => 'disease'], function () {
   Route::get('/{id}/submitters', 'DiseaseController@submitter')->name('disease-show-submitter');
 });
 
-Route::group(['prefix' => 'dashboard', 'middleware' => ['auth']], function () {
-  Route::get('/', 'DashboardController@index')->name('dashboard');
-
-  Route::group(['prefix' => 'admin'], function () {
-    Route::get('/', 'AdministratorController@index')->name('manage-submitters');
-    Route::get('/submitter-create', 'AdministratorController@submitterCreate')->name('manage-submitter-create');
-    Route::get('/{id?}', 'AdministratorController@show')->name('manage-submitter-show');
-    Route::get('/{id?}/files', 'AdministratorController@files')->name('manage-submitter-show-files');
-    Route::get('/{id?}/files/{file?}', 'AdministratorController@file')->name('manage-submitter-show-file');
-    Route::get('/{id?}/submissions/{submission?}', 'AdministratorController@submission')->name('manage-submitter-show-submission');
-    Route::get('/{id?}/profile', 'AdministratorController@profile')->name('manage-submitter-show-profile');
-  });
-
-});
-
 
 Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
@@ -73,6 +55,9 @@ Route::get('/download/action/submissions-export-xlsx', 'DownloadController@expor
 Route::get('/download/action/submissions-export-xls', 'DownloadController@export_XLS')->name('submissions-export-xls');
 Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')->name('submissions-export-tsv');
 Route::get('/download/action/submissions-export-csv', 'DownloadController@export_CSV')->name('submissions-export-csv');
+
+// Logo serving from database
+Route::get('/brand/submitters/{identifier}', 'LogoController@show')->name('submitter-logo');
 
 Route::get('/about', 'AboutController@index')->name('about');
 Route::get('/privacy', 'PrivacyController@index')->name('privacy');
