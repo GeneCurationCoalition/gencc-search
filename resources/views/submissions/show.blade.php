@@ -89,7 +89,7 @@
               <div class="font-normal">{{ $submission->disease->title }}</div>
               <div class="text-xs">{!! $submission->displayLinkToDisease($submission->disease->curie, $submission->disease->curie) !!}{!! $submission->displayDeprecationIndicator($submission->disease) !!}</div>
             </div>
-            @if($submission->disease_id != $submission->disease_original_id)
+            @if($submission->disease_original && $submission->disease_id != $submission->disease_original_id)
             <div class="mb-2">
               <div class="text-xs text-gray-500 font-semibold">Submitted as:</div>
               <div class="font-normal">{{ $submission->disease_original->title }}</div>
@@ -100,8 +100,12 @@
 
         <div class="col-span-2 pt-3 text-right pr-3">Mode Of Inheritance:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
+          @if($submission->inheritance)
           <div class="font-normal">{{ $submission->inheritance->title }}</div>
           <div class="text-xs">{!! $submission->displayLinkToMoi($submission->inheritance->curie, $submission->inheritance->curie) !!}</div>
+          @else
+          <div class="font-normal text-gray-500">N/A</div>
+          @endif
         </div>
 
         <div class="col-span-2 pt-3 text-right pr-3">Evaluated Date:</div>

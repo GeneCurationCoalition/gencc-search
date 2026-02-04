@@ -77,7 +77,7 @@
     @else
     <div class="col-span-12 xl:col-span-1">
       <div class="flex flex-col items-center justify-center">
-        <img class="h-32 max-w-md object-contain mb-4" src="/brand/submitters/{{ $submitter->uuid }}.png" alt="{{ $submitter->title }}">
+        <img class="h-32 max-w-md object-contain mb-4" src="{{ $submitter->logo }}" alt="{{ $submitter->title }}">
         <p class="text-sm leading-5 text-center font-medium text-gray-500">
             Member
         </p>

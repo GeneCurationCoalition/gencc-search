@@ -37,7 +37,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
     public function map($submission): array
     {
         return [
-            $submission->uuid,
+            $submission->sid,
             $submission->version_number,
             $submission->gene_curie                 = $submission->gene->curie,
             $submission->gene_symbol                = $submission->gene->title,
