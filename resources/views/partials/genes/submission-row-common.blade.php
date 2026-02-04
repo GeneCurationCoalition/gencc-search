@@ -28,7 +28,7 @@
                             </div>
 
                           </div>
-                          <div class="col-span-2 xl:col-span-1"><span class="list-text-label"> {{ $item->inheritance?->abbreviation ?? 'N/A' }} @if($item->inheritance)<i class="far fa-question-circle text-gray-400" title="{{ $item->inheritance->title }} Mode Of Inheritance " data-toggle="tooltip" data-placement="top" \></i>@endif</span>
+                          <div class="col-span-2 xl:col-span-1"><span class="list-text-label"> {{ optional($item->inheritance)->abbreviation ?? 'N/A' }} @if($item->inheritance)<i class="far fa-question-circle text-gray-400" title="{{ $item->inheritance->title }} Mode Of Inheritance " data-toggle="tooltip" data-placement="top" \></i>@endif</span>
                           </div>
                           <div class="col-span-11 xl:col-span-1"><i class="far fa-calendar text-gray-400"></i> <span class="list-text-label">{{ Carbon\Carbon::parse($item->submitted_as_date)->format('m/d/Y') }}</span><div class="text-sm text-gray-600 ml-4">Evaluated</div>
                         <div class="text-sm mt-3 text-gray-600 ml-4 font-semibold leading-snug">@if($item->submitted_run_date) {{ Carbon\Carbon::parse($item->submitted_run_date)->format('m/d/Y') }} @else N/A @endif<div class=" font-normal">Submitted</div></div>

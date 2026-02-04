@@ -282,7 +282,7 @@ class SubmissionController extends Controller
                 ->first();
         }
 
-        $inheritanceTitle = $submission->inheritance?->title ?? 'N/A';
+        $inheritanceTitle = optional($submission->inheritance)->title ?? 'N/A';
         $page_meta['seo']['title'] = $submission->gene->title . " | " . $submission->disease->title . " | " . $inheritanceTitle . " by " . $submission->submitter->title . " submission information facts";
 
         return view('submissions.show', [
