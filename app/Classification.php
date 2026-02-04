@@ -55,6 +55,33 @@ class Classification extends Model
     }
 
     /**
+     * Get slug attribute - computed from classification ID if not in database.
+     * Maps classification IDs to slug names for color lookups.
+     */
+    public function getSlugAttribute()
+    {
+        // Return database value if exists
+        if (!empty($this->attributes['slug'])) {
+            return $this->attributes['slug'];
+        }
+
+        // Compute from classification ID
+        $slugMap = [
+            1 => 'definitive',
+            2 => 'strong',
+            3 => 'moderate',
+            4 => 'supportive',
+            5 => 'limited',
+            6 => 'disputed',
+            7 => 'refuted',
+            8 => 'animal-model-only',
+            9 => 'no-known',
+        ];
+
+        return $slugMap[$this->id] ?? '';
+    }
+
+    /**
      * Get href attribute - computed from classification ID if not in database.
      * Maps classification IDs to filter parameter names.
      */
