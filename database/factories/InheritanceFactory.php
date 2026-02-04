@@ -25,16 +25,20 @@ class InheritanceFactory extends Factory
 
         return [
             'curie' => 'HP:' . str_pad($this->faker->unique()->numberBetween(1, 999999), 7, '0', STR_PAD_LEFT),
-            'uuid' => $this->faker->uuid,
+            'uuid' => 'moi-' . $this->faker->uuid(),
+            'ident' => 'moi-' . $this->faker->uuid(),
+            'name' => $inheritance['title'],
             'title' => $inheritance['title'],
             'abbreviation' => $inheritance['abbreviation'],
             'description' => $this->faker->sentence(),
+            'status' => 1,
         ];
     }
 
     public function autosomalDominant()
     {
         return $this->state(fn () => [
+            'name' => 'Autosomal dominant',
             'title' => 'Autosomal dominant',
             'abbreviation' => 'AD',
         ]);
@@ -43,6 +47,7 @@ class InheritanceFactory extends Factory
     public function autosomalRecessive()
     {
         return $this->state(fn () => [
+            'name' => 'Autosomal recessive',
             'title' => 'Autosomal recessive',
             'abbreviation' => 'AR',
         ]);

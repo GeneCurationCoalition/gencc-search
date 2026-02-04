@@ -71,6 +71,7 @@ class Disease extends Model
 
     /**
      * The attributes that should be cast to native types.
+     * Note: gencc-sub uses individual columns instead of JSON for counts.
      *
      * @var array
      */
@@ -84,42 +85,32 @@ class Disease extends Model
 
     /**
      * The attributes that are mass assignable.
+     * Updated to match gencc-sub column names.
      *
      * @var array
      */
     protected $fillable = [
-        'ident',
+        'ident', 'uuid',
         'type',
         'mondo_id',
         'curie',
-        'name',
+        'name', 'title',
         'deprecated_name',
         'description',
-        'synonyms',
+        'synonyms', 'synonyms_exact', 'synonyms_related',
         'xrefs',
         'scores',
         'activity',
         'events',
         'notes',
         'status',
-        // Denormalized count columns (preserved from original design)
-        'count_child_submissions',
-        'curations_definitive',
-        'curations_strong',
-        'curations_moderate',
-        'curations_supportive',
-        'curations_limited',
-        'curations_disputed',
-        'curations_refuted',
-        'curations_animal',
-        'curations_noknown',
-        'curations_nul',
-        'count_clinical_above',
-        'count_clinical_neutral',
-        'count_clinical_below',
-        'count_submissions',
-        'count_unique_genes',
-        'count_unique_submitters',
+        'meta_parents', 'children_sync',
+        'related_closeMatch', 'related_exactMatch',
+        'count_submissions', 'count_unique_genes', 'count_unique_submitters',
+        'count_child_submissions', 'count_clinical_above', 'count_clinical_below', 'count_clinical_neutral',
+        'curations_definitive', 'curations_strong', 'curations_moderate', 'curations_limited',
+        'curations_disputed', 'curations_refuted', 'curations_animal', 'curations_noknown',
+        'curations_supportive', 'curations_nul',
     ];
 
     /**
@@ -137,14 +128,14 @@ class Disease extends Model
     /**
      * Get all the live published (publicly visible) submissions associated with this disease.
      * Filters by is_live=true (most recent version) AND status='published'.
+     *
+     * NOTE: Changed from belongsToMany (pivot table) to hasMany (direct FK) for gencc-sub compatibility.
      */
     public function submissions()
     {
-        return $this->belongsToMany('App\Submission', 'disease_submission')
+        return $this->hasMany('App\Submission', 'disease_id')
             ->where('is_live', '=', true)
-            ->where('status', '=', Submission::STATUS_PUBLISHED)
-            ->withTimestamps()
-            ->withPivot('type');
+            ->where('status', '=', Submission::STATUS_PUBLISHED);
     }
 
     /**
@@ -165,57 +156,134 @@ class Disease extends Model
     }
 
     // =========================================================================
-    // Legacy relationships - kept for backward compatibility during migration
-    // These can be removed once the disease_disease pivot table is dropped
+    // Accessors for backward compatibility
     // =========================================================================
 
-    public function xrefs()
+    /**
+     * Get the title attribute.
+     * Gencc-sub has both 'title' and 'name' columns.
+     *
+     * @return string|null
+     */
+    public function getTitleAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'disease_id', 'xref_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['title'] ?? $this->attributes['name'] ?? null;
     }
 
-    public function synonyms_rel()
+    /**
+     * Get uuid attribute - actual column in gencc-sub.
+     */
+    public function getUuidAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'disease_id', 'synonym_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['uuid'] ?? $this->attributes['ident'] ?? null;
     }
 
-    public function equivalents()
+    // =========================================================================
+    // Curations count accessors - these columns exist directly in the database
+    // =========================================================================
+
+    /**
+     * Get curations_definitive (actual column name).
+     */
+    public function getCurationsDefinitiveAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'disease_id', 'equiv_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['curations_definitive'] ?? 0;
     }
 
-    public function synonym_parents()
+    /**
+     * Get curations_strong (actual column name).
+     */
+    public function getCurationsStrongAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'parent_id', 'child_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['curations_strong'] ?? 0;
     }
 
-    public function synonym_children()
+    /**
+     * Get curations_moderate (actual column name).
+     */
+    public function getCurationsModerateAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'child_id', 'parent_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['curations_moderate'] ?? 0;
     }
 
-    public function parents()
+    /**
+     * Get curations_limited (actual column name).
+     */
+    public function getCurationsLimitedAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'parent_id', 'child_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['curations_limited'] ?? 0;
     }
 
-    public function children()
+    /**
+     * Get curations_disputed (actual column name).
+     */
+    public function getCurationsDisputedAttribute()
     {
-        return $this->belongsToMany('App\Disease', 'disease_disease', 'child_id', 'parent_id')
-            ->withTimestamps()
-            ->withPivot('type', 'predicate', 'ontology');
+        return $this->attributes['curations_disputed'] ?? 0;
+    }
+
+    /**
+     * Get curations_refuted (actual column name).
+     */
+    public function getCurationsRefutedAttribute()
+    {
+        return $this->attributes['curations_refuted'] ?? 0;
+    }
+
+    /**
+     * Get curations_animal (actual column name).
+     */
+    public function getCurationsAnimalAttribute()
+    {
+        return $this->attributes['curations_animal'] ?? 0;
+    }
+
+    /**
+     * Get curations_noknown (actual column name).
+     */
+    public function getCurationsNoknownAttribute()
+    {
+        return $this->attributes['curations_noknown'] ?? 0;
+    }
+
+    /**
+     * Get curations_supportive (actual column name).
+     */
+    public function getCurationsSupportiveAttribute()
+    {
+        return $this->attributes['curations_supportive'] ?? 0;
+    }
+
+    /**
+     * Get curations_nul (actual column name).
+     */
+    public function getCurationsNulAttribute()
+    {
+        return $this->attributes['curations_nul'] ?? 0;
+    }
+
+    /**
+     * Get count_submissions (actual column name).
+     */
+    public function getCountSubmissionsAttribute()
+    {
+        return $this->attributes['count_submissions'] ?? 0;
+    }
+
+    /**
+     * Get count_unique_submitters (actual column name).
+     */
+    public function getCountUniqueSubmittersAttribute()
+    {
+        return $this->attributes['count_unique_submitters'] ?? 0;
+    }
+
+    /**
+     * Get count_unique_genes (actual column name).
+     */
+    public function getCountUniqueGenesAttribute()
+    {
+        return $this->attributes['count_unique_genes'] ?? 0;
     }
 
     // =========================================================================
@@ -231,17 +299,6 @@ class Disease extends Model
     public function scopeCurie($query, $curie)
     {
         return $query->where('curie', $curie);
-    }
-
-    /**
-     * Query scope by UUID (legacy - use scopeIdent instead)
-     *
-     * @param string $id
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeUuid($query, $id)
-    {
-        return $query->where('uuid', '=', $id)->orderBy('updated_at', 'asc');
     }
 
     /**
@@ -294,237 +351,5 @@ class Disease extends Model
         ];
 
         return $query->whereIn('type', $types)->where('curie', $curie);
-    }
-
-    // =========================================================================
-    // Rosetta Stone - Disease ID Resolution
-    // =========================================================================
-
-    /**
-     * Map various disease ontology references to the canonical MONDO disease record.
-     *
-     * This method uses the mondo_id foreign key for fast equivalence lookups.
-     * Returns ACTIVE and DEPRECATED disease records (REMOVED diseases are excluded).
-     *
-     * For OMIM/Orphanet IDs:
-     * 1. First looks for a direct OMIM/Orphanet record with that curie
-     * 2. If found, returns its linked MONDO disease (via mondo_id)
-     * 3. If not found, looks for MONDO disease with this ID in xrefs (legacy fallback)
-     *
-     * @param string $id The disease identifier (with or without prefix)
-     * @return Disease|null The MONDO disease record (active or deprecated), or null if not found/removed
-     */
-    public static function rosetta($id)
-    {
-        // Return null if id is not set
-        if (empty($id)) {
-            return null;
-        }
-
-        // Separate out prefix and identifier
-        $parts = explode(':', basename(trim($id)));
-
-        // If a prefix is omitted, assume it is a MIM number
-        if (!isset($parts[1])) {
-            if (is_numeric($id)) {
-                $curie = 'OMIM:' . $id;
-                $record = self::rosettaOmim($curie);
-            } else {
-                $record = null;
-            }
-        } else {
-            $numericId = $parts[1];
-            $curie = strtoupper($parts[0]) . ':' . $numericId;
-
-            switch (strtoupper($parts[0])) {
-                case 'OMIM':
-                case 'OMIMPS':
-                    $record = self::rosettaOmim($curie);
-                    break;
-
-                case 'ORPHANET':
-                case 'ORPHA':
-                    $curie = 'Orphanet:' . $numericId;  // Normalize to Orphanet prefix
-                    $record = self::rosettaOrphanet($curie);
-                    break;
-
-                case 'MONDO':
-                    $record = self::rosettaMondo('MONDO:' . $numericId);
-                    break;
-
-                case 'DOID':
-                    // For non-MONDO/OMIM/Orphanet ontologies, search xrefs (exclude REMOVED)
-                    $record = self::where('type', self::TYPE_MONDO)
-                        ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_DEPRECATED])
-                        ->where('xrefs->do_id', $numericId)
-                        ->first();
-                    break;
-
-                case 'GARD':
-                    $record = self::where('type', self::TYPE_MONDO)
-                        ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_DEPRECATED])
-                        ->where('xrefs->gard_id', $numericId)
-                        ->first();
-                    break;
-
-                case 'MEDGEN':
-                    $record = self::where('type', self::TYPE_MONDO)
-                        ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_DEPRECATED])
-                        ->where('xrefs->medgen_id', $numericId)
-                        ->first();
-                    break;
-
-                case 'UMLS':
-                    $record = self::where('type', self::TYPE_MONDO)
-                        ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_DEPRECATED])
-                        ->where('xrefs->umls_id', $numericId)
-                        ->first();
-                    break;
-
-                default:
-                    $record = null;
-            }
-        }
-
-        return $record;
-    }
-
-    /**
-     * Resolve an OMIM ID to its canonical MONDO disease
-     *
-     * @param string $curie OMIM CURIE (e.g., "OMIM:615438")
-     * @return Disease|null The MONDO disease (active or deprecated), or null if not found/removed
-     */
-    protected static function rosettaOmim($curie)
-    {
-        // Strategy 1: Look for direct OMIM record with mondo_id
-        $omimDisease = self::omim($curie)->first();
-
-        if ($omimDisease && $omimDisease->mondo_id) {
-            // Prioritize ACTIVE MONDO disease over deprecated
-            $mondoDisease = self::where('id', $omimDisease->mondo_id)
-                ->where('status', self::STATUS_ACTIVE)
-                ->first();
-
-            if ($mondoDisease) {
-                return $mondoDisease;
-            }
-
-            // Fallback to deprecated if no active found
-            $mondoDisease = self::where('id', $omimDisease->mondo_id)
-                ->where('status', self::STATUS_DEPRECATED)
-                ->first();
-
-            if ($mondoDisease) {
-                return $mondoDisease;
-            }
-        }
-
-        // Strategy 2: Legacy fallback - search MONDO xrefs
-        $omimId = str_replace('OMIM:', '', $curie);
-
-        // Prioritize active MONDO terms
-        $mondoDisease = self::where('type', self::TYPE_MONDO)
-            ->where('status', self::STATUS_ACTIVE)
-            ->whereJsonContains('xrefs->omim_id', $omimId)
-            ->first();
-
-        if ($mondoDisease) {
-            return $mondoDisease;
-        }
-
-        // Fallback to deprecated MONDO terms
-        $mondoDisease = self::where('type', self::TYPE_MONDO)
-            ->where('status', self::STATUS_DEPRECATED)
-            ->whereJsonContains('xrefs->omim_id', $omimId)
-            ->first();
-
-        return $mondoDisease;
-    }
-
-    /**
-     * Resolve an Orphanet ID to its canonical MONDO disease
-     *
-     * @param string $curie Orphanet CURIE (e.g., "Orphanet:464724")
-     * @return Disease|null The MONDO disease (active or deprecated), or null if not found/removed
-     */
-    protected static function rosettaOrphanet($curie)
-    {
-        // Strategy 1: Look for direct Orphanet record with mondo_id
-        $orphanetDisease = self::where('type', self::TYPE_ORPHANET)
-            ->where('curie', $curie)
-            ->first();
-
-        if ($orphanetDisease && $orphanetDisease->mondo_id) {
-            // Prioritize ACTIVE MONDO disease over deprecated
-            $mondoDisease = self::where('id', $orphanetDisease->mondo_id)
-                ->where('status', self::STATUS_ACTIVE)
-                ->first();
-
-            if ($mondoDisease) {
-                return $mondoDisease;
-            }
-
-            // Fallback to deprecated if no active found
-            $mondoDisease = self::where('id', $orphanetDisease->mondo_id)
-                ->where('status', self::STATUS_DEPRECATED)
-                ->first();
-
-            if ($mondoDisease) {
-                return $mondoDisease;
-            }
-        }
-
-        // Strategy 2: Legacy fallback - search MONDO xrefs
-        $orphanetId = str_replace('Orphanet:', '', $curie);
-
-        // Prioritize active MONDO terms
-        $mondoDisease = self::where('type', self::TYPE_MONDO)
-            ->where('status', self::STATUS_ACTIVE)
-            ->where('xrefs->orpha_id', $orphanetId)
-            ->first();
-
-        if ($mondoDisease) {
-            return $mondoDisease;
-        }
-
-        // Fallback to deprecated MONDO terms
-        $mondoDisease = self::where('type', self::TYPE_MONDO)
-            ->where('status', self::STATUS_DEPRECATED)
-            ->where('xrefs->orpha_id', $orphanetId)
-            ->first();
-
-        return $mondoDisease;
-    }
-
-    /**
-     * Resolve a MONDO ID to its disease record
-     *
-     * @param string $curie MONDO CURIE (e.g., "MONDO:0000001")
-     * @return Disease|null The MONDO disease (active or deprecated), or null if not found/removed
-     */
-    protected static function rosettaMondo($curie)
-    {
-        // Return MONDO disease if active or deprecated (not removed)
-        $mondoDisease = self::curie($curie)
-            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_DEPRECATED])
-            ->first();
-
-        return $mondoDisease;
-    }
-
-    // =========================================================================
-    // Accessor for backward compatibility
-    // =========================================================================
-
-    /**
-     * Get the title attribute (backward compatibility)
-     * Maps to the new 'name' field
-     *
-     * @return string|null
-     */
-    public function getTitleAttribute()
-    {
-        return $this->name ?? $this->attributes['title'] ?? null;
     }
 }

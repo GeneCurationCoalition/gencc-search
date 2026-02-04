@@ -30,7 +30,7 @@ class OrCurationsFromSubmitters implements FilterSubmitters
       // })->get();
       return $builder->whereHas('submissions.submitter', function ($query) use ($value) {
         //dd($value);
-        return $query->whereIn('uuid', $value);
+        return $query->whereIn('ident', $value);
       });
     } else {
       return $builder->whereHas('submissions');

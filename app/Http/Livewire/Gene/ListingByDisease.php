@@ -118,7 +118,13 @@ class ListingByDisease extends Component
         $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
 
         $count_submissions = $records->count();
-        $this->filter = [];
+        $this->filter = [
+            'classifications' => [],
+            'genes' => [],
+            'diseases' => [],
+            'inheritances' => [],
+            'submitters' => [],
+        ];
 
         if ($records->count() == 0) {
             return view('partials.no-results.genes');
@@ -146,9 +152,11 @@ class ListingByDisease extends Component
                 $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
             }
             //$this->filter['diseases_id']['ref_' . $submission->disease->id]                 = $submission->disease->id;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['ref']                = $submission->inheritance->id;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['uuid']               = $submission->inheritance->uuid;
+            if ($submission->inheritance) {
+                $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
+                $this->filter['inheritances'][$submission->inheritance->uuid]['ref']                = $submission->inheritance->id;
+                $this->filter['inheritances'][$submission->inheritance->uuid]['uuid']               = $submission->inheritance->uuid;
+            }
             //$this->filter['inheritances_id']['ref_' . $submission->inheritance->id]         = $submission->inheritance->id;
             $this->filter['submitters'][$submission->submitter->uuid]['title']                  = $submission->submitter->title;
             $this->filter['submitters'][$submission->submitter->uuid]['ref']                    = $submission->submitter->id;

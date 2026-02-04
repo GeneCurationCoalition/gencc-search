@@ -35,14 +35,12 @@ class ClassificationModelTest extends TestCase
     }
 
     /** @test */
-    public function classification_has_uuid_scope()
+    public function classification_title_accessor_returns_name()
     {
-        $classification = Classification::factory()->create(['uuid' => 'test-uuid-123']);
+        // Note: gencc-sub uses 'name' column, accessor maps title->name
+        $classification = Classification::factory()->create(['name' => 'Test Classification']);
 
-        $found = Classification::uuid('test-uuid-123')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($classification->id, $found->id);
+        $this->assertEquals('Test Classification', $classification->title);
     }
 
     /** @test */
@@ -70,7 +68,7 @@ class ClassificationModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $this->assertCount(1, $classification->submissions);
@@ -91,7 +89,7 @@ class ClassificationModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
         ]);
 
@@ -101,7 +99,7 @@ class ClassificationModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => false,
         ]);
 
@@ -133,8 +131,9 @@ class ClassificationModelTest extends TestCase
     /** @test */
     public function classification_has_display_properties()
     {
+        // Note: gencc-sub uses 'name' column, accessor maps title->name
         $classification = Classification::factory()->create([
-            'title' => 'Definitive',
+            'name' => 'Definitive',
             'abbreviation' => 'DEF',
             'hex_color' => '#276749',
             'css_class' => 'classification-definitive',
@@ -149,9 +148,10 @@ class ClassificationModelTest extends TestCase
     /** @test */
     public function classification_order_determines_sort_order()
     {
-        $definitive = Classification::factory()->create(['order' => 1, 'title' => 'Definitive']);
-        $strong = Classification::factory()->create(['order' => 2, 'title' => 'Strong']);
-        $moderate = Classification::factory()->create(['order' => 3, 'title' => 'Moderate']);
+        // Note: gencc-sub uses 'name' column, accessor maps title->name
+        $definitive = Classification::factory()->create(['order' => 1, 'name' => 'Definitive']);
+        $strong = Classification::factory()->create(['order' => 2, 'name' => 'Strong']);
+        $moderate = Classification::factory()->create(['order' => 3, 'name' => 'Moderate']);
 
         $ordered = Classification::orderBy('order')->get();
 

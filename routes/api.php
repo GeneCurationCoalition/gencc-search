@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -12,13 +10,6 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-// Release endpoint (publish/unpublish submissions)
-Route::post('/release', 'ReleaseController@process');
 
 // Export endpoints
 Route::get('/export/submissions', 'DownloadController@export_XLSX');

@@ -87,16 +87,15 @@ class DiseaseFeatureTest extends TestCase
         $classification = Classification::factory()->create();
         $submitter = Submitter::factory()->create();
 
-        $submission = Submission::factory()->create([
+        // Create submission with disease_id - no need to attach via pivot as
+        // Disease->submissions is now a hasMany relationship via disease_id
+        Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $diseaseWithSubmission->id,
-            'disease_original_id' => $diseaseWithSubmission->id,
+            'original_disease_id' => $diseaseWithSubmission->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
         ]);
-
-        // Attach submission to disease via pivot table (required for has('submissions') check)
-        $diseaseWithSubmission->submissions()->attach($submission->id, ['type' => 'current']);
 
         $response = $this->get('/disease');
 

@@ -2,7 +2,7 @@
 
                       <div class="grid grid-cols-11 gap-2 my-3 ">
 
-                          <div class="col-span-11 xl:col-span-1 -mt-1"><a href="{{ route('submission-show', $item->uuid) }}">{!!  $item->displayCurationLabelPill($item->classification) !!}</a></div>
+                          <div class="col-span-11 xl:col-span-1 -mt-1"><a href="{{ route('submission-show', $item->display_id) }}">{!!  $item->displayCurationLabelPill($item->classification) !!}</a></div>
                           <div class="col-span-9 xl:col-span-4  ml-0 mr-3">
                             <div class="flex">
                               <div class="flex-initial mr-1">
@@ -21,14 +21,14 @@
                                 {{-- @if($item->displayMondoDisease($item->diseases)->first()->curie != $item->disease->curie)
                                 <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToOmim($item->disease->curie, $item->disease->curie) !!}</div>
                                 @endif --}}
-                                @if($item->disease->id != $item->disease_original->id)
+                                @if($item->disease_original && $item->disease->id != $item->disease_original->id)
                                   <div class="mt-1 text-sm text-gray-600 break-words"> Submitted as: {!! $item->displayLinkToDisease($item->disease_original->curie, $item->disease_original->curie) !!}{!! $item->displayDeprecationIndicator($item->disease_original) !!}</div>
                                   @endif
                               </div>
                             </div>
 
                           </div>
-                          <div class="col-span-2 xl:col-span-1"><span class="list-text-label"> {{ $item->inheritance->abbreviation }} <i class="far fa-question-circle text-gray-400" title="{{ $item->inheritance->title }} Mode Of Inheritance " data-toggle="tooltip" data-placement="top" \></i></span>
+                          <div class="col-span-2 xl:col-span-1"><span class="list-text-label"> {{ optional($item->inheritance)->abbreviation ?? 'N/A' }} @if($item->inheritance)<i class="far fa-question-circle text-gray-400" title="{{ $item->inheritance->title }} Mode Of Inheritance " data-toggle="tooltip" data-placement="top" \></i>@endif</span>
                           </div>
                           <div class="col-span-11 xl:col-span-1"><i class="far fa-calendar text-gray-400"></i> <span class="list-text-label">{{ Carbon\Carbon::parse($item->submitted_as_date)->format('m/d/Y') }}</span><div class="text-sm text-gray-600 ml-4">Evaluated</div>
                         <div class="text-sm mt-3 text-gray-600 ml-4 font-semibold leading-snug">@if($item->submitted_run_date) {{ Carbon\Carbon::parse($item->submitted_run_date)->format('m/d/Y') }} @else N/A @endif<div class=" font-normal">Submitted</div></div>
@@ -46,11 +46,11 @@
                                   <li><a id='click-exit-assertion-criteria' href="{{ route('member-show', $item->submitter->uuid) }}" class="text-blue-700">Assertion Criteria <i class="fas fa-external-link-alt"></i></a></li>
                                 @endif
 
-                              <li><a class="text-blue-700" href="{{ route('submission-show', $item->uuid) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
+                              <li><a class="text-blue-700" href="{{ route('submission-show', $item->display_id) }}">More Details <i class="far fa-arrow-alt-circle-right"></i></a></li>
                               </ul>
                             </div>
                             @if($item->submitted_as_notes)
-                            <div class="ml-4 pt-1 text-sm text-gray-800 prose prose-sm max-w-none">Evidence: {!! \Illuminate\Support\Str::limit(strip_tags($item->renderMarkdown($item->submitted_as_notes)), 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->uuid) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
+                            <div class="ml-4 pt-1 text-sm text-gray-800 prose prose-sm max-w-none">Evidence: {!! \Illuminate\Support\Str::limit(strip_tags($item->renderMarkdown($item->submitted_as_notes)), 100, $end='... <a class="text-gray-600 underline" href="'. route('submission-show', $item->display_id) .'">Read more <i class="far fa-arrow-alt-circle-right"></i></a>') ?? ''!!}</div>
                             @endif
 
 

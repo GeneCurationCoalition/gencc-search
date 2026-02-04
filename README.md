@@ -18,19 +18,36 @@ The Gene Curation Coalition (GenCC) is an international collaboration of genetic
 - **Data Export** - Download curations in CSV, TSV, or Excel format
 - **Statistics Dashboard** - Overview of submissions, genes, and diseases in the database
 
+## Architecture
+
+GenCC Search is a **read-only** application that connects to the GenCC submission database (gencc-sub). All data management, curation submissions, and administrative functions are handled by the [gencc-sub](https://github.com/GeneCurationCoalition/gencc-sub) application.
+
+```text
+┌─────────────────┐     read-only      ┌─────────────────┐
+│  gencc-search   │ ──────────────────▶│   gencc-sub     │
+│  (public site)  │                    │   database      │
+└─────────────────┘                    └─────────────────┘
+                                              ▲
+                                              │ write
+                                       ┌──────┴────────┐
+                                       │   gencc-sub   │
+                                       │  (admin site) │
+                                       └───────────────┘
+```
+
 ## Technology Stack
 
-- **Backend:** PHP 7.3+ with Laravel 8
+- **Backend:** PHP 7.4+ with Laravel 8
 - **Frontend:** Livewire, Alpine.js, Tailwind CSS
-- **Database:** MySQL 8
+- **Database:** MySQL 8 (read-only connection to gencc-sub database)
 - **Asset Compilation:** Laravel Mix (Webpack)
 
 ## Requirements
 
-- PHP 7.3 or higher
+- PHP 7.4 or higher
 - Composer
 - Node.js and npm
-- MySQL 8.0+
+- MySQL 8.0+ (access to gencc-sub database)
 
 ## Installation
 
@@ -56,58 +73,57 @@ The Gene Curation Coalition (GenCC) is an international collaboration of genetic
    php artisan key:generate
    ```
 
-5. Configure your database connection in `.env`
+5. Configure database connection in `.env`:
 
-6. Run migrations:
-   ```bash
-   php artisan migrate
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=gencc_sub
+   DB_USERNAME=gencc_search_reader
+   DB_PASSWORD=your_password
    ```
 
-7. Build frontend assets:
+   Note: Use a read-only database user for security.
+
+6. Build frontend assets:
    ```bash
    npm run dev
    ```
 
-8. Start the development server:
+7. Start the development server:
    ```bash
    php artisan serve
    ```
-
-## Data Management Commands
-
-The application includes several artisan commands for managing external data sources:
-
-| Command | Description |
-|---------|-------------|
-| `php artisan update:diseases` | Update disease data from MONDO, OMIM, and Orphanet |
-| `php artisan update:mondo` | Update MONDO disease ontology |
-| `php artisan update:mim` | Update OMIM gene map data |
-| `php artisan update:sources` | Master command to update all data sources |
-| `php artisan run:report` | Generate reports |
 
 ## Project Structure
 
 ```
 app/
-├── Console/Commands/     # Artisan commands for data management
+├── Console/Commands/     # Utility commands
+├── Exports/              # Data export classes (CSV, TSV, XLSX)
 ├── Http/
 │   ├── Controllers/      # Request handlers
-│   └── Livewire/         # Livewire components
+│   └── Livewire/         # Livewire components for dynamic UI
+├── Query/Filters/        # Search filter implementations
 ├── Traits/               # Shared model functionality
+├── Classification.php    # Curation classification levels
 ├── Disease.php           # Disease model with cross-ontology resolution
 ├── Gene.php              # Gene model with multi-ID search
+├── Inheritance.php       # Mode of inheritance
 ├── Submission.php        # Gene-disease curation submissions
-├── Submitter.php         # Member organizations
-└── Classification.php    # Curation classification levels
+└── Submitter.php         # Member organizations
 
 resources/
 ├── views/                # Blade templates
+│   ├── livewire/         # Livewire component views
+│   └── partials/         # Reusable view components
 ├── css/                  # Stylesheets
 └── js/                   # JavaScript
 
 database/
-├── migrations/           # Database schema
-└── seeders/              # Initial data
+├── factories/            # Model factories for testing
+└── migrations/           # Test database schema
 ```
 
 ## Testing
@@ -119,9 +135,22 @@ php artisan test
 vendor/bin/phpunit
 ```
 
+Note: Tests use SQLite in-memory database by default. Some tests requiring MySQL-specific features (JSON queries, REGEXP) are skipped when running with SQLite.
+
+## Environment Variables
+
+Key environment variables (see `.env.example` for full list):
+
+| Variable       | Description                              |
+| -------------- | ---------------------------------------- |
+| `DB_DATABASE`  | Database name (typically `gencc_sub`)    |
+| `DB_USERNAME`  | Database user (use read-only user)       |
+| `APP_ENV`      | Environment (`local`, `production`)      |
+| `APP_DEBUG`    | Enable debug mode (false in production)  |
+
 ## Related Projects
 
-- **[gencc-sub](https://github.com/GeneCurationCoalition/gencc-sub)** - Submission portal for member organizations to submit and manage their curations
+- **[gencc-sub](https://github.com/GeneCurationCoalition/gencc-sub)** - Submission portal for member organizations to submit and manage their curations (also serves as the master database)
 
 ## License
 

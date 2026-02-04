@@ -35,7 +35,8 @@ class GeneFeatureTest extends TestCase
     /** @test */
     public function gene_show_page_returns_200_for_valid_gene()
     {
-        $gene = Gene::factory()->create(['curie' => 'HGNC:12345']);
+        // Gene curie scope looks up by hgnc_id column
+        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:12345']);
 
         $response = $this->get('/genes/HGNC:12345');
 
@@ -56,7 +57,8 @@ class GeneFeatureTest extends TestCase
     /** @test */
     public function gene_disease_page_returns_200_for_valid_gene()
     {
-        $gene = Gene::factory()->create(['curie' => 'HGNC:12345']);
+        // Gene curie scope looks up by hgnc_id column
+        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:12345']);
 
         $response = $this->get('/genes/HGNC:12345/disease');
 
@@ -68,7 +70,8 @@ class GeneFeatureTest extends TestCase
     /** @test */
     public function gene_submitter_page_returns_200_for_valid_gene()
     {
-        $gene = Gene::factory()->create(['curie' => 'HGNC:12345']);
+        // Gene curie scope looks up by hgnc_id column
+        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:12345']);
 
         $response = $this->get('/genes/HGNC:12345/submitters');
 
@@ -101,9 +104,10 @@ class GeneFeatureTest extends TestCase
     /** @test */
     public function gene_page_has_correct_seo_meta_title()
     {
+        // Gene curie scope looks up by hgnc_id, title accessor reads from symbol
         $gene = Gene::factory()->create([
-            'curie' => 'HGNC:12345',
-            'title' => 'BRCA1',
+            'hgnc_id' => 'HGNC:12345',
+            'symbol' => 'BRCA1',
         ]);
 
         $response = $this->get('/genes/HGNC:12345');

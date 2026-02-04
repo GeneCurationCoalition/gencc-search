@@ -138,7 +138,13 @@ class ListingOfSubmissions extends Component
 
         $count_submissions = $records->count();
 
-        $this->filter = [];
+        $this->filter = [
+            'classifications' => [],
+            'genes' => [],
+            'diseases' => [],
+            'inheritances' => [],
+            'submitters' => [],
+        ];
 
         foreach ($records as $submission) {
             $count_submissions++;
@@ -163,9 +169,11 @@ class ListingOfSubmissions extends Component
                 $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
             }
             //$this->filter['diseases_id']['ref_' . $submission->disease->id]                 = $submission->disease->id;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['ref']                = $submission->inheritance->id;
-            $this->filter['inheritances'][$submission->inheritance->uuid]['uuid']               = $submission->inheritance->uuid;
+            if ($submission->inheritance) {
+                $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
+                $this->filter['inheritances'][$submission->inheritance->uuid]['ref']                = $submission->inheritance->id;
+                $this->filter['inheritances'][$submission->inheritance->uuid]['uuid']               = $submission->inheritance->uuid;
+            }
             //$this->filter['inheritances_id']['ref_' . $submission->inheritance->id]         = $submission->inheritance->id;
             $this->filter['submitters'][$submission->submitter->uuid]['title']                  = $submission->submitter->title;
             $this->filter['submitters'][$submission->submitter->uuid]['ref']                    = $submission->submitter->id;
@@ -217,8 +225,7 @@ class ListingOfSubmissions extends Component
                         //$query->whereNotIn('id', $filter_set['diseases']);
                     //}
                     if (!empty($this->query_disease)) {
-                    //dd($disease);
-                        $query->where('title', 'like', '%' . $this->query_disease . '%');
+                        $query->where('name', 'like', '%' . $this->query_disease . '%');
                     }
                 })->whereHas('inheritance', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['inheritances'] as $key => $item) {
@@ -231,8 +238,7 @@ class ListingOfSubmissions extends Component
                         //$query->whereNotIn('id', $filter_set['genes']);
                     //}
                     if (!empty($this->query_gene)) {
-                    //dd($disease);
-                        $query->where('title', 'like', '%' . $this->query_gene . '%');
+                        $query->where('symbol', 'like', '%' . $this->query_gene . '%');
                     }
                 })->whereHas('submitter', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['submitters'] as $key => $item) {
@@ -245,7 +251,8 @@ class ListingOfSubmissions extends Component
                 //     }])
                 ->where('is_live', '=', true)
                 ->where('status', '=', Submission::STATUS_PUBLISHED)
-                ->orderBy('order', 'ASC')
+                ->orderBy('classification_id', 'ASC')
+                ->orderBy('report_date', 'DESC')
                 ->paginate(20);
         // }
 

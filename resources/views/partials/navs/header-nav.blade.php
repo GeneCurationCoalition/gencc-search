@@ -32,11 +32,7 @@
 							<i class="fas fa-file-code"></i> Download
 						</a>
 
-						{{-- <a href="{{ route('reports')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="fas fa-chart-pie"></i> Reports
-						</a> --}}
-
-						<a href="{{ route('faq') }}" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
+<a href="{{ route('faq') }}" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="far fa-question-circle"></i> FAQ
 						</a>
 						<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="no-underline hover:underline text-gray-800 p-2">
@@ -63,30 +59,16 @@
 							<i class="fas fa-link"></i>
 						</a> --}}
 
-							@guest
-									{{-- @if (Route::has('register'))
-											<a class="no-underline hover:underline text-gray-800  p-3" href="{{ route('register') }}"><i class="far fa-user-circle"></i> {{ __('Register') }}</a>
-									@endif --}}
-									{{-- <a class="no-underline hover:underline text-gray-800 p-2" href="{{ route('login') }}"><i class="fas fa-lock"></i></a> --}}
-							@else
-
-						{{-- <a href="{{ route('dashboard')}}" class="no-underline hover:underline text-gray-800 p-3">
-							<i class="fas fa-cloud-upload-alt"></i>
-						</a> --}}
-									<a href="{{ route('dashboard')}}" class="no-underline hover:underline text-gray-800 p-3"><i class="fas fa-user-circle"></i>
-										{{-- {{ Auth::user()->name }}'s Dashboard --}}
-									</a>
-
+							@auth
 									<a href="{{ route('logout') }}"
 											class="no-underline hover:underline text-gray-800"
 											onclick="event.preventDefault();
 													document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i>
-													{{-- {{ __('Logout') }} --}}
 												</a>
 									<form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
 											{{ csrf_field() }}
 									</form>
-							@endguest
+							@endauth
 					</div>
 
 

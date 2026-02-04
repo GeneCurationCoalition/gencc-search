@@ -35,14 +35,24 @@ class SubmitterModelTest extends TestCase
     }
 
     /** @test */
-    public function submitter_has_uuid_scope()
+    public function submitter_has_ident_scope()
     {
-        $submitter = Submitter::factory()->create(['uuid' => 'test-uuid-123']);
+        // Note: scopeIdent queries by 'ident' column (gencc-sub schema)
+        $submitter = Submitter::factory()->create(['ident' => 'test-ident-123']);
 
-        $found = Submitter::uuid('test-uuid-123')->first();
+        $found = Submitter::ident('test-ident-123')->first();
 
         $this->assertNotNull($found);
         $this->assertEquals($submitter->id, $found->id);
+    }
+
+    /** @test */
+    public function submitter_uuid_accessor_returns_ident()
+    {
+        // Note: gencc-sub uses 'ident' column, accessor maps uuid->ident
+        $submitter = Submitter::factory()->create(['ident' => 'test-uuid-456']);
+
+        $this->assertEquals('test-uuid-456', $submitter->uuid);
     }
 
     /** @test */
@@ -59,7 +69,7 @@ class SubmitterModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $this->assertCount(1, $submitter->submissions);
@@ -80,7 +90,7 @@ class SubmitterModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
         ]);
 
@@ -90,7 +100,7 @@ class SubmitterModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => false,
         ]);
 
@@ -116,9 +126,9 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_can_be_member()
     {
-        $submitter = Submitter::factory()->create(['member' => 1]);
+        $submitter = Submitter::factory()->create(['member' => true]);
 
-        $this->assertEquals(1, $submitter->member);
+        $this->assertTrue($submitter->member);
     }
 
     /** @test */
@@ -126,32 +136,40 @@ class SubmitterModelTest extends TestCase
     {
         $submitter = Submitter::factory()->nonMember()->create();
 
-        $this->assertEquals(0, $submitter->member);
+        $this->assertFalse($submitter->member);
     }
 
     /** @test */
     public function submitter_has_required_fields()
     {
+        // Note: gencc-sub uses 'name' and 'description' columns, accessor maps title->name
         $submitter = Submitter::factory()->create([
-            'title' => 'Test Consortium',
+            'name' => 'Test Consortium',
             'website' => 'https://example.com',
-            'text_descriptions' => 'Test description',
-            'text_contact' => 'test@example.com',
+            'description' => 'Test description',
         ]);
 
         $this->assertEquals('Test Consortium', $submitter->title);
         $this->assertEquals('https://example.com', $submitter->website);
         $this->assertEquals('Test description', $submitter->text_descriptions);
-        $this->assertEquals('test@example.com', $submitter->text_contact);
+    }
+
+    /** @test */
+    public function submitter_title_accessor_returns_name()
+    {
+        // Note: gencc-sub uses 'name' column, accessor maps title->name
+        $submitter = Submitter::factory()->create(['name' => 'Test Organization']);
+
+        $this->assertEquals('Test Organization', $submitter->title);
     }
 
     /** @test */
     public function submitter_downloadable_flag_works()
     {
-        $downloadable = Submitter::factory()->create(['downloadable' => 1]);
-        $notDownloadable = Submitter::factory()->create(['downloadable' => 0]);
+        $downloadable = Submitter::factory()->create(['downloadable' => true]);
+        $notDownloadable = Submitter::factory()->create(['downloadable' => false]);
 
-        $this->assertEquals(1, $downloadable->downloadable);
-        $this->assertEquals(0, $notDownloadable->downloadable);
+        $this->assertTrue($downloadable->downloadable);
+        $this->assertFalse($notDownloadable->downloadable);
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Traits;
 
 use App\Disease;
-use GuzzleHttp\Client as GClient;
 
 trait ModelTransform
 {
@@ -17,25 +16,22 @@ trait ModelTransform
    */
   public function displayStatChartBarPercentSubmitter($data, $field, $action = false)
   {
-    $data = $data->toArray();
     $return = "0";
 
-    // if($data != 0) {
-    //   return "data";
-    //   return $return;
-    // }
+    // Access the attribute directly instead of converting to array (much faster)
+    $fieldValue = $data->$field ?? 0;
 
     if ($action == 'count') {
-      return $data[$field];
+      return $fieldValue;
     }
 
-    if ($data[$field] == 0) {
+    if ($fieldValue == 0) {
       return $return;
     }
 
-    if(!empty($data)) {
-      $return = ($data[$field] / $data['count_submissions']) * 100;
-        //dd($return);
+    $countSubmissions = $data->count_submissions ?? 0;
+    if ($countSubmissions > 0) {
+      $return = ($fieldValue / $countSubmissions) * 100;
     }
 
     return $return;
@@ -292,247 +288,4 @@ trait ModelTransform
     $return = "<a href='{$href}' class='transition duration-200 ease-in-out transform hover:scale-125 block rounded-full py-half text-xs px-1 border-gray-400  border text-center {$text} {$color}' title='{$data} submissions are {$type}'  data-toggle='tooltip' data-placement='top'>{$data}</a>";
     return ($return);
   }
-
-
-  // /**
-  //  * Return a displayable string of date parameter
-  //  *
-  //  * @param
-  //  * @return string
-  //  */
-  // public function displaySubmissionsInListingTable($data = null, $href = "#", $format = "long")
-  // {
-  //   if (empty($data))
-  //     return '';
-
-  //     $list = array(
-  //       "definitive"                    => "0",
-  //       "strong"                        => "0",
-  //       "moderate"                      => "0",
-  //       "limited"                       => "0",
-  //       "disputed"             => "0",
-  //       "refuted"              => "0",
-  //       "animal-model-only"             => "0",
-  //       "no-known-disease-relationship" => "0",
-  //       "nul"                           => "0"
-  //     );
-
-  //     //dd($data);
-  //   foreach($data as $val) {
-  //     // Take the val and add one to it.
-  //     $list[$val->classification->slug]    = $list[$val->classification->slug] + 1;
-  //   }
-  //   //dd($list);
-  //   $css = "rounded-full py-1 text-xs px-1 text-center text-white";
-  //   $css_num = "500";
-  //   $css_nul = "bg-gray-300";
-  //   $return = "
-  //     <div class='grid grid-cols-9 gap-2'>
-  //           <div class='{$css} ". ($list['definitive'] != 0 ? 'bg-red-'.$css_num : $css_nul) ."'><a href='{$href}' title='Definitive'>{$list['definitive']}</a></div>
-  //           <div class='{$css} " . ($list['strong'] != 0 ? 'bg-orange-' . $css_num : $css_nul) . "'><a href='{$href}' title='Strong'>{$list['strong']}</a></div>
-  //           <div class='{$css} " . ($list['moderate'] != 0 ? 'bg-yellow-' . $css_num : $css_nul) . "'><a href='{$href}' title='Moderate'>{$list['moderate']}</a></div>
-  //           <div class='{$css} " . ($list['limited'] != 0 ? 'bg-green-' . $css_num : $css_nul) . "'><a href='{$href}' title='Limited'>{$list['limited']}</a></div>
-  //           <div class='{$css} " . ($list['disputed'] != 0 ? 'bg-teal-' . $css_num : $css_nul) . "'><a href='{$href}' title='Disputed Evidence'>{$list['disputed']}</a></div>
-  //           <div class='{$css} " . ($list['refuted'] != 0 ? 'bg-blue-' . $css_num : $css_nul) . "'><a href='{$href}' title='Refuted Evidence'>{$list['refuted']}</a></div>
-  //           <div class='{$css} " . ($list['animal-model-only'] != 0 ? 'bg-indigo-' . $css_num : $css_nul) . "'><a href='{$href}' title='Animal Model Only'>{$list['animal-model-only']}</a></div>
-  //           <div class='{$css} " . ($list['no-known-disease-relationship'] != 0 ? 'bg-purple-' . $css_num : $css_nul) . "'><a href='{$href}' title='No Known Disease Relationship'>{$list['no-known-disease-relationship']}</a></div>
-  //           <div class='{$css} " . ($list['nul'] != 0 ? 'bg-gray-' . $css_num : $css_nul) . "'><a href='{$href}' title='Unset'>{$list['nul']}</a></div>
-  //     </div>
-  //   ";
-  //   return ($return);
-
-  // }
-
-  /**
-   * Process disease via Monarch Initiative API
-   *
-   * @deprecated Use Disease::rosetta($curie) instead for disease resolution.
-   *             This method is kept for backward compatibility during the migration
-   *             but should not be used for new code.
-   *
-   * @param array $data Row data containing 'disease_id'
-   * @return void
-   */
-  public function processMondoApi($data)
-  {
-    //dd("start");
-    $row_disease_id   = $data["disease_id"];
-
-    echo "- - - - processMondoApi START -- '" . $row_disease_id . "\n";
-
-    // Get the query ready for MONDO API
-    $query = preg_replace("/[^a-zA-Z0-9:]/", "", $row_disease_id);
-    // Call the API
-
-    // This is checking the import curie for ORPHANET and switching them to ORPHA which is with the API expects
-    if (preg_match('(Orphanet:|Orpha:|ORPHA:|ORPHANET:)', $query) === 1) {
-      $explode = explode(":", $query);
-      $query = "ORPHA:". $explode[1];
-      //$query = "ORPHA:79304";
-      //dd($query);
-    }
-
-    try {
-      $client = new GClient(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
-      $response = $client->request('GET', 'bioentity/disease/' . $query);
-
-      if ($response->getStatusCode() != 200) {
-        unset($response);
-      } else {
-        $response = $response->getBody();
-      }
-      //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query)
-      //$client = new GClient();
-      //dd($client);
-      //$response = $client->request('GET', 'https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
-
-      //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
-      //$response = json_decode($response);
-    } catch (\Exception $e) {
-        echo "import guzzle exception \n";
-
-        try {
-          $response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
-          //$response = json_decode($response);
-        } catch (\Exception $e) {
-          echo "import file_get_contents exception \n";
-        }
-
-    }
-    // } finally {
-    //   //optional code that always runs
-    // }
-
-    //$response = file_get_contents('https://api.monarchinitiative.org/api/bioentity/disease/' . $query);
-    //$response = json_decode($response);
-    //dd($response);
-    // Get the response
-      //echo $query;
-      //echo gettype($query);
-      //$client = new GClient(['base_uri' => 'https://api.monarchinitiative.org/api/', 'http_errors' => false]);
-      //$response = $client->request('GET', 'bioentity/disease/' . $query);
-
-    // Check the response
-    //if ($response->getStatusCode() == 200) {
-    if (isset($response)) {
-      // Message is things is good
-      //echo "- - - - processMondoApi getStatusCode = 200 -- (This is good) -- '" . $row_disease_id . "\n";
-
-      // $body = $response->getBody();
-      // Decode the response body so it can be used...
-      $var = json_decode($response);
-
-
-      // Make 100% sure this is a MONDO return
-      if (preg_match('(MONDO:)', $var->id) === 1) {
-
-          //echo "- - - - processMondoApi -- MONDO was returned -- '". $var->id ."' for '" . $row_disease_id . "\n";
-
-          // Do this to get if this as a MONDO (though it should be based on above)
-          $type = explode(":", $var->id);
-          $type = $type[0];
-
-          // Make the MONDO label be title since that is what the DB uses for easy naming
-          $title = $var->label;
-
-          // set the UUID which is the curie with an underscore
-          $uuid = str_replace(':', '_', $var->id);
-
-          $disease_mondo = Disease::updateOrCreate(
-            [
-              'curie' => $var->id,
-              'type' => $type,
-              'title' => $title,
-              'uuid'  => $uuid
-            ],
-            [
-              'curie' => $var->id,
-              'type' => $type,
-              'title' => $title,
-              'uuid'  => $uuid
-            ]
-          );
-
-          //dd($disease_mondo);
-
-          // START  xrefs
-          if ($var->xrefs) {
-              foreach ($var->xrefs as $xref) {
-                  // Only save some of the diseases
-                  if (preg_match('(OMIM:|MONDO:|Orphanet:|Orpha:|ORPHA:|ORPHANET:)', $xref) === 1) {
-                      //echo "- - - - processMondoApi GOOD -- XREF is a OMIM:|MONDO:|Orphanet -- " . $xref . " for " . $var->id . "\n";
-
-
-                      $type = explode(":", $xref);
-                      $type = $type[0];
-                      $title = $xref;
-                      $uuid = str_replace(':', '_', $xref);
-
-                      $disease_xref = Disease::updateOrCreate(
-                        [
-                          'curie' => $xref,
-                          'type' => $type,
-                          'title' => $title,
-                          'uuid'  => $uuid
-                        ],
-                        [
-                          'curie' => $xref,
-                          'type' => $type,
-                          'title' => $title,
-                          'uuid'  => $uuid
-                        ]
-                      );
-                      // Save the xref to the xref column in the MONDO to this new OMIM:|MONDO:|Orphanet disease
-                      $disease_xref->xrefs = $disease_mondo->id;
-                      $disease_xref->equivalents()->sync($disease_mondo);
-                      $disease_xref->save();
-
-                      // Save XREF to array for use by the MONDO
-                      $xref_array[] = $disease_xref->id;
-                      //dd($disease_xref);
-                  }
-              }
-
-
-              // Get the xref array and make sure unique and then pipe it all to the MONDO disease
-              // Doing it here because the data only availbale if the above works...
-              if(isset($xref_array)) {
-                  $xref_array = array_unique($xref_array);
-                  $disease_mondo->xrefs = implode("|", $xref_array);
-
-                  // set the xrefs as equivs
-                  $disease_mondo->equivalents()->sync($xref_array);
-
-                  // Save the xrefs to the MONDO xref col for future
-                  $disease_mondo->save();
-              }
-
-          } else {
-            //echo "- - - - processMondoApi GOOD -- this MONDO does not have XREFs " . $var->id . "\n";
-          }
-
-
-      } else {
-        // message if the response wasn't a MONDO
-        echo "IMPORT ERROR - - - - processMondoApi ERROR -- Response was not MONDO or the response didn't have a MONDO equiv-- '" . $var->id . "\n";
-      }
-
-      //dd("STOP");
-
-      // $var->xrefs;
-      // $var->id;
-      // $var->label;
-
-
-    } else {
-      // message is $response->getStatusCode() fails...
-      echo "IMPORT ERROR - - - - processMondoApi ERROR ' -- (Not good) -- '" . $row_disease_id . "\n";
-    }
-
-
-    //echo "- - - - processMondoApi END -- '" . $row_disease_id . "\n";
-
-    //dd("STOP");
-  }
-
 }

@@ -70,7 +70,7 @@ class Listing extends Component
     public function mount()
     {
 
-        $this->submitters     = Submitter::has('submissions')->orderBy('title')->get();
+        $this->submitters     = Submitter::has('submissions')->orderBy('name')->get();
 
         //$curations_from_submitters = $this->submitters->toArray();
         $curations_from_submitters = $this->submitters->pluck(['uuid']);
@@ -170,7 +170,7 @@ class Listing extends Component
     public function render()
     {
 
-        $this->submitters     = Submitter::has('submissions')->orderBy('title')->get();
+        $this->submitters     = Submitter::has('submissions')->orderBy('name')->get();
         if(empty($this->curations_from_submitters)){
             $curations_from_submitters = $this->submitters->pluck(['uuid']);
             $this->curations_from_submitters = $curations_from_submitters->toArray();
@@ -249,65 +249,47 @@ class Listing extends Component
         //$this->return = Gene::where('title', 'LIKE', '%' . $this->title . '%')
 
             //dd($query_title);
-        $this->return = Gene::where('title', 'LIKE', '%' . $this->title . '%')
-            ->whereHas('submissions', function ($query) use($query_disease) {
+        // Build array of enabled classification IDs based on filter toggles
+        // Classification IDs: 1=Definitive, 2=Strong, 3=Moderate, 4=Supportive,
+        // 5=Limited, 6=Disputed, 7=Refuted, 8=Animal Model, 9=No Known Disease
+        $enabledClassifications = [];
+        if ($filter['num_curations_definitive'] > 0) $enabledClassifications[] = 1;
+        if ($filter['num_curations_strong'] > 0) $enabledClassifications[] = 2;
+        if ($filter['num_curations_moderate'] > 0) $enabledClassifications[] = 3;
+        if ($filter['num_curations_supportive'] > 0) $enabledClassifications[] = 4;
+        if ($filter['num_curations_limited'] > 0) $enabledClassifications[] = 5;
+        if ($filter['num_curations_disputed'] > 0) $enabledClassifications[] = 6;
+        if ($filter['num_curations_refuted'] > 0) $enabledClassifications[] = 7;
+        if ($filter['num_curations_animal'] > 0) $enabledClassifications[] = 8;
+        if ($filter['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
+
+        $this->return = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
+            ->whereHas('submissions', function ($query) use($query_disease, $enabledClassifications) {
                 if (!empty($query_disease)) {
-                //dd($disease);
-                    $query->where('submitted_as_disease_name', 'like', '%' . $query_disease . '%');
+                    // Filter by disease name via disease relationship
+                    // gencc-sub stores disease name in diseases.name column
+                    $query->whereHas('disease', function ($diseaseQuery) use ($query_disease) {
+                        $diseaseQuery->where('name', 'like', '%' . $query_disease . '%');
+                    });
                 }
-            })->where(function($query) use ($filter, $query_title) {
-                if($filter['num_curations_definitive'] > 0) {
-                    $query->orwhere('curations_definitive', ">=", $filter['num_curations_definitive']);
-                }
-                if ($filter['num_curations_strong'] > 0) {
-                    $query->orwhere('curations_strong', ">=", $filter['num_curations_strong']);
-                }
-                if ($filter['num_curations_moderate'] > 0) {
-                    $query->orwhere('curations_moderate', ">=", $filter['num_curations_moderate']);
-                }
-                if ($filter['num_curations_supportive'] > 0) {
-                    $query->orwhere('curations_supportive', ">=", $filter['num_curations_supportive']);
-                }
-                if ($filter['num_curations_limited'] > 0) {
-                    $query->orwhere('curations_limited', ">=", $filter['num_curations_limited']);
-                }
-                if ($filter['num_curations_disputed'] > 0) {
-                    $query->orwhere('curations_disputed', ">=", $filter['num_curations_disputed']);
-                }
-                if ($filter['num_curations_refuted'] > 0) {
-                    $query->orwhere('curations_refuted', ">=", $filter['num_curations_refuted']);
-                }
-                if ($filter['num_curations_animal'] > 0) {
-                    $query->orwhere('curations_animal', ">=", $filter['num_curations_animal']);
-                }
-                if ($filter['num_curations_noknown'] > 0) {
-                    $query->orwhere('curations_noknown', ">=", $filter['num_curations_noknown']);
+                // Filter by enabled classification types
+                if (!empty($enabledClassifications)) {
+                    $query->whereIn('classification_id', $enabledClassifications);
                 }
             })->whereHas('submissions.submitter', function ($query) use ($value) {
-                $query->whereIn('uuid', $value);
+                $query->whereIn('ident', $value);
             })
-
-            // ->where('curations_definitive', '>=', $query['or_curations_definitive'])
-            // ->orwhere('curations_strong', '>=', $query['or_curations_strong'])
-            // ->orwhere('curations_moderate', '>=', $query['or_curations_moderate'])
-            // ->orwhere('curations_supportive', '>=', $query['or_curations_supportive'])
-            // ->orwhere('curations_limited', '>=', $query['or_curations_limited'])
-            // ->orwhere('curations_disputed', '>=', $query['or_curations_disputed'])
-            // ->orwhere('curations_refuted', '>=', $query['or_curations_refuted'])
-            // ->orwhere('curations_animal', '>=', $query['or_curations_animal'])
-            // ->orwhere('curations_noknown', '>=', $query['or_curations_noknown'])
-
-            ->whereHas('submissions')
-            // extract nonnumeric and numeric terms from title,
+            // extract nonnumeric and numeric terms from symbol,
             // order by first 3 pairs, then remainder
+            ->with('submissions')
             ->orderByRaw("
-                REGEXP_SUBSTR(title, '^[^0-9]+') ASC,
-                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 1) AS UNSIGNED) ASC,
-                REGEXP_SUBSTR(title, '[^0-9]+', 1, 2) ASC,
-                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 2) AS UNSIGNED) ASC,
-                REGEXP_SUBSTR(title, '[^0-9]+', 1, 3) ASC,
-                CAST(REGEXP_SUBSTR(title, '[0-9]+', 1, 3) AS UNSIGNED) ASC,
-                REGEXP_SUBSTR(title, '[^0-9]+', 1, 4) ASC")
+                REGEXP_SUBSTR(symbol, '^[^0-9]+') ASC,
+                CAST(REGEXP_SUBSTR(symbol, '[0-9]+', 1, 1) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(symbol, '[^0-9]+', 1, 2) ASC,
+                CAST(REGEXP_SUBSTR(symbol, '[0-9]+', 1, 2) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(symbol, '[^0-9]+', 1, 3) ASC,
+                CAST(REGEXP_SUBSTR(symbol, '[0-9]+', 1, 3) AS UNSIGNED) ASC,
+                REGEXP_SUBSTR(symbol, '[^0-9]+', 1, 4) ASC")
             ->paginate(25);
 
         //dd(count($this->return));

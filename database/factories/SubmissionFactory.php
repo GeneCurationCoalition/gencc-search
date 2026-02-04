@@ -22,16 +22,18 @@ class SubmissionFactory extends Factory
             'order' => $this->faker->numberBetween(1, 1000),
             'gene_id' => Gene::factory(),
             'disease_id' => $disease->id,
-            'disease_original_id' => $disease->id,
+            'original_disease_id' => $disease->id,
             'classification_id' => Classification::factory(),
             'submitter_id' => Submitter::factory(),
-            'moi_id' => Inheritance::factory(),
-            'submitted_as_date' => $this->faker->date(),
-            'submitted_as_public_report_url' => $this->faker->url,
-            'submitted_as_notes' => $this->faker->paragraph(),
-            'submitted_as_pmids' => (string) $this->faker->numberBetween(10000000, 39999999),
-            'submitted_as_assertion_criteria_url' => $this->faker->url,
-            'submitted_run_date' => $this->faker->dateTimeThisYear(),
+            'inheritance_id' => Inheritance::factory(),
+            'report_date' => $this->faker->date(),
+            'report_url' => $this->faker->url,
+            'evidence' => [
+                'pmids' => [(string) $this->faker->numberBetween(10000000, 39999999)],
+            ],
+            'submission_data' => [
+                'notes' => ['display' => $this->faker->paragraph()],
+            ],
             'version_number' => 1,
             'is_live' => true,            // Most recent version
             'status' => 'published',      // Publicly visible

@@ -35,14 +35,22 @@ class DiseaseModelTest extends TestCase
     }
 
     /** @test */
-    public function disease_has_uuid_scope()
+    public function disease_has_ident_scope()
     {
-        $disease = Disease::factory()->create(['uuid' => 'MONDO_0000001']);
+        $disease = Disease::factory()->create(['ident' => 'MONDO_0000001']);
 
-        $found = Disease::uuid('MONDO_0000001')->first();
+        $found = Disease::ident('MONDO_0000001')->first();
 
         $this->assertNotNull($found);
         $this->assertEquals($disease->id, $found->id);
+    }
+
+    /** @test */
+    public function disease_uuid_accessor_returns_uuid()
+    {
+        $disease = Disease::factory()->create(['uuid' => 'test-uuid-789']);
+
+        $this->assertEquals('test-uuid-789', $disease->uuid);
     }
 
     /** @test */
@@ -81,23 +89,22 @@ class DiseaseModelTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        $submission = Submission::factory()->create([
+        // Disease->submissions is now a hasMany relationship (via disease_id FK)
+        Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
-
-        // Sync the disease to the submission through the pivot table
-        $submission->diseases()->attach($disease->id);
 
         $this->assertCount(1, $disease->submissions);
     }
 
     /** @test */
-    public function disease_title_attribute_returns_title_field()
+    public function disease_title_accessor_returns_title_field()
     {
+        // gencc-sub uses 'title' column directly
         $disease = Disease::factory()->create(['title' => 'Test Disease']);
 
         $this->assertEquals('Test Disease', $disease->title);
@@ -120,9 +127,9 @@ class DiseaseModelTest extends TestCase
         $parentDisease = Disease::factory()->create(['curie' => 'MONDO:0000001']);
         $childDisease = Disease::factory()->create([
             'curie' => 'OMIM:123456',
-            'mondo_id' => $parentDisease->id,
+            'mondo_parent_id' => $parentDisease->id,
         ]);
 
-        $this->assertEquals($parentDisease->id, $childDisease->mondo_id);
+        $this->assertEquals($parentDisease->id, $childDisease->mondo_parent_id);
     }
 }

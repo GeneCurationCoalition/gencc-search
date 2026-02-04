@@ -3,32 +3,30 @@
 namespace App\Exports;
 
 use App\Submission;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 
-
-// class SubmissionExport implements FromCollection
-// {
-//     /**
-//     * @return \Illuminate\Support\Collection
-//     */
-//     public function collection()
-//     {
-//         return Submission::all();
-//     }
-// }
-//, WithMapping
-class SubmissionExport implements FromCollection, WithHeadings, WithMapping, WithCustomCsvSettings
+/**
+ * CSV/XLSX Export for submissions - uses FromQuery for efficient chunked processing.
+ * This significantly reduces memory usage by not loading all 25K+ records at once.
+ */
+class SubmissionExport implements FromQuery, WithHeadings, WithMapping, WithCustomCsvSettings
 {
     use Exportable;
 
-    public function collection()
+    /**
+     * Return a query builder for chunked processing.
+     * Eager loads relationships to prevent N+1 queries.
+     */
+    public function query()
     {
-        return Submission::where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
+        return Submission::query()
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED)
+            ->with(['gene', 'disease', 'disease_original', 'classification', 'inheritance', 'submitter']);
     }
 
     /**
@@ -37,7 +35,7 @@ class SubmissionExport implements FromCollection, WithHeadings, WithMapping, Wit
     public function map($submission): array
     {
         return [
-            $submission->uuid,
+            $submission->sid,
             $submission->version_number,
             $submission->gene_curie                 = $submission->gene->curie,
             $submission->gene_symbol                = $submission->gene->title,
