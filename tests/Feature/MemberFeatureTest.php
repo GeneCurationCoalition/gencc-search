@@ -42,9 +42,10 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_page_returns_200_for_valid_submitter()
     {
-        $submitter = Submitter::factory()->create(['uuid' => 'test-submitter-uuid']);
+        // Controller looks up by ident column
+        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-ident']);
 
-        $response = $this->get('/members/test-submitter-uuid');
+        $response = $this->get('/members/test-submitter-ident');
 
         $response->assertStatus(200);
         $response->assertViewIs('submitters.show');
@@ -62,7 +63,8 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_includes_classifications()
     {
-        $submitter = Submitter::factory()->create(['uuid' => 'test-submitter-class']);
+        // Controller looks up by ident column
+        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-class']);
 
         $response = $this->get('/members/test-submitter-class');
 
@@ -85,9 +87,10 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_page_has_seo_meta_title()
     {
+        // Controller looks up by ident column
         $submitter = Submitter::factory()->create([
-            'uuid' => 'test-submitter-meta',
-            'title' => 'Test Consortium'
+            'ident' => 'test-submitter-meta',
+            'name' => 'Test Consortium'
         ]);
 
         $response = $this->get('/members/test-submitter-meta');

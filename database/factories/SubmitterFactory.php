@@ -11,11 +11,17 @@ class SubmitterFactory extends Factory
 
     public function definition()
     {
+        $title = $this->faker->company . ' ' . $this->faker->randomElement(['Consortium', 'Institute', 'Laboratory', 'Center']);
+        $ident = 'GENCC_' . str_pad($this->faker->unique()->numberBetween(1, 999), 6, '0', STR_PAD_LEFT);
         return [
             'curie' => 'GENCC:' . str_pad($this->faker->unique()->numberBetween(1, 999), 6, '0', STR_PAD_LEFT),
-            'uuid' => 'GENCC_' . str_pad($this->faker->unique()->numberBetween(1, 999), 6, '0', STR_PAD_LEFT),
-            'title' => $this->faker->company . ' ' . $this->faker->randomElement(['Consortium', 'Institute', 'Laboratory', 'Center']),
+            'ident' => $ident,
+            'uuid' => $ident,
+            'name' => $title,
+            'title' => $title,
             'website' => $this->faker->url,
+            'description' => $this->faker->paragraph(),
+            'assertion' => $this->faker->sentence(),
             'text_descriptions' => $this->faker->paragraph(),
             'text_assertions' => $this->faker->sentence(),
             'text_contact' => $this->faker->email,

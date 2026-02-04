@@ -104,11 +104,12 @@ class SubmissionController extends Controller
                 $mondoDisease = $originalDisease;
             } else {
                 // Search for MONDO diseases that have this as an xref
-                $xrefField = match($type) {
+                $xrefMap = [
                     'omim' => 'omim_id',
-                    'orpha', 'orphanet' => 'orpha_id',
-                    default => null
-                };
+                    'orpha' => 'orpha_id',
+                    'orphanet' => 'orpha_id',
+                ];
+                $xrefField = $xrefMap[$type] ?? null;
 
                 if ($xrefField) {
                     $mondoDisease = Disease::where('type', Disease::TYPE_MONDO)

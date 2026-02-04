@@ -20,6 +20,11 @@ class GenesListingTest extends TestCase
     /** @test */
     public function genes_listing_component_can_render()
     {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
         // Create test data
         $this->createTestSubmission();
 
@@ -133,6 +138,11 @@ class GenesListingTest extends TestCase
     /** @test */
     public function genes_listing_initializes_submitters()
     {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -156,6 +166,11 @@ class GenesListingTest extends TestCase
     /** @test */
     public function genes_listing_curations_from_submitters_method_toggles_filter()
     {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
         // Need 2+ submitters to test toggle behavior properly
         // (when all are removed, the filter resets to include all)
         $submitter1 = Submitter::factory()->create();
@@ -197,6 +212,11 @@ class GenesListingTest extends TestCase
     /** @test */
     public function genes_listing_resets_curation_filters_when_all_off()
     {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();

@@ -25,6 +25,8 @@ class ClassificationFactory extends Factory
         return [
             'curie' => 'GENCC:' . str_pad($this->faker->unique()->numberBetween(1, 999999), 7, '0', STR_PAD_LEFT),
             'uuid' => 'class-' . $this->faker->uuid(),
+            'ident' => 'class-' . $this->faker->uuid(),
+            'name' => $classification['title'],
             'title' => $classification['title'],
             'abbreviation' => $classification['abbreviation'],
             'slug' => $classification['slug'],
@@ -39,6 +41,7 @@ class ClassificationFactory extends Factory
     public function definitive()
     {
         return $this->state(fn () => [
+            'name' => 'Definitive',
             'title' => 'Definitive',
             'abbreviation' => 'DEF',
             'slug' => 'definitive',
@@ -49,6 +52,7 @@ class ClassificationFactory extends Factory
     public function strong()
     {
         return $this->state(fn () => [
+            'name' => 'Strong',
             'title' => 'Strong',
             'abbreviation' => 'STR',
             'slug' => 'strong',

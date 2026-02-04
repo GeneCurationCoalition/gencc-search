@@ -18,7 +18,9 @@ return new class extends Migration
             $table->id();
             $table->string('curie')->unique();
             $table->string('uuid')->nullable();
-            $table->string('title');
+            $table->string('ident')->unique()->nullable();
+            $table->string('name')->nullable();
+            $table->string('title')->nullable();
             $table->string('abbreviation')->nullable();
             $table->string('slug')->nullable();
             $table->integer('order')->default(0);
@@ -36,7 +38,9 @@ return new class extends Migration
             $table->id();
             $table->string('curie')->unique();
             $table->string('uuid')->nullable();
-            $table->string('title');
+            $table->string('ident')->unique()->nullable();
+            $table->string('name')->nullable();
+            $table->string('title')->nullable();
             $table->string('abbreviation')->nullable();
             $table->text('description')->nullable();
             $table->string('hex_color')->nullable();
@@ -167,9 +171,11 @@ return new class extends Migration
             $table->string('ident')->unique()->nullable();
             $table->string('curie')->unique();
             $table->string('uuid')->nullable();
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->string('name')->nullable();
             $table->string('website')->nullable();
+            $table->text('description')->nullable();
+            $table->text('assertion')->nullable();
             $table->text('text_descriptions')->nullable();
             $table->text('text_assertions')->nullable();
             $table->text('text_contact')->nullable();

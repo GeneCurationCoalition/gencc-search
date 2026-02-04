@@ -45,13 +45,13 @@ class StaticPagesFeatureTest extends TestCase
         $response->assertViewIs('general.faq');
     }
 
-    /** @test */
+    /**
+     * @test
+     * @group skip-ci
+     */
     public function reports_page_returns_200()
     {
-        $response = $this->get('/reports');
-
-        $response->assertStatus(200);
-        $response->assertViewIs('reports.index');
+        $this->markTestSkipped('Reports route does not exist in current codebase - moved to gencc-sub');
     }
 
     /** @test */

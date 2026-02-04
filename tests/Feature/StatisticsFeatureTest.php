@@ -81,7 +81,9 @@ class StatisticsFeatureTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
-        $submission1 = Submission::factory()->create([
+        // Create submissions with disease_id - no need to attach via pivot as
+        // Disease->submissions is now a hasMany relationship via disease_id
+        Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease1->id,
             'original_disease_id' => $disease1->id,
@@ -90,7 +92,7 @@ class StatisticsFeatureTest extends TestCase
             'moi_id' => $inheritance->id,
         ]);
 
-        $submission2 = Submission::factory()->create([
+        Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => $disease2->id,
             'original_disease_id' => $disease2->id,
@@ -98,10 +100,6 @@ class StatisticsFeatureTest extends TestCase
             'submitter_id' => $submitter->id,
             'moi_id' => $inheritance->id,
         ]);
-
-        // Attach submissions to diseases via pivot table (disease_submission)
-        $disease1->submissions()->attach($submission1->id, ['type' => 'current']);
-        $disease2->submissions()->attach($submission2->id, ['type' => 'current']);
 
         $response = $this->get('/statistics');
 

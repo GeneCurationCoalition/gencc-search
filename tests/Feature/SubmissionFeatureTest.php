@@ -32,8 +32,9 @@ class SubmissionFeatureTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
+        // byDisplayId scope looks up by sid column
         $submission = Submission::factory()->create([
-            'uuid' => 'test-uuid-12345',
+            'sid' => 'SGC-12345',
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -44,7 +45,7 @@ class SubmissionFeatureTest extends TestCase
         ]);
 
         // Request with versioned URL
-        $response = $this->get('/submissions/test-uuid-12345.1');
+        $response = $this->get('/submissions/SGC-12345.1');
 
         $response->assertStatus(200);
         $response->assertViewIs('submissions.show');
@@ -60,9 +61,13 @@ class SubmissionFeatureTest extends TestCase
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
+        // byDisplayId scope looks up by sid column
+        // Non-versioned URL requires is_live=true and status=published
         $submission = Submission::factory()->create([
-            'uuid' => 'test-uuid-redirect',
+            'sid' => 'SGC-REDIRECT',
             'version_number' => 2,
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
             'original_disease_id' => $disease->id,
@@ -72,9 +77,9 @@ class SubmissionFeatureTest extends TestCase
         ]);
 
         // Request without version should redirect to versioned URL
-        $response = $this->get('/submissions/test-uuid-redirect');
+        $response = $this->get('/submissions/SGC-REDIRECT');
 
-        $response->assertRedirect('/submissions/test-uuid-redirect.2');
+        $response->assertRedirect('/submissions/SGC-REDIRECT.2');
     }
 
     /** @test */
@@ -88,14 +93,16 @@ class SubmissionFeatureTest extends TestCase
     /** @test */
     public function submission_show_includes_related_gene_disease_and_submitter()
     {
-        $gene = Gene::factory()->create(['title' => 'BRCA1']);
-        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
+        // Gene title accessor reads from symbol, Disease title reads from title first
+        $gene = Gene::factory()->create(['symbol' => 'BRCA1']);
+        $disease = Disease::factory()->create(['title' => 'Breast Cancer', 'name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
         $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $inheritance = Inheritance::factory()->create();
 
+        // byDisplayId scope looks up by sid column
         $submission = Submission::factory()->create([
-            'uuid' => 'test-uuid-67890',
+            'sid' => 'SGC-67890',
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -105,7 +112,7 @@ class SubmissionFeatureTest extends TestCase
             'moi_id' => $inheritance->id,
         ]);
 
-        $response = $this->get('/submissions/test-uuid-67890.1');
+        $response = $this->get('/submissions/SGC-67890.1');
 
         $response->assertStatus(200);
         $response->assertViewHas('submission', function ($sub) use ($gene, $disease, $submitter) {
@@ -118,14 +125,16 @@ class SubmissionFeatureTest extends TestCase
     /** @test */
     public function submission_show_page_has_seo_meta_title()
     {
-        $gene = Gene::factory()->create(['title' => 'BRCA1']);
-        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
+        // Gene title accessor reads from symbol
+        $gene = Gene::factory()->create(['symbol' => 'BRCA1']);
+        $disease = Disease::factory()->create(['title' => 'Breast Cancer', 'name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
         $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $inheritance = Inheritance::factory()->create(['name' => 'Autosomal dominant']);
 
+        // byDisplayId scope looks up by sid column
         $submission = Submission::factory()->create([
-            'uuid' => 'test-uuid-meta',
+            'sid' => 'SGC-META',
             'version_number' => 1,
             'gene_id' => $gene->id,
             'disease_id' => $disease->id,
@@ -135,7 +144,7 @@ class SubmissionFeatureTest extends TestCase
             'moi_id' => $inheritance->id,
         ]);
 
-        $response = $this->get('/submissions/test-uuid-meta.1');
+        $response = $this->get('/submissions/SGC-META.1');
 
         $response->assertStatus(200);
         $response->assertViewHas('page_meta');

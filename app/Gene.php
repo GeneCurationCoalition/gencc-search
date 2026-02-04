@@ -112,21 +112,39 @@ class Gene extends Model
     // =========================================================================
 
     /**
-     * Get prev_symbol - returns previous_symbols from JSON.
-     * gencc-sub uses previous_symbols (JSON array).
+     * Get prev_symbol - returns array of previous symbols.
+     * First checks JSON array column (gencc-sub), falls back to parsing text column.
      */
     public function getPrevSymbolAttribute()
     {
-        return $this->previous_symbols ?? [];
+        // First check for JSON array column (gencc-sub schema)
+        if (!empty($this->previous_symbols)) {
+            return $this->previous_symbols;
+        }
+        // Fall back to parsing text column (test/legacy schema)
+        $text = $this->attributes['prev_symbol'] ?? null;
+        if (empty($text)) {
+            return [];
+        }
+        return array_filter(array_map('trim', explode(',', $text)));
     }
 
     /**
-     * Get alias_symbol - returns alias_symbols from JSON.
-     * gencc-sub uses alias_symbols (JSON array).
+     * Get alias_symbol - returns array of alias symbols.
+     * First checks JSON array column (gencc-sub), falls back to parsing text column.
      */
     public function getAliasSymbolAttribute()
     {
-        return $this->alias_symbols ?? [];
+        // First check for JSON array column (gencc-sub schema)
+        if (!empty($this->alias_symbols)) {
+            return $this->alias_symbols;
+        }
+        // Fall back to parsing text column (test/legacy schema)
+        $text = $this->attributes['alias_symbol'] ?? null;
+        if (empty($text)) {
+            return [];
+        }
+        return array_filter(array_map('trim', explode(',', $text)));
     }
 
     /**
@@ -166,6 +184,10 @@ class Gene extends Model
      */
     public function getCurationsDefinitiveAttribute()
     {
+        // First check individual column (test migration/gencc-sub)
+        if (isset($this->attributes['curations_definitive'])) {
+            return (int) $this->attributes['curations_definitive'];
+        }
         if (!empty($this->counts['definitive'])) {
             return $this->counts['definitive'];
         }
@@ -179,6 +201,9 @@ class Gene extends Model
      */
     public function getCurationsStrongAttribute()
     {
+        if (isset($this->attributes['curations_strong'])) {
+            return (int) $this->attributes['curations_strong'];
+        }
         if (!empty($this->counts['strong'])) {
             return $this->counts['strong'];
         }
@@ -192,6 +217,9 @@ class Gene extends Model
      */
     public function getCurationsModerateAttribute()
     {
+        if (isset($this->attributes['curations_moderate'])) {
+            return (int) $this->attributes['curations_moderate'];
+        }
         if (!empty($this->counts['moderate'])) {
             return $this->counts['moderate'];
         }
@@ -205,6 +233,9 @@ class Gene extends Model
      */
     public function getCurationsSupportiveAttribute()
     {
+        if (isset($this->attributes['curations_supportive'])) {
+            return (int) $this->attributes['curations_supportive'];
+        }
         if (!empty($this->counts['supportive'])) {
             return $this->counts['supportive'];
         }
@@ -218,6 +249,9 @@ class Gene extends Model
      */
     public function getCurationsLimitedAttribute()
     {
+        if (isset($this->attributes['curations_limited'])) {
+            return (int) $this->attributes['curations_limited'];
+        }
         if (!empty($this->counts['limited'])) {
             return $this->counts['limited'];
         }
@@ -231,6 +265,9 @@ class Gene extends Model
      */
     public function getCurationsDisputedAttribute()
     {
+        if (isset($this->attributes['curations_disputed'])) {
+            return (int) $this->attributes['curations_disputed'];
+        }
         if (!empty($this->counts['disputed'])) {
             return $this->counts['disputed'];
         }
@@ -244,6 +281,9 @@ class Gene extends Model
      */
     public function getCurationsRefutedAttribute()
     {
+        if (isset($this->attributes['curations_refuted'])) {
+            return (int) $this->attributes['curations_refuted'];
+        }
         if (!empty($this->counts['refuted'])) {
             return $this->counts['refuted'];
         }
@@ -257,6 +297,9 @@ class Gene extends Model
      */
     public function getCurationsAnimalAttribute()
     {
+        if (isset($this->attributes['curations_animal'])) {
+            return (int) $this->attributes['curations_animal'];
+        }
         if (!empty($this->counts['animal'])) {
             return $this->counts['animal'];
         }
@@ -270,6 +313,9 @@ class Gene extends Model
      */
     public function getCurationsNoknownAttribute()
     {
+        if (isset($this->attributes['curations_noknown'])) {
+            return (int) $this->attributes['curations_noknown'];
+        }
         if (!empty($this->counts['noknown'])) {
             return $this->counts['noknown'];
         }
@@ -283,6 +329,9 @@ class Gene extends Model
      */
     public function getCurationsNulAttribute()
     {
+        if (isset($this->attributes['curations_nul'])) {
+            return (int) $this->attributes['curations_nul'];
+        }
         if (!empty($this->counts['nul'])) {
             return $this->counts['nul'];
         }
@@ -296,6 +345,9 @@ class Gene extends Model
      */
     public function getCountSubmissionsAttribute()
     {
+        if (isset($this->attributes['count_submissions'])) {
+            return (int) $this->attributes['count_submissions'];
+        }
         if (!empty($this->counts['submissions'])) {
             return $this->counts['submissions'];
         }
@@ -309,6 +361,9 @@ class Gene extends Model
      */
     public function getCountUniqueSubmittersAttribute()
     {
+        if (isset($this->attributes['count_unique_submitters'])) {
+            return (int) $this->attributes['count_unique_submitters'];
+        }
         if (!empty($this->counts['unique_submitters'])) {
             return $this->counts['unique_submitters'];
         }
@@ -322,6 +377,9 @@ class Gene extends Model
      */
     public function getCountUniqueDiseasesAttribute()
     {
+        if (isset($this->attributes['count_unique_diseases'])) {
+            return (int) $this->attributes['count_unique_diseases'];
+        }
         if (!empty($this->counts['unique_diseases'])) {
             return $this->counts['unique_diseases'];
         }

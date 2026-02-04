@@ -37,8 +37,8 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_has_ident_scope()
     {
-        // Note: scopeIdent now queries by 'uuid' column (gencc-sub schema)
-        $submitter = Submitter::factory()->create(['uuid' => 'test-ident-123']);
+        // Note: scopeIdent queries by 'ident' column (gencc-sub schema)
+        $submitter = Submitter::factory()->create(['ident' => 'test-ident-123']);
 
         $found = Submitter::ident('test-ident-123')->first();
 
@@ -47,10 +47,10 @@ class SubmitterModelTest extends TestCase
     }
 
     /** @test */
-    public function submitter_uuid_accessor_returns_uuid()
+    public function submitter_uuid_accessor_returns_ident()
     {
-        // Note: gencc-sub uses 'uuid' column directly
-        $submitter = Submitter::factory()->create(['uuid' => 'test-uuid-456']);
+        // Note: gencc-sub uses 'ident' column, accessor maps uuid->ident
+        $submitter = Submitter::factory()->create(['ident' => 'test-uuid-456']);
 
         $this->assertEquals('test-uuid-456', $submitter->uuid);
     }
@@ -142,11 +142,11 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_has_required_fields()
     {
-        // Note: gencc-sub uses 'title' and 'text_descriptions' columns
+        // Note: gencc-sub uses 'name' and 'description' columns, accessor maps title->name
         $submitter = Submitter::factory()->create([
-            'title' => 'Test Consortium',
+            'name' => 'Test Consortium',
             'website' => 'https://example.com',
-            'text_descriptions' => 'Test description',
+            'description' => 'Test description',
         ]);
 
         $this->assertEquals('Test Consortium', $submitter->title);
@@ -155,10 +155,10 @@ class SubmitterModelTest extends TestCase
     }
 
     /** @test */
-    public function submitter_title_accessor_returns_title()
+    public function submitter_title_accessor_returns_name()
     {
-        // Note: gencc-sub uses 'title' column directly (not 'name')
-        $submitter = Submitter::factory()->create(['title' => 'Test Organization']);
+        // Note: gencc-sub uses 'name' column, accessor maps title->name
+        $submitter = Submitter::factory()->create(['name' => 'Test Organization']);
 
         $this->assertEquals('Test Organization', $submitter->title);
     }

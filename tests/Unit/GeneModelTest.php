@@ -27,7 +27,8 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_has_curie_scope()
     {
-        $gene = Gene::factory()->create(['curie' => 'HGNC:12345']);
+        // Curie scope searches by hgnc_id column
+        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:12345']);
 
         $found = Gene::curie('HGNC:12345')->first();
 
@@ -47,17 +48,23 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_uuid_accessor_returns_ident()
+    public function gene_uuid_accessor_returns_uuid_or_ident()
     {
-        $gene = Gene::factory()->create(['ident' => 'test-ident-456']);
+        // Accessor returns uuid if set, otherwise ident
+        $gene = Gene::factory()->create(['uuid' => 'test-uuid-456', 'ident' => 'test-ident-456']);
 
-        $this->assertEquals('test-ident-456', $gene->uuid);
+        $this->assertEquals('test-uuid-456', $gene->uuid);
+
+        // When uuid is null, returns ident
+        $gene2 = Gene::factory()->create(['uuid' => null, 'ident' => 'test-ident-789']);
+        $this->assertEquals('test-ident-789', $gene2->uuid);
     }
 
     /** @test */
     public function gene_has_symbol_scope()
     {
-        $gene = Gene::factory()->create(['title' => 'BRCA1']);
+        // Symbol scope searches by symbol column
+        $gene = Gene::factory()->create(['symbol' => 'BRCA1']);
 
         $found = Gene::symbol('BRCA1')->first();
 
@@ -197,9 +204,10 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_has_required_attributes()
     {
+        // curie accessor reads from hgnc_id, title accessor reads from symbol
         $gene = Gene::factory()->create([
-            'curie' => 'HGNC:99999',
-            'title' => 'TEST',
+            'hgnc_id' => 'HGNC:99999',
+            'symbol' => 'TEST',
             'name' => 'Test Gene',
         ]);
 

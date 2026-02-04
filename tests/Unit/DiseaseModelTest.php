@@ -46,11 +46,11 @@ class DiseaseModelTest extends TestCase
     }
 
     /** @test */
-    public function disease_uuid_accessor_returns_ident()
+    public function disease_uuid_accessor_returns_uuid()
     {
-        $disease = Disease::factory()->create(['ident' => 'test-ident-789']);
+        $disease = Disease::factory()->create(['uuid' => 'test-uuid-789']);
 
-        $this->assertEquals('test-ident-789', $disease->uuid);
+        $this->assertEquals('test-uuid-789', $disease->uuid);
     }
 
     /** @test */
