@@ -1,243 +1,242 @@
-# Testing Guide for GenCC Submission Portal
+# Testing Guide for GenCC Search
 
-> **Last Updated:** December 2025
+## Overview
 
-## ⚠️ CRITICAL: Database Safety
-
-**Tests use SQLite in-memory database and NEVER touch the production MySQL database.**
-
-### How Tests Are Protected
-
-1. **phpunit.xml Configuration**
-   - All tests automatically use `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:`
-   - This is enforced in `phpunit.xml` lines 24-25
-   - **DO NOT comment out these lines**
-
-2. **Alternative: Command-Line Override**
-   ```bash
-   # Explicit SQLite override (redundant but safe)
-   DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test
-   ```
-
-3. **GitHub Actions CI/CD**
-   - Automatically uses SQLite :memory: (configured in `.github/workflows/tests.yml`)
-   - No MySQL connection possible in CI environment
+GenCC Search uses PHPUnit with Laravel's testing framework. Tests run against an in-memory SQLite database to ensure isolation and speed.
 
 ## Running Tests
 
-### Recommended: Use Laravel Artisan (uses phpunit.xml automatically)
+### Quick Start
 
 ```bash
 # Run all tests
 php artisan test
 
+# Run with verbose output
+php artisan test --verbose
+```
+
+### Using PHPUnit Directly
+
+```bash
+# Run all tests
+./vendor/bin/phpunit
+
+# Run with specific configuration
+./vendor/bin/phpunit --configuration phpunit.xml
+```
+
+### Running Specific Tests
+
+```bash
 # Run only Feature tests
 php artisan test --testsuite=Feature
 
 # Run only Unit tests
 php artisan test --testsuite=Unit
 
-# Run specific test file
-php artisan test tests/Feature/SubmissionFileValidationTest.php
+# Run a specific test file
+php artisan test tests/Feature/SubmissionFeatureTest.php
 
-# Run specific test method
-php artisan test --filter=test_passes_with_valid_new_submission
+# Run a specific test method
+php artisan test --filter=test_submission_show_page_returns_200
+
+# Run tests matching a pattern
+php artisan test --filter="Gene"
 ```
 
-### Alternative: Use PHPUnit directly (also uses phpunit.xml)
+## Test Database Configuration
 
-```bash
-# Run all tests
-./vendor/bin/phpunit
+Tests use SQLite in-memory database, configured in `phpunit.xml`:
 
-# Run with explicit configuration
-./vendor/bin/phpunit --configuration phpunit.xml
-```
-
-## What Caused the MySQL Database Wipe?
-
-**Root Cause:** Someone likely ran tests WITHOUT the phpunit.xml configuration OR with the SQLite lines commented out.
-
-When this happens:
-1. Laravel uses the default `.env` configuration (MySQL)
-2. The `RefreshDatabase` trait in Feature tests runs migrations
-3. This **wipes and rebuilds the MySQL database** (all data lost!)
-
-## How to Prevent Database Wipes
-
-### ✅ Safe Practices
-
-1. **Always run tests through `php artisan test`**
-   - This automatically uses `phpunit.xml` configuration
-   - Safest and recommended method
-
-2. **Keep phpunit.xml SQLite configuration uncommented**
-   ```xml
-   <env name="DB_CONNECTION" value="sqlite"/>
-   <env name="DB_DATABASE" value=":memory:"/>
-   ```
-
-3. **Never run migrations manually in local environment**
-   - Use `php artisan migrate` ONLY on empty databases
-   - Use `php artisan migrate:fresh` ONLY on development databases
-
-4. **Check database before running unknown commands**
-   ```bash
-   # Quick check
-   php artisan tinker --execute="echo 'Users: ' . \App\Models\User::count();"
-   ```
-
-### ❌ Dangerous Practices
-
-1. **DO NOT comment out SQLite configuration in phpunit.xml**
-2. **DO NOT run `php artisan migrate:fresh` on production data**
-3. **DO NOT run tests with `APP_ENV=local`**
-4. **DO NOT create tests without understanding `RefreshDatabase` trait**
-
-## Understanding RefreshDatabase Trait
-
-```php
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-class MyTest extends TestCase
-{
-    use RefreshDatabase;  // ⚠️ WIPES DATABASE!
-}
-```
-
-**What it does:**
-- Runs all migrations from scratch
-- Resets database to clean state
-- **DELETES ALL DATA** in the database
-
-**Why it's safe in tests:**
-- phpunit.xml forces SQLite :memory: connection
-- In-memory database is temporary (destroyed after tests)
-- Production MySQL database is never touched
-
-## Test Database Seeding
-
-Feature tests seed their own test data:
-
-```php
-protected function seedTestData(): void
-{
-    // Create minimal test data
-    Gene::create(['hgnc_id' => 'HGNC:5', ...]);
-    Disease::create(['curie' => 'MONDO:0000001', ...]);
-    // etc.
-}
-```
-
-This seeding happens in the in-memory SQLite database, not MySQL.
-
-## Troubleshooting
-
-### "No such table" errors
-
-This is GOOD! It means tests are correctly using SQLite :memory:.
-
-If you see this during tests, the test setup needs to seed data or run migrations.
-
-### Tests are slow
-
-Feature tests should run in ~1 second with SQLite :memory:.
-
-If tests are slow (>5 seconds), they might be hitting MySQL. Check:
-```bash
-grep -E "DB_CONNECTION|DB_DATABASE" phpunit.xml
-```
-
-Should show:
 ```xml
 <env name="DB_CONNECTION" value="sqlite"/>
 <env name="DB_DATABASE" value=":memory:"/>
 ```
 
-### How to restore MySQL database
+This ensures:
 
-If the MySQL database was wiped:
+- Tests never touch the production gencc-sub database
+- Fast test execution (no disk I/O)
+- Complete isolation between test runs
 
-1. **Check for backups**
-   ```bash
-   ls -la database/backups/
-   ls -la storage/backups/
-   ```
+## MySQL-Specific Tests
 
-2. **Use production backup command**
-   ```bash
-   # If available
-   php artisan make-prod-db
-   ```
+Some tests require MySQL features not available in SQLite:
 
-3. **Restore from SQL dump** (if available)
-   ```bash
-   mysql -u root -p gencc_sub < backup.sql
-   ```
+- `JSON_EXTRACT` queries
+- `REGEXP_SUBSTR` for gene symbol ordering
 
-4. **Re-import data** (if needed)
-   ```bash
-   php artisan import:genes
-   php artisan import:diseases
-   php artisan import:gencc
-   # etc.
-   ```
+These tests are marked with `@group mysql` and skip automatically when running with SQLite:
 
-## Test Coverage
-
-### Unit Tests (`tests/Unit/`)
-
-| Test File | Description |
-|-----------|-------------|
-| `ExampleTest.php` | Basic Laravel test example |
-| `DiseaseUpdateRefactoringTest.php` | Disease ontology update and equivalence logic |
-| `JobStateMachineTest.php` | Job status transitions and validation |
-| `SubmissionStateMachineTest.php` | Submission status transitions |
-| `SubmissionFileValidationTest.php` | File upload validation logic |
-
-### Feature Tests (`tests/Feature/`)
-
-| Test File | Description |
-|-----------|-------------|
-| `AuthenticationTest.php` | User login/logout flows |
-| `SubmissionApiTest.php` | API endpoint validation |
-| `SubmissionFileValidationTest.php` | End-to-end file validation |
-| `DocumentRowCountTest.php` | Excel file row counting (excludes empty rows) |
-| `*TeamTest.php` | Jetstream team management tests |
-| `*PasswordTest.php` | Password reset/update flows |
-
-### Running Specific Test Groups
-
-```bash
-# All application-specific tests (excluding Jetstream boilerplate)
-php artisan test --filter="Submission|Job|Disease|Document"
-
-# State machine tests only
-php artisan test --filter="StateMachine"
-
-# API tests only
-php artisan test tests/Feature/SubmissionApiTest.php
+```php
+/**
+ * @test
+ * @group mysql
+ */
+public function genes_listing_shows_genes_with_submissions()
+{
+    if (config('database.default') === 'sqlite') {
+        $this->markTestSkipped('This test requires MySQL for JSON_EXTRACT support');
+    }
+    // ...
+}
 ```
 
-## CI/CD Testing
+To run MySQL-specific tests:
 
-GitHub Actions automatically runs tests on:
-- Push to `main`, `master`, `develop`, `feature/*` branches
+```bash
+# Set environment to use MySQL
+DB_CONNECTION=mysql DB_DATABASE=gencc_test php artisan test --group=mysql
+```
+
+## Test Structure
+
+### Test Suites
+
+| Suite   | Location            | Description                        |
+| ------- | ------------------- | ---------------------------------- |
+| Unit    | `tests/Unit/`       | Model and component tests          |
+| Feature | `tests/Feature/`    | HTTP request and integration tests |
+
+### Feature Tests
+
+| Test File                      | Description                              |
+| ------------------------------ | ---------------------------------------- |
+| `DiseaseFeatureTest.php`       | Disease listing and detail pages         |
+| `GeneFeatureTest.php`          | Gene search and detail pages             |
+| `StatisticsFeatureTest.php`    | Statistics dashboard                     |
+| `SubmissionFeatureTest.php`    | Submission detail pages                  |
+| `SubmitterFeatureTest.php`     | Submitter profiles                       |
+| `Livewire/GenesListingTest.php`| Livewire gene listing component          |
+
+### Unit Tests
+
+| Test File                      | Description                              |
+| ------------------------------ | ---------------------------------------- |
+| `ClassificationModelTest.php`  | Classification model accessors           |
+| `DiseaseModelTest.php`         | Disease model and relationships          |
+| `GeneModelTest.php`            | Gene model with multi-ID search          |
+| `SubmissionModelTest.php`      | Submission scopes and relationships      |
+| `SubmitterModelTest.php`       | Submitter model tests                    |
+
+## Writing Tests
+
+### Basic Feature Test
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Gene;
+use App\Disease;
+use App\Submission;
+
+class ExampleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /** @test */
+    public function example_page_returns_200()
+    {
+        // Create test data
+        $gene = Gene::factory()->create();
+
+        // Make request
+        $response = $this->get('/genes/' . $gene->curie);
+
+        // Assert response
+        $response->assertStatus(200);
+        $response->assertViewHas('gene');
+    }
+}
+```
+
+### Using Factories
+
+Model factories are in `database/factories/`:
+
+```php
+// Create a gene
+$gene = Gene::factory()->create(['symbol' => 'BRCA1']);
+
+// Create a submission with relationships
+$submission = Submission::factory()->create([
+    'gene_id' => $gene->id,
+    'disease_id' => Disease::factory(),
+    'classification_id' => Classification::factory()->definitive(),
+]);
+```
+
+### Testing Livewire Components
+
+```php
+use Livewire\Livewire;
+use App\Http\Livewire\Genes\Listing;
+
+/** @test */
+public function genes_listing_component_renders()
+{
+    $this->createTestSubmission();
+
+    Livewire::test(Listing::class)
+        ->assertStatus(200)
+        ->assertSee('BRCA1');
+}
+```
+
+## CI/CD Pipeline
+
+GitHub Actions runs tests automatically on:
+
+- Push to `main`, `master`, `develop` branches
 - Pull requests
 
-Configuration: `.github/workflows/tests.yml`
+Configuration: `.github/workflows/tests.yaml`
 
-Tests run on:
-- PHP 8.1
-- PHP 8.2
-- SQLite :memory: (no MySQL connection possible)
+The CI pipeline:
+
+1. Sets up PHP 7.4
+2. Installs Composer dependencies
+3. Runs PHPUnit with SQLite in-memory database
+4. Reports test results
+
+## Troubleshooting
+
+### "No such table" Errors
+
+This is expected with SQLite. The `RefreshDatabase` trait runs migrations before each test. If you see this error, ensure:
+
+1. The migration exists in `database/migrations/`
+2. The test uses `RefreshDatabase` trait
+
+### Tests Are Slow
+
+If tests take more than a few seconds, check you're using SQLite:
+
+```bash
+grep "DB_CONNECTION" phpunit.xml
+# Should show: <env name="DB_CONNECTION" value="sqlite"/>
+```
+
+### MySQL Features Not Available
+
+Some queries don't work with SQLite. Skip these tests:
+
+```php
+if (config('database.default') === 'sqlite') {
+    $this->markTestSkipped('Requires MySQL');
+}
+```
 
 ## Summary
 
-✅ **Safe:** `php artisan test` (uses phpunit.xml)
-✅ **Safe:** `./vendor/bin/phpunit` (uses phpunit.xml)
-✅ **Safe:** GitHub Actions CI/CD
-❌ **Dangerous:** Commenting out SQLite config
-❌ **Dangerous:** Running migrations on production database
-
-**Golden Rule:** Never modify phpunit.xml SQLite configuration!
+| Command                             | Description              |
+| ----------------------------------- | ------------------------ |
+| `php artisan test`                  | Run all tests            |
+| `php artisan test --testsuite=Unit` | Run unit tests only      |
+| `php artisan test --filter="Gene"`  | Run tests matching "Gene"|
+| `./vendor/bin/phpunit`              | Run via PHPUnit directly |
