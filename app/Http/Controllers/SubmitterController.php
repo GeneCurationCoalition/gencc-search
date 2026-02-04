@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Classification;
-use App\Gene;
 use App\Submitter;
-use Illuminate\Http\Request;
 
 class SubmitterController extends Controller
 {
@@ -16,10 +14,9 @@ class SubmitterController extends Controller
      */
     public function index()
     {
-        //$submitters = Submitter::whereHas('submissions')->paginate(25);
-        $submitters = Submitter::where('status', 1)->with('submissions')->paginate(25);
+        // Don't eager load submissions - curation counts are computed via accessors
+        $submitters = Submitter::where('status', 1)->paginate(25);
         $page_meta['seo']['title'] = "GenCC Members";
-        //dd($records);
         return view('submitters.index', ['submitters' => $submitters, 'page' => 'submitter', 'page_meta' => $page_meta]);
     }
 

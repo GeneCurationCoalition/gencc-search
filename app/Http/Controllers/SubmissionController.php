@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Submission;
 use App\Submitter;
 use App\Gene;
@@ -155,32 +154,73 @@ class SubmissionController extends Controller
      */
     public function index()
     {
-        //
         return redirect('home');
-        //$items = Submission::with('gene', 'disease')->paginate(5);
-        //$page_meta['seo']['title'] = "GenCC Submitters";
-        //return view('submissions.index', ['submissions' => $items, 'page_meta' => $page_meta]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Determine the version state for a submission.
+     * Returns view state information including whether the submission is historical,
+     * unpublished, and what the current version is.
      *
-     * @return \Illuminate\Http\Response
+     * @param Submission $submission The submission being viewed
+     * @return array Version state with keys: currentVersion, isPreviousVersion, isExplicitlyUnpublished, unpublishedDate, hideDetails
      */
-    public function create()
+    private function determineVersionState(Submission $submission): array
     {
-        //
-    }
+        $sgcId = $submission->sid;
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
+        // Find the most recent version (is_live=true means most recent)
+        $mostRecentVersion = Submission::where('sid', $sgcId)
+            ->where('is_live', true)
+            ->first();
+
+        // Fallback to highest version number (data migration edge case)
+        if (!$mostRecentVersion) {
+            $mostRecentVersion = Submission::where('sid', $sgcId)
+                ->orderBy('version_number', 'desc')
+                ->first();
+        }
+
+        // Check if this SGC ID is unpublished (most recent version has status='unpublished')
+        $isSgcIdUnpublished = $mostRecentVersion && $mostRecentVersion->isUnpublished();
+
+        $state = [
+            'currentVersion' => null,
+            'isPreviousVersion' => false,
+            'isExplicitlyUnpublished' => false,
+            'unpublishedDate' => null,
+            'hideDetails' => false,
+        ];
+
+        if ($isSgcIdUnpublished) {
+            // The entire SGC ID is unpublished - hide details for ALL versions
+            $state['hideDetails'] = true;
+            $state['isExplicitlyUnpublished'] = true;
+            $state['unpublishedDate'] = $mostRecentVersion->released_at;
+
+            if ($submission->isHistorical()) {
+                $state['isPreviousVersion'] = true;
+                $state['currentVersion'] = $mostRecentVersion;
+            }
+        } elseif ($submission->isHistorical()) {
+            // Historical version superseded by newer version
+            $state['isPreviousVersion'] = true;
+
+            // Check if THIS specific version was unpublished
+            if ($submission->status === Submission::STATUS_UNPUBLISHED) {
+                $state['isExplicitlyUnpublished'] = true;
+                $state['hideDetails'] = true;
+                $state['unpublishedDate'] = $submission->released_at;
+            }
+
+            // Find the current live published version
+            $state['currentVersion'] = Submission::where('sid', $sgcId)
+                ->where('is_live', true)
+                ->where('status', Submission::STATUS_PUBLISHED)
+                ->first();
+        }
+
+        return $state;
     }
 
     /**
@@ -205,129 +245,37 @@ class SubmissionController extends Controller
      */
     public function show($id)
     {
-        // Check if this is a legacy friendly format URL
+        // Handle legacy friendly format URLs (redirect to proper SGC ID URL)
         if ($this->isLegacyFriendlyFormat($id)) {
             $components = $this->parseLegacyFriendly($id);
             if ($components) {
                 $submission = $this->findSubmissionByLegacyFriendly($components);
                 if ($submission) {
-                    // Redirect to the proper versioned URL
                     return redirect()->route('submission-show', ['id' => $submission->display_id], 301);
                 }
             }
-            // Legacy friendly not found - return 404
             abort(404, 'Submission not found for legacy identifier: ' . $id);
         }
 
-        // Look up submission by display ID (handles both formats)
+        // Look up submission by display ID
         $submission = Submission::byDisplayId($id)->with('gene', 'disease', 'submitter')->firstOrFail();
 
-        // If the URL doesn't include a version, redirect to the versioned URL
+        // Redirect non-versioned URLs to versioned URL
         if (!preg_match('/\.\d+$/', $id)) {
             return redirect()->route('submission-show', ['id' => $submission->display_id]);
         }
 
-        // Find the most recent version of this SGC ID (is_live=true means most recent)
-        // Use sid field (SGC-XXXXX format in gencc-sub)
-        $sgcId = $submission->sid;
-        $mostRecentVersion = Submission::where('sid', $sgcId)
-            ->where('is_live', true)
-            ->first();
+        // Determine version state (historical, unpublished, etc.)
+        $versionState = $this->determineVersionState($submission);
 
-        // If no is_live found, fallback to highest version number (data migration edge case)
-        if (!$mostRecentVersion) {
-            $mostRecentVersion = Submission::where('sid', $sgcId)
-                ->orderBy('version_number', 'desc')
-                ->first();
-        }
-
-        // Check if this SGC ID is unpublished (most recent version has status='unpublished')
-        $isSgcIdUnpublished = $mostRecentVersion && $mostRecentVersion->isUnpublished();
-
-        // Initialize view variables
-        $currentVersion = null;
-        $isPreviousVersion = false;
-        $isExplicitlyUnpublished = false;
-        $unpublishedDate = null;
-        $hideDetails = false;
-
-        if ($isSgcIdUnpublished) {
-            // The entire SGC ID is unpublished - hide details for ALL versions
-            $hideDetails = true;
-            $isExplicitlyUnpublished = true;
-            // Use released_at as the unpublish date (when the unpublish version was released)
-            $unpublishedDate = $mostRecentVersion->released_at;
-
-            // If viewing a historical version of an unpublished SGC, also show previous version banner
-            if ($submission->isHistorical()) {
-                $isPreviousVersion = true;
-                // The "current version" is the unpublished one (no link will be shown since it's unpublished)
-                $currentVersion = $mostRecentVersion;
-            }
-        } elseif ($submission->isHistorical()) {
-            // This is a historical version (superseded by newer version)
-            $isPreviousVersion = true;
-
-            // Check if THIS specific version was unpublished (even though a newer published version exists)
-            if ($submission->status === Submission::STATUS_UNPUBLISHED) {
-                $isExplicitlyUnpublished = true;
-                $hideDetails = true;
-                $unpublishedDate = $submission->released_at;
-            }
-
-            // Find the current live published version
-            $currentVersion = Submission::where('sid', $sgcId)
-                ->where('is_live', true)
-                ->where('status', Submission::STATUS_PUBLISHED)
-                ->first();
-        }
-
+        // Build page metadata
         $inheritanceTitle = optional($submission->inheritance)->title ?? 'N/A';
         $page_meta['seo']['title'] = $submission->gene->title . " | " . $submission->disease->title . " | " . $inheritanceTitle . " by " . $submission->submitter->title . " submission information facts";
 
-        return view('submissions.show', [
+        return view('submissions.show', array_merge([
             'submission' => $submission,
             'page' => 'submitter',
             'page_meta' => $page_meta,
-            'currentVersion' => $currentVersion,
-            'isPreviousVersion' => $isPreviousVersion,
-            'isExplicitlyUnpublished' => $isExplicitlyUnpublished,
-            'unpublishedDate' => $unpublishedDate,
-            'hideDetails' => $hideDetails,
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        ], $versionState));
     }
 }

@@ -225,8 +225,7 @@ class ListingOfSubmissions extends Component
                         //$query->whereNotIn('id', $filter_set['diseases']);
                     //}
                     if (!empty($this->query_disease)) {
-                    //dd($disease);
-                        $query->where('title', 'like', '%' . $this->query_disease . '%');
+                        $query->where('name', 'like', '%' . $this->query_disease . '%');
                     }
                 })->whereHas('inheritance', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['inheritances'] as $key => $item) {
@@ -239,8 +238,7 @@ class ListingOfSubmissions extends Component
                         //$query->whereNotIn('id', $filter_set['genes']);
                     //}
                     if (!empty($this->query_gene)) {
-                    //dd($disease);
-                        $query->where('title', 'like', '%' . $this->query_gene . '%');
+                        $query->where('symbol', 'like', '%' . $this->query_gene . '%');
                     }
                 })->whereHas('submitter', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['submitters'] as $key => $item) {

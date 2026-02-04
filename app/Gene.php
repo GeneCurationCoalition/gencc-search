@@ -10,6 +10,7 @@ use Uuid;
 
 use App\Traits\ModelTransform;
 use App\Traits\DisplayTransform;
+use App\Traits\HasCurationCounts;
 
 /**
  *
@@ -30,6 +31,7 @@ class Gene extends Model
     use HasFactory;
     use ModelTransform;
     use DisplayTransform;
+    use HasCurationCounts;
 
     /**
      * Map the json attributes to associative arrays.
@@ -173,172 +175,7 @@ class Gene extends Model
         return $this->attributes['uuid'] ?? $this->attributes['ident'] ?? null;
     }
 
-    // =========================================================================
-    // Curations count accessors - compute from submissions relationship
-    // Classification IDs: 1=Definitive, 2=Strong, 3=Moderate, 4=Supportive,
-    // 5=Limited, 6=Disputed, 7=Refuted, 8=Animal Model, 9=No Known Disease
-    // =========================================================================
-
-    /**
-     * Get curations_definitive - count submissions with classification_id = 1.
-     */
-    public function getCurationsDefinitiveAttribute()
-    {
-        // First check individual column (test migration/gencc-sub)
-        if (isset($this->attributes['curations_definitive'])) {
-            return (int) $this->attributes['curations_definitive'];
-        }
-        if (!empty($this->counts['definitive'])) {
-            return $this->counts['definitive'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 1)->count()
-            : $this->submissions()->where('classification_id', 1)->count();
-    }
-
-    /**
-     * Get curations_strong - count submissions with classification_id = 2.
-     */
-    public function getCurationsStrongAttribute()
-    {
-        if (isset($this->attributes['curations_strong'])) {
-            return (int) $this->attributes['curations_strong'];
-        }
-        if (!empty($this->counts['strong'])) {
-            return $this->counts['strong'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 2)->count()
-            : $this->submissions()->where('classification_id', 2)->count();
-    }
-
-    /**
-     * Get curations_moderate - count submissions with classification_id = 3.
-     */
-    public function getCurationsModerateAttribute()
-    {
-        if (isset($this->attributes['curations_moderate'])) {
-            return (int) $this->attributes['curations_moderate'];
-        }
-        if (!empty($this->counts['moderate'])) {
-            return $this->counts['moderate'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 3)->count()
-            : $this->submissions()->where('classification_id', 3)->count();
-    }
-
-    /**
-     * Get curations_supportive - count submissions with classification_id = 4.
-     */
-    public function getCurationsSupportiveAttribute()
-    {
-        if (isset($this->attributes['curations_supportive'])) {
-            return (int) $this->attributes['curations_supportive'];
-        }
-        if (!empty($this->counts['supportive'])) {
-            return $this->counts['supportive'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 4)->count()
-            : $this->submissions()->where('classification_id', 4)->count();
-    }
-
-    /**
-     * Get curations_limited - count submissions with classification_id = 5.
-     */
-    public function getCurationsLimitedAttribute()
-    {
-        if (isset($this->attributes['curations_limited'])) {
-            return (int) $this->attributes['curations_limited'];
-        }
-        if (!empty($this->counts['limited'])) {
-            return $this->counts['limited'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 5)->count()
-            : $this->submissions()->where('classification_id', 5)->count();
-    }
-
-    /**
-     * Get curations_disputed - count submissions with classification_id = 6.
-     */
-    public function getCurationsDisputedAttribute()
-    {
-        if (isset($this->attributes['curations_disputed'])) {
-            return (int) $this->attributes['curations_disputed'];
-        }
-        if (!empty($this->counts['disputed'])) {
-            return $this->counts['disputed'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 6)->count()
-            : $this->submissions()->where('classification_id', 6)->count();
-    }
-
-    /**
-     * Get curations_refuted - count submissions with classification_id = 7.
-     */
-    public function getCurationsRefutedAttribute()
-    {
-        if (isset($this->attributes['curations_refuted'])) {
-            return (int) $this->attributes['curations_refuted'];
-        }
-        if (!empty($this->counts['refuted'])) {
-            return $this->counts['refuted'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 7)->count()
-            : $this->submissions()->where('classification_id', 7)->count();
-    }
-
-    /**
-     * Get curations_animal - count submissions with classification_id = 8.
-     */
-    public function getCurationsAnimalAttribute()
-    {
-        if (isset($this->attributes['curations_animal'])) {
-            return (int) $this->attributes['curations_animal'];
-        }
-        if (!empty($this->counts['animal'])) {
-            return $this->counts['animal'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 8)->count()
-            : $this->submissions()->where('classification_id', 8)->count();
-    }
-
-    /**
-     * Get curations_noknown - count submissions with classification_id = 9.
-     */
-    public function getCurationsNoknownAttribute()
-    {
-        if (isset($this->attributes['curations_noknown'])) {
-            return (int) $this->attributes['curations_noknown'];
-        }
-        if (!empty($this->counts['noknown'])) {
-            return $this->counts['noknown'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 9)->count()
-            : $this->submissions()->where('classification_id', 9)->count();
-    }
-
-    /**
-     * Get curations_nul - count submissions with null classification.
-     */
-    public function getCurationsNulAttribute()
-    {
-        if (isset($this->attributes['curations_nul'])) {
-            return (int) $this->attributes['curations_nul'];
-        }
-        if (!empty($this->counts['nul'])) {
-            return $this->counts['nul'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->whereNull('classification_id')->count()
-            : $this->submissions()->whereNull('classification_id')->count();
-    }
+    // Curation count accessors provided by HasCurationCounts trait
 
     /**
      * Get count_submissions - total submissions count.

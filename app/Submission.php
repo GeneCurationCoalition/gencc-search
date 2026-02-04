@@ -364,19 +364,6 @@ class Submission extends Model
     }
 
     /**
-     * Scope to only include current (active) submissions.
-     * @deprecated Use scopeLive() instead. This scope is kept for backwards compatibility.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeCurrent($query)
-    {
-        return $query->where('is_live', '=', true)
-            ->where('status', '=', self::STATUS_PUBLISHED);
-    }
-
-    /**
      * Scope to only include the most recent version of each SGC ID.
      * This includes both published and unpublished submissions (any status where is_live=true).
      *

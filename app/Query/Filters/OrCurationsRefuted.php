@@ -2,34 +2,10 @@
 
 namespace App\Query\Filters;
 
-use Illuminate\Database\Eloquent\Builder;
-
-class OrCurationsRefuted implements Filter
+class OrCurationsRefuted extends AbstractOrCurationsFilter
 {
-
-  /**
-   * Apply a given search value to the builder instance.
-   *
-   * @param Builder $builder
-   * @param mixed $value
-   * @return Builder $builder
-   */
-  public static function apply(Builder $builder, $value)
-  {
-    //dd($value);
-    if ($value == 0) {
-      //dd("hello");
-      //$value = 1;
-      return $builder;
-    } else {
-      //return $builder;
-      return $builder->orwhere('curations_refuted', '>=', $value)->whereHas('submissions');
+    protected static function column(): string
+    {
+        return 'curations_refuted';
     }
-    // if($value) {
-    //   //$value = 1;
-    //   return $builder->orWhere('curations_refuted','>=', $value);
-    // } else {
-    //   return $builder;
-    // }
-  }
 }

@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\ModelTransform;
 use App\Traits\DisplayTransform;
+use App\Traits\HasCurationCounts;
 
 class Submitter extends Model
 {
     use HasFactory;
     use ModelTransform;
     use DisplayTransform;
+    use HasCurationCounts;
 
     /**
      * The attributes that should be cast to native types.
@@ -52,6 +54,27 @@ class Submitter extends Model
             ->orderBy('report_date');
     }
 
+    /**
+     * Get all users associated with this submitter.
+     */
+    public function users()
+    {
+        return $this->belongsToMany('App\User', 'submitter_user')
+            ->withPivot('is_contact')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the contact user for this submitter (where is_contact=1).
+     */
+    public function contactUser()
+    {
+        return $this->belongsToMany('App\User', 'submitter_user')
+            ->withPivot('is_contact')
+            ->wherePivot('is_contact', true)
+            ->limit(1);
+    }
+
     // =========================================================================
     // Accessors for backward compatibility
     // The gencc-sub database uses these column names:
@@ -85,23 +108,76 @@ class Submitter extends Model
     }
 
     /**
-     * Get text_assertions attribute (returns 'assertion' column).
+     * Get text_assertions attribute.
+     * Returns unique assertion criteria URLs from live, published submissions.
+     * Each URL is separated by <br> for display in the view.
      */
     public function getTextAssertionsAttribute()
     {
-        return $this->attributes['assertion'] ?? null;
+        // Get unique criteria URLs from live, published submissions
+        $criteriaUrls = $this->submissions()
+            ->pluck('submission_data')
+            ->map(function ($data) {
+                return $data['criteria']['url'] ?? null;
+            })
+            ->filter(function ($url) {
+                // Filter out empty values and non-URL values like "PMID: 12345"
+                return !empty($url) && (
+                    str_starts_with($url, 'http://') ||
+                    str_starts_with($url, 'https://')
+                );
+            })
+            ->unique()
+            ->values();
+
+        if ($criteriaUrls->isEmpty()) {
+            return null;
+        }
+
+        return $criteriaUrls->implode('<br>');
     }
 
     /**
-     * Get text_contact attribute (returns from 'contacts' JSON).
+     * Get text_contact attribute (formats contact info from contact user).
+     * Returns HTML with contact user's name, title, phone, and email.
+     * Returns placeholder text if no contact user is found.
      */
     public function getTextContactAttribute()
     {
-        $contacts = $this->attributes['contacts'] ?? null;
-        if (is_string($contacts)) {
-            $contacts = json_decode($contacts, true);
+        // Try to get contact from the associated user
+        $contactUser = $this->relationLoaded('contactUser')
+            ? $this->contactUser->first()
+            : $this->contactUser()->first();
+
+        if ($contactUser) {
+            $lines = [];
+
+            // Line 1: Name, Title
+            if (!empty($contactUser->name)) {
+                $nameLine = e($contactUser->name);
+                if (!empty($contactUser->title)) {
+                    $nameLine .= ', ' . e($contactUser->title);
+                }
+                $lines[] = $nameLine;
+            }
+
+            // Line 2: Phone (if exists)
+            if (!empty($contactUser->phone)) {
+                $lines[] = 'Phone: ' . e($contactUser->phone);
+            }
+
+            // Line 3: Email (if exists)
+            if (!empty($contactUser->email)) {
+                $lines[] = 'Email: ' . e($contactUser->email);
+            }
+
+            if (!empty($lines)) {
+                return implode('<br>', $lines);
+            }
         }
-        return is_array($contacts) ? ($contacts['text'] ?? null) : null;
+
+        // No contact user found - return placeholder message
+        return '<span class="text-gray-400 italic">No contact designated</span>';
     }
 
     /**
@@ -121,128 +197,7 @@ class Submitter extends Model
         return $this->attributes['logo'] ?? null;
     }
 
-    // =========================================================================
-    // Curations count accessors - compute from submissions relationship
-    // Classification IDs: 1=Definitive, 2=Strong, 3=Moderate, 4=Supportive,
-    // 5=Limited, 6=Disputed, 7=Refuted, 8=Animal Model, 9=No Known Disease
-    // =========================================================================
-
-    /**
-     * Get curations_definitive - count submissions with classification_id = 1.
-     */
-    public function getCurationsDefinitiveAttribute()
-    {
-        if (!empty($this->counts['definitive'])) {
-            return $this->counts['definitive'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 1)->count()
-            : $this->submissions()->where('classification_id', 1)->count();
-    }
-
-    /**
-     * Get curations_strong - count submissions with classification_id = 2.
-     */
-    public function getCurationsStrongAttribute()
-    {
-        if (!empty($this->counts['strong'])) {
-            return $this->counts['strong'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 2)->count()
-            : $this->submissions()->where('classification_id', 2)->count();
-    }
-
-    /**
-     * Get curations_moderate - count submissions with classification_id = 3.
-     */
-    public function getCurationsModerateAttribute()
-    {
-        if (!empty($this->counts['moderate'])) {
-            return $this->counts['moderate'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 3)->count()
-            : $this->submissions()->where('classification_id', 3)->count();
-    }
-
-    /**
-     * Get curations_supportive - count submissions with classification_id = 4.
-     */
-    public function getCurationsSupportiveAttribute()
-    {
-        if (!empty($this->counts['supportive'])) {
-            return $this->counts['supportive'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 4)->count()
-            : $this->submissions()->where('classification_id', 4)->count();
-    }
-
-    /**
-     * Get curations_limited - count submissions with classification_id = 5.
-     */
-    public function getCurationsLimitedAttribute()
-    {
-        if (!empty($this->counts['limited'])) {
-            return $this->counts['limited'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 5)->count()
-            : $this->submissions()->where('classification_id', 5)->count();
-    }
-
-    /**
-     * Get curations_disputed - count submissions with classification_id = 6.
-     */
-    public function getCurationsDisputedAttribute()
-    {
-        if (!empty($this->counts['disputed'])) {
-            return $this->counts['disputed'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 6)->count()
-            : $this->submissions()->where('classification_id', 6)->count();
-    }
-
-    /**
-     * Get curations_refuted - count submissions with classification_id = 7.
-     */
-    public function getCurationsRefutedAttribute()
-    {
-        if (!empty($this->counts['refuted'])) {
-            return $this->counts['refuted'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 7)->count()
-            : $this->submissions()->where('classification_id', 7)->count();
-    }
-
-    /**
-     * Get curations_animal - count submissions with classification_id = 8.
-     */
-    public function getCurationsAnimalAttribute()
-    {
-        if (!empty($this->counts['animal'])) {
-            return $this->counts['animal'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 8)->count()
-            : $this->submissions()->where('classification_id', 8)->count();
-    }
-
-    /**
-     * Get curations_noknown - count submissions with classification_id = 9.
-     */
-    public function getCurationsNoknownAttribute()
-    {
-        if (!empty($this->counts['noknown'])) {
-            return $this->counts['noknown'];
-        }
-        return $this->relationLoaded('submissions')
-            ? $this->submissions->where('classification_id', 9)->count()
-            : $this->submissions()->where('classification_id', 9)->count();
-    }
+    // Curation count accessors provided by HasCurationCounts trait
 
     /**
      * Get count_submissions - total submissions count.
