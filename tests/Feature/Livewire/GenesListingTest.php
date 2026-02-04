@@ -71,7 +71,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
             'status' => 'published',
         ]);
@@ -118,7 +118,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         Submission::factory()->create([
@@ -126,7 +126,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $component = Livewire::test(Listing::class)
@@ -154,7 +154,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $component = Livewire::test(Listing::class);
@@ -186,7 +186,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter1->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         Submission::factory()->create([
@@ -194,7 +194,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter2->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $component = Livewire::test(Listing::class);
@@ -228,7 +228,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         // Set all curation filters to 0
@@ -264,7 +264,7 @@ class GenesListingTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
     }
 }

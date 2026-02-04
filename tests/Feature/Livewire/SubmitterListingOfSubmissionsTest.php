@@ -31,7 +31,7 @@ class SubmitterListingOfSubmissionsTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
             'status' => 'published',
         ]);
@@ -65,7 +65,7 @@ class SubmitterListingOfSubmissionsTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
             'status' => 'published',
         ]);
@@ -95,7 +95,7 @@ class SubmitterListingOfSubmissionsTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
             'status' => 'published',
         ]);
@@ -121,7 +121,7 @@ class SubmitterListingOfSubmissionsTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
             'status' => 'published',
         ]);
@@ -146,7 +146,7 @@ class SubmitterListingOfSubmissionsTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => null,
+            'inheritance_id' => null,
             'is_live' => true,
             'status' => 'published',
         ]);

@@ -18,7 +18,7 @@ class Inheritance extends Model
      */
     public function submissions()
     {
-        return $this->hasMany('App\Submission', 'moi_id')
+        return $this->hasMany('App\Submission', 'inheritance_id')
             ->where('is_live', '=', true)
             ->where('status', '=', Submission::STATUS_PUBLISHED);
     }

@@ -21,11 +21,11 @@ class Submission extends Model
 
     /**
      * Inheritance (Mode of Inheritance) relationship.
-     * Uses moi_id column which references the inheritances table.
+     * Uses inheritance_id column which references the inheritances table.
      */
     public function inheritance()
     {
-        return $this->belongsTo('App\Inheritance', 'moi_id');
+        return $this->belongsTo('App\Inheritance', 'inheritance_id');
     }
 
     public function classification()
@@ -124,14 +124,6 @@ class Submission extends Model
     public function getDiseaseOriginalIdAttribute()
     {
         return $this->original_disease_id ?? $this->attributes['disease_original_id'] ?? null;
-    }
-
-    /**
-     * Get inheritance_id accessor (returns the moi_id column value for backward compatibility)
-     */
-    public function getInheritanceIdAttribute()
-    {
-        return $this->attributes['moi_id'] ?? null;
     }
 
     /**

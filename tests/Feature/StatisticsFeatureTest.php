@@ -54,7 +54,7 @@ class StatisticsFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         Submission::factory()->create([
@@ -62,7 +62,7 @@ class StatisticsFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $response = $this->get('/statistics');
@@ -89,7 +89,7 @@ class StatisticsFeatureTest extends TestCase
             'original_disease_id' => $disease1->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         Submission::factory()->create([
@@ -98,7 +98,7 @@ class StatisticsFeatureTest extends TestCase
             'original_disease_id' => $disease2->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $response = $this->get('/statistics');
@@ -122,7 +122,7 @@ class StatisticsFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => true,
         ]);
 
@@ -132,7 +132,7 @@ class StatisticsFeatureTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
             'is_live' => false,
         ]);
 

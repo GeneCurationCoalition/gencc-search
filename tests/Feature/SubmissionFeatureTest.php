@@ -41,7 +41,7 @@ class SubmissionFeatureTest extends TestCase
             'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         // Request with versioned URL
@@ -73,7 +73,7 @@ class SubmissionFeatureTest extends TestCase
             'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         // Request without version should redirect to versioned URL
@@ -109,7 +109,7 @@ class SubmissionFeatureTest extends TestCase
             'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $response = $this->get('/submissions/SGC-67890.1');
@@ -141,7 +141,7 @@ class SubmissionFeatureTest extends TestCase
             'original_disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $response = $this->get('/submissions/SGC-META.1');

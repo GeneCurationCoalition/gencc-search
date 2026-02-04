@@ -25,7 +25,7 @@ class SubmissionFactory extends Factory
             'original_disease_id' => $disease->id,
             'classification_id' => Classification::factory(),
             'submitter_id' => Submitter::factory(),
-            'moi_id' => Inheritance::factory(),
+            'inheritance_id' => Inheritance::factory(),
             'report_date' => $this->faker->date(),
             'report_url' => $this->faker->url,
             'evidence' => [

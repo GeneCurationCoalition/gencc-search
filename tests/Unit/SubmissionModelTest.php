@@ -94,7 +94,7 @@ class SubmissionModelTest extends TestCase
     public function submission_belongs_to_inheritance()
     {
         $inheritance = Inheritance::factory()->autosomalDominant()->create();
-        $submission = Submission::factory()->create(['moi_id' => $inheritance->id]);
+        $submission = Submission::factory()->create(['inheritance_id' => $inheritance->id]);
 
         $this->assertEquals('Autosomal dominant', $submission->inheritance->title);
     }

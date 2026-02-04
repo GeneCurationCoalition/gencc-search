@@ -231,7 +231,7 @@ return new class extends Migration
             $table->unsignedBigInteger('original_disease_id')->nullable();
             $table->unsignedBigInteger('classification_id');
             $table->unsignedBigInteger('submitter_id');
-            $table->unsignedBigInteger('moi_id')->nullable();
+            $table->unsignedBigInteger('inheritance_id')->nullable();
             $table->date('report_date')->nullable();
             $table->string('report_url')->nullable();
             $table->json('evidence')->nullable();
@@ -253,7 +253,7 @@ return new class extends Migration
             $table->foreign('original_disease_id')->references('id')->on('diseases')->nullOnDelete();
             $table->foreign('classification_id')->references('id')->on('classifications')->cascadeOnDelete();
             $table->foreign('submitter_id')->references('id')->on('submitters')->cascadeOnDelete();
-            $table->foreign('moi_id')->references('id')->on('inheritances')->nullOnDelete();
+            $table->foreign('inheritance_id')->references('id')->on('inheritances')->nullOnDelete();
         });
 
         // Pubmed-Submission pivot table

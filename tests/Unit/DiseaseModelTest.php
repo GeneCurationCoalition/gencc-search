@@ -95,7 +95,7 @@ class DiseaseModelTest extends TestCase
             'disease_id' => $disease->id,
             'classification_id' => $classification->id,
             'submitter_id' => $submitter->id,
-            'moi_id' => $inheritance->id,
+            'inheritance_id' => $inheritance->id,
         ]);
 
         $this->assertCount(1, $disease->submissions);
