@@ -76,7 +76,7 @@
         <div class="col-span-2 pt-3 text-right pr-3">Gene:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
           @if($submission->gene)
-          <div class="font-normal"><a class="underline" href="{{ route('gene-show', $submission->gene->uuid) }}">{{ $submission->gene->title }}</a></div>
+          <div class="font-normal"><a class="underline" href="{{ route('gene-show', $submission->gene->curie) }}">{{ $submission->gene->title }}</a></div>
           <div class="text-xs">{!! $submission->displayLinkToHgnc($submission->gene->curie, $submission->gene->curie) !!}</div>
           @else
             <div class="font-normal">N/A</div>

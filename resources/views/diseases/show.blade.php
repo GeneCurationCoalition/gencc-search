@@ -30,7 +30,7 @@
               @foreach($disease->displayGroupSubmissionsByClassification($disease->submissions, $classification) as $item)
                   <div class="border-t border-t-gray-200 border-t-solid pt-0 mt-2">
                       <div class="grid grid-cols-11 gap-1">
-                          <div class="col-span-2"><a href="{{ route('gene-show', $item->gene->uuid) }}">{{ $item->gene->title }}</a></div>
+                          <div class="col-span-2"><a href="{{ route('gene-show', $item->gene->curie) }}">{{ $item->gene->title }}</a></div>
                           <div class="col-span-7">{{ $disease->title }}<div class="text-xs">{{ $item->mondo_ref }}{{ $item->omim_ref }}</div></div>
                           <div class="col-span-2">{{ $item->submitter }}</div>
                       </div>
