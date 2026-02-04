@@ -266,7 +266,11 @@ class Listing extends Component
         $this->return = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
             ->whereHas('submissions', function ($query) use($query_disease, $enabledClassifications) {
                 if (!empty($query_disease)) {
-                    $query->where('submitted_as_disease_name', 'like', '%' . $query_disease . '%');
+                    // Filter by disease name via disease relationship
+                    // gencc-sub stores disease name in diseases.name column
+                    $query->whereHas('disease', function ($diseaseQuery) use ($query_disease) {
+                        $diseaseQuery->where('name', 'like', '%' . $query_disease . '%');
+                    });
                 }
                 // Filter by enabled classification types
                 if (!empty($enabledClassifications)) {

@@ -16,12 +16,11 @@ class HasDisease implements Filter
    */
   public static function apply(Builder $builder, $value)
   {
-    //dd($value);
-    //return $builder->where('title', 'LIKE', '%' . $value . '%');
     if(!empty($value)){
-      return $builder->whereHas('submissions', function (Builder $builder) use($value) {
-        //dd($value);
-        $builder->where('submitted_as_disease_name', 'like', '%' . $value .'%');
+      // Filter by disease name via the disease relationship
+      // gencc-sub stores disease name in diseases.name column, not as submission column
+      return $builder->whereHas('submissions.disease', function (Builder $builder) use($value) {
+        $builder->where('name', 'like', '%' . $value .'%');
       });
     } else {
       return $builder;
