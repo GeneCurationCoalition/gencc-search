@@ -43,12 +43,11 @@ class SubmissionModelTest extends TestCase
     }
 
     /** @test */
-    public function submission_sid_accessor_returns_uuid()
+    public function submission_sid_accessor_returns_sid()
     {
-        $submission = Submission::factory()->create(['uuid' => 'test-uuid-789']);
+        $submission = Submission::factory()->create(['sid' => 'GENCC:00001-01-01']);
 
-        // sid accessor should also return the uuid value for backward compatibility
-        $this->assertEquals('test-uuid-789', $submission->sid);
+        $this->assertEquals('GENCC:00001-01-01', $submission->sid);
     }
 
     /** @test */
@@ -81,7 +80,7 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_belongs_to_submitter()
     {
-        $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
+        $submitter = Submitter::factory()->create(['title' => 'Test Lab']);
         $submission = Submission::factory()->create(['submitter_id' => $submitter->id]);
 
         $this->assertEquals('Test Lab', $submission->submitter->title);
@@ -154,7 +153,7 @@ class SubmissionModelTest extends TestCase
     {
         $submission = Submission::factory()->create([
             'report_date' => '2024-01-15',
-            'submitted_as_pmids' => '12345678',
+            'normalized_pmids' => '12345678',
             'submission_data' => ['notes' => ['display' => 'Test notes']],
         ]);
 

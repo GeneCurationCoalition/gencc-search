@@ -122,6 +122,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('deprecated_name')->nullable();
             $table->unsignedBigInteger('mondo_id')->nullable();
+            $table->unsignedBigInteger('mondo_parent_id')->nullable();
             $table->json('synonyms')->nullable();
             $table->text('synonyms_exact')->nullable();
             $table->text('synonyms_related')->nullable();
@@ -157,14 +158,17 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('mondo_id')->references('id')->on('diseases')->nullOnDelete();
+            $table->foreign('mondo_parent_id')->references('id')->on('diseases')->nullOnDelete();
         });
 
         // Submitters table (matches gencc-sub schema)
         Schema::create('submitters', function (Blueprint $table) {
             $table->id();
+            $table->string('ident')->unique()->nullable();
             $table->string('curie')->unique();
             $table->string('uuid')->nullable();
             $table->string('title');
+            $table->string('name')->nullable();
             $table->string('website')->nullable();
             $table->text('text_descriptions')->nullable();
             $table->text('text_assertions')->nullable();
@@ -213,6 +217,7 @@ return new class extends Migration
         Schema::create('submissions', function (Blueprint $table) {
             $table->id();
             $table->string('uuid')->nullable();
+            $table->string('sid')->nullable();
             $table->string('curie')->nullable();
             $table->integer('order')->default(0);
             $table->unsignedBigInteger('gene_id');
@@ -225,7 +230,10 @@ return new class extends Migration
             $table->string('report_url')->nullable();
             $table->json('evidence')->nullable();
             $table->json('submission_data')->nullable();
+            $table->json('original_submission_data')->nullable();
             $table->text('private_notes')->nullable();
+            $table->string('normalized_pmids')->nullable();
+            $table->dateTime('publish_date')->nullable();
             $table->dateTime('submitted_run_date')->nullable();
             $table->integer('version_number')->default(1);
             $table->boolean('is_live')->default(true);
