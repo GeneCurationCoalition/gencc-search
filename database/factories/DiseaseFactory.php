@@ -12,14 +12,31 @@ class DiseaseFactory extends Factory
     public function definition()
     {
         $mondoId = $this->faker->unique()->numberBetween(1, 999999);
+        $name = $this->faker->words(4, true) . ' syndrome';
 
         return [
             'curie' => 'MONDO:' . str_pad($mondoId, 7, '0', STR_PAD_LEFT),
-            'uuid' => 'MONDO_' . str_pad($mondoId, 7, '0', STR_PAD_LEFT),
+            'ident' => 'MONDO_' . str_pad($mondoId, 7, '0', STR_PAD_LEFT),
+            'uuid' => $this->faker->uuid,
             'type' => 'MONDO',
-            'title' => $this->faker->words(4, true) . ' syndrome',
+            'title' => $name,
+            'name' => $name,
             'description' => $this->faker->sentence(),
             'status' => 'active',
+            // Individual count columns (not JSON)
+            'count_submissions' => 0,
+            'count_unique_genes' => 0,
+            'count_unique_submitters' => 0,
+            'curations_definitive' => 0,
+            'curations_strong' => 0,
+            'curations_moderate' => 0,
+            'curations_limited' => 0,
+            'curations_disputed' => 0,
+            'curations_refuted' => 0,
+            'curations_animal' => 0,
+            'curations_noknown' => 0,
+            'curations_supportive' => 0,
+            'curations_nul' => 0,
         ];
     }
 
@@ -29,7 +46,7 @@ class DiseaseFactory extends Factory
             $omimId = $this->faker->unique()->numberBetween(100000, 699999);
             return [
                 'curie' => 'OMIM:' . $omimId,
-                'uuid' => 'OMIM_' . $omimId,
+                'ident' => 'OMIM_' . $omimId,
                 'type' => 'OMIM',
             ];
         });
@@ -41,7 +58,7 @@ class DiseaseFactory extends Factory
             $orphaId = $this->faker->unique()->numberBetween(1, 999999);
             return [
                 'curie' => 'Orphanet:' . $orphaId,
-                'uuid' => 'Orphanet_' . $orphaId,
+                'ident' => 'Orphanet_' . $orphaId,
                 'type' => 'Orphanet',
             ];
         });

@@ -33,28 +33,44 @@ class Gene extends Model
 
     /**
      * Map the json attributes to associative arrays.
+     * gencc-sub uses JSON for counts, alias_symbols, previous_symbols, coordinates, xrefs, scores.
      *
      * @var array
      */
-	protected $casts = [
-        'prev_symbol' => 'array',
-        'alias_symbol' => 'array',
-        'omim_id' => 'array'
+    protected $casts = [
+        'is_acmgsf3' => 'boolean',
+        'is_morbid' => 'boolean',
+        'counts' => 'array',
+        'alias_symbols' => 'array',
+        'previous_symbols' => 'array',
+        'alias_names' => 'array',
+        'previous_names' => 'array',
+        'coordinates' => 'array',
+        'xrefs' => 'array',
+        'scores' => 'array',
+        'activity' => 'array',
+        'events' => 'array',
     ];
 
     /**
      * The attributes that are mass assignable.
+     * Updated to match gencc-sub column names.
      *
      * @var array
      */
     protected $fillable = [
-        'curie', 'type', 'title', 'description', 'status', 'date_modified', 'uuid', 'is_morbid',
-        'hgnc_uuid', 'hgnc_id', 'symbol', 'name', 'location', 'locus_group', 'locus_type',
-        'date_symbol_changed', 'hi', 'plof', 'pli', 'lsdb', 'haplo', 'triplo', 'curation_status',
-        'entrez_id', 'function',
-        'chr', 'start37', 'stop37', 'seqid37', 'stop38', 'start38', 'seqid38', 'history',
-        'notes', 'date_last_curated', 'nstatus', 'mane_select', 'mane_plus', 'acmg59',
-        'prev_symbol', 'alias_symbol', 'omim_id', 'ucsc_id', 'ensembl_gene_id', 'date_approved_reserved'
+        'curie', 'type', 'title', 'description', 'status', 'date_modified', 'ident', 'uuid',
+        'hgnc_id', 'hgnc_uuid', 'symbol', 'name', 'location', 'locus_group', 'locus_type',
+        'date_symbol_changed', 'lsdb', 'curation_status',
+        'function', 'notes', 'date_last_curated', 'is_acmgsf3', 'is_morbid',
+        'prev_symbol', 'alias_symbol', 'chr', 'grch37', 'grch38', 'chm13',
+        'mane_select', 'mane_plus', 'date_approved_reserved',
+        'ensembl_gene_id', 'entrez_id', 'ucsc_id', 'omim_id', 'gene_group',
+        'pli', 'loeuf', 'hi', 'haplo', 'triplo', 'nstatus',
+        'count_submissions', 'count_unique_submitters', 'count_unique_diseases',
+        'curations_definitive', 'curations_strong', 'curations_moderate', 'curations_limited',
+        'curations_disputed', 'curations_refuted', 'curations_animal', 'curations_noknown',
+        'curations_supportive', 'curations_nul'
     ];
 
     public const STATUS_INITIALIZED = 0;
@@ -91,9 +107,236 @@ class Gene extends Model
             ->where('status', '=', Submission::STATUS_PUBLISHED);
     }
 
+    // =========================================================================
+    // Accessors for backward compatibility with gencc-sub field names
+    // =========================================================================
 
     /**
-     * Scope a query by curie.
+     * Get prev_symbol - returns previous_symbols from JSON.
+     * gencc-sub uses previous_symbols (JSON array).
+     */
+    public function getPrevSymbolAttribute()
+    {
+        return $this->previous_symbols ?? [];
+    }
+
+    /**
+     * Get alias_symbol - returns alias_symbols from JSON.
+     * gencc-sub uses alias_symbols (JSON array).
+     */
+    public function getAliasSymbolAttribute()
+    {
+        return $this->alias_symbols ?? [];
+    }
+
+    /**
+     * Get title - returns symbol for backward compatibility.
+     * gencc-sub uses 'symbol' column, views may reference 'title'.
+     */
+    public function getTitleAttribute()
+    {
+        return $this->attributes['symbol'] ?? null;
+    }
+
+    /**
+     * Get curie - returns hgnc_id for backward compatibility.
+     * gencc-sub uses 'hgnc_id' column, views may reference 'curie'.
+     */
+    public function getCurieAttribute()
+    {
+        return $this->attributes['hgnc_id'] ?? null;
+    }
+
+    /**
+     * Get uuid attribute - actual column in gencc-sub.
+     */
+    public function getUuidAttribute()
+    {
+        return $this->attributes['uuid'] ?? $this->attributes['ident'] ?? null;
+    }
+
+    // =========================================================================
+    // Curations count accessors - compute from submissions relationship
+    // Classification IDs: 1=Definitive, 2=Strong, 3=Moderate, 4=Supportive,
+    // 5=Limited, 6=Disputed, 7=Refuted, 8=Animal Model, 9=No Known Disease
+    // =========================================================================
+
+    /**
+     * Get curations_definitive - count submissions with classification_id = 1.
+     */
+    public function getCurationsDefinitiveAttribute()
+    {
+        if (!empty($this->counts['definitive'])) {
+            return $this->counts['definitive'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 1)->count()
+            : $this->submissions()->where('classification_id', 1)->count();
+    }
+
+    /**
+     * Get curations_strong - count submissions with classification_id = 2.
+     */
+    public function getCurationsStrongAttribute()
+    {
+        if (!empty($this->counts['strong'])) {
+            return $this->counts['strong'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 2)->count()
+            : $this->submissions()->where('classification_id', 2)->count();
+    }
+
+    /**
+     * Get curations_moderate - count submissions with classification_id = 3.
+     */
+    public function getCurationsModerateAttribute()
+    {
+        if (!empty($this->counts['moderate'])) {
+            return $this->counts['moderate'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 3)->count()
+            : $this->submissions()->where('classification_id', 3)->count();
+    }
+
+    /**
+     * Get curations_supportive - count submissions with classification_id = 4.
+     */
+    public function getCurationsSupportiveAttribute()
+    {
+        if (!empty($this->counts['supportive'])) {
+            return $this->counts['supportive'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 4)->count()
+            : $this->submissions()->where('classification_id', 4)->count();
+    }
+
+    /**
+     * Get curations_limited - count submissions with classification_id = 5.
+     */
+    public function getCurationsLimitedAttribute()
+    {
+        if (!empty($this->counts['limited'])) {
+            return $this->counts['limited'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 5)->count()
+            : $this->submissions()->where('classification_id', 5)->count();
+    }
+
+    /**
+     * Get curations_disputed - count submissions with classification_id = 6.
+     */
+    public function getCurationsDisputedAttribute()
+    {
+        if (!empty($this->counts['disputed'])) {
+            return $this->counts['disputed'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 6)->count()
+            : $this->submissions()->where('classification_id', 6)->count();
+    }
+
+    /**
+     * Get curations_refuted - count submissions with classification_id = 7.
+     */
+    public function getCurationsRefutedAttribute()
+    {
+        if (!empty($this->counts['refuted'])) {
+            return $this->counts['refuted'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 7)->count()
+            : $this->submissions()->where('classification_id', 7)->count();
+    }
+
+    /**
+     * Get curations_animal - count submissions with classification_id = 8.
+     */
+    public function getCurationsAnimalAttribute()
+    {
+        if (!empty($this->counts['animal'])) {
+            return $this->counts['animal'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 8)->count()
+            : $this->submissions()->where('classification_id', 8)->count();
+    }
+
+    /**
+     * Get curations_noknown - count submissions with classification_id = 9.
+     */
+    public function getCurationsNoknownAttribute()
+    {
+        if (!empty($this->counts['noknown'])) {
+            return $this->counts['noknown'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->where('classification_id', 9)->count()
+            : $this->submissions()->where('classification_id', 9)->count();
+    }
+
+    /**
+     * Get curations_nul - count submissions with null classification.
+     */
+    public function getCurationsNulAttribute()
+    {
+        if (!empty($this->counts['nul'])) {
+            return $this->counts['nul'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->whereNull('classification_id')->count()
+            : $this->submissions()->whereNull('classification_id')->count();
+    }
+
+    /**
+     * Get count_submissions - total submissions count.
+     */
+    public function getCountSubmissionsAttribute()
+    {
+        if (!empty($this->counts['submissions'])) {
+            return $this->counts['submissions'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->count()
+            : $this->submissions()->count();
+    }
+
+    /**
+     * Get count_unique_submitters - count unique submitters.
+     */
+    public function getCountUniqueSubmittersAttribute()
+    {
+        if (!empty($this->counts['unique_submitters'])) {
+            return $this->counts['unique_submitters'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->pluck('submitter_id')->unique()->count()
+            : $this->submissions()->distinct('submitter_id')->count('submitter_id');
+    }
+
+    /**
+     * Get count_unique_diseases - count unique diseases (MONDO equivalents).
+     */
+    public function getCountUniqueDiseasesAttribute()
+    {
+        if (!empty($this->counts['unique_diseases'])) {
+            return $this->counts['unique_diseases'];
+        }
+        return $this->relationLoaded('submissions')
+            ? $this->submissions->pluck('disease_id')->unique()->count()
+            : $this->submissions()->distinct('disease_id')->count('disease_id');
+    }
+
+    // =========================================================================
+    // Query Scopes
+    // =========================================================================
+
+    /**
+     * Scope a query by hgnc_id (HGNC:XXXX format).
+     * gencc-sub uses hgnc_id instead of curie for genes.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  string  $id
@@ -101,22 +344,21 @@ class Gene extends Model
      */
     public function scopeCurie($query, $id)
     {
-        return $query->where('curie', '=', $id)->orderBy('updated_at', 'asc');
+        return $query->where('hgnc_id', '=', $id)->orderBy('updated_at', 'asc');
     }
 
 
     /**
-     * Scope a query by uuid.
+     * Scope a query by ident (replaces uuid scope for gencc-sub compatibility).
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  string  $id
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeUuid($query, $id)
+    public function scopeIdent($query, $ident)
     {
-        return $query->where('uuid', '=', $id)->orderBy('updated_at', 'asc');
+       return $query->where('ident', $ident);
     }
-
 
     /**
      * Scope a query by symbol.
@@ -127,19 +369,7 @@ class Gene extends Model
      */
     public function scopeSymbol($query, $id)
     {
-        return $query->where('title', '=', $id)->orderBy('updated_at', 'asc');
-    }
-
-
-    /**
-     * Query scope by ident
-     *
-     * @@param	string	$ident
-     * @return Illuminate\Database\Eloquent\Collection
-     */
-	public function scopeIdent($query, $ident)
-    {
-       return $query->where('ident', $ident);
+        return $query->where('symbol', '=', $id)->orderBy('updated_at', 'asc');
     }
 
 
@@ -168,98 +398,6 @@ class Gene extends Model
 
 
     /**
-    * Query scope by ensemble id
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-     public function scopeEnsembl($query, $id)
-    {
-      return $query->where('ensembl_gene_id', $id);
-    }
-
-
-    /**
-    * Query scope by omim value
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeOmim($query, $value)
-    {
-       // strip out the prefix if present
-       if (strpos($value, 'OMIM:') === 0)
-           $value = substr($value, 5);
-
-       // should be left with just a numeric string
-       if (!is_numeric($value))
-           return $query;
-
-       return $query->whereJsonContains('omim_id', $value);
-    }
-
-
-    /**
-    * Query scope by entrez id
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeEntrez($query, $id)
-    {
-        return $query->where('entrez_id', $id);
-    }
-
-
-    /**
-    * Query scope by ucsc id
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeUcsc($query, $id)
-    {
-        return $query->where('ucsc_id', $id);
-    }
-
-
-    /**
-    * Query scope by cytoband
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeCytoband($query, $name)
-    {
-       return $query->where('location', $name);
-    }
-
-
-    /**
-    * Query scope by gene previous symbol
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-     public function scopePrevious($query, $symbol)
-    {
-        return $query->whereJsonContains('prev_symbol', $symbol);
-    }
-
-
-   /**
-    * Query scope by gene alias symbol
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeAlias($query, $symbol)
-    {
-       return $query->whereJsonContains('alias_symbol', $symbol);
-    }
-
-
-    /**
     * Query scope by ACMG SF 3 flag
     *
     * @@param	string	$ident
@@ -269,268 +407,4 @@ class Gene extends Model
     {
        return $query->where('acmg59', 1);
     }
-
-
-    /**
-    * Get a display formatted form of aliases
-    *
-    * @@param
-    * @return
-    */
-    public function getDisplayAliasesAttribute()
-    {
-       if (empty($this->alias_symbol))
-           return 'No aliases found';
-
-       return implode(', ', $this->alias_symbol);
-    }
-
-
-   /**
-    * Get a display formatted form of previous names
-    *
-    * @@param
-    * @return
-    */
-    public function getDisplayPreviousAttribute()
-    {
-       if (empty($this->prev_symbol))
-           return 'No previous names found';
-
-       return implode(', ', $this->prev_symbol);
-    }
-
-
-    /**
-    * Get a display formatted form of omim ids
-    *
-    * @@param
-    * @return
-    */
-    public function getDisplayOmimAttribute()
-    {
-        if (empty($this->omim_id))
-             return null;
-
-        return implode(', ', $this->omim_id);
-    }
-
-
-   /**
-    * Get a display formatted form of grch37
-    *
-    * @@param
-    * @return
-    */
-    public function getGrch37Attribute()
-    {
-         if ($this->chr === null || $this->start37 === null || $this->stop37 === null)
-              return null;
-
-         switch ($this->chr)
-         {
-              case '23':
-                   $chr = 'X';
-                   break;
-              case '24':
-                   $chr = 'Y';
-                   break;
-              default:
-                   $chr = $this->chr;
-         }
-
-         return 'chr' . $chr . ':' . $this->start37 . '-' . $this->stop37;
-    }
-
-
-   /**
-    * Get a display formatted form of grch38
-    *
-    * @@param
-    * @return
-    */
-    public function getGrch38Attribute()
-    {
-         if ($this->chr == null || $this->start38 == null || $this->stop38 == null)
-              return null;
-
-         switch ($this->chr)
-         {
-              case '23':
-                   $chr = 'X';
-                   break;
-              case '24':
-                   $chr = 'Y';
-                   break;
-              default:
-                   $chr = $this->chr;
-         }
-
-         return 'chr' . $chr . ':' . $this->start38 . '-' . $this->stop38;
-    }
-
-
-    /**
-    * Search for all contained or overlapped genes and regions
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public static function searchList($args, $page = 0, $pagesize = 20)
-    {
-         // break out the args
-         foreach ($args as $key => $value)
-              $$key = $value;
-
-         // initialize the collection
-         $collection = collect();
-         $gene_count = 0;
-         $region_count = 0;
-
-         // check the required input
-         if (!isset($type) || !isset($region))
-              return (object) ['count' => $collection->count(), 'collection' => $collection,
-                        'gene_count' => $gene_count, 'region_count' => $region_count];
-
-         // only recognize 37 and 38 at this time
-         if ($type != 'GRCh37' && $type != 'GRCh38')
-              return (object) ['count' => $collection->count(), 'collection' => $collection,
-                        'gene_count' => $gene_count, 'region_count' => $region_count];
-
-         // break out the location and clean it up
-         $location = preg_split('/[:-]/', trim($region), 3);
-
-         $chr = strtoupper($location[0]);
-
-         if (strpos($chr, 'CHR') === 0 )   // strip out the chr
-              $chr = substr($chr, 3);
-
-
-
-         //vet the search terms
-         $start = str_replace(',', '', empty($location[1]) ? '0' : $location[1]);  // strip out commas
-         $stop = str_replace(',', '', empty($location[2]) ? '9999999999' : $location[2]);
-
-         if ($chr == 'X')
-              $chr = 23;
-
-         if ($chr == 'Y')
-              $chr = 24;
-
-         if ($start == '' || $stop == '')
-              return (object) ['count' => $collection->count(), 'collection' => $collection,
-                        'gene_count' => $gene_count, 'region_count' => $region_count];
-
-         if (!is_numeric($start) || !is_numeric($stop))
-              return (object) ['count' => $collection->count(), 'collection' => $collection,
-                        'gene_count' => $gene_count, 'region_count' => $region_count];
-
-         if ((int) $start >= (int) $stop)
-              return (object) ['count' => $collection->count(), 'collection' => $collection,
-                        'gene_count' => $gene_count, 'region_count' => $region_count];
-
-           if (isset($option) && $option == 1)  // only return contained
-           {
-           if ($type == 'GRCh37')
-               $regions = self::where('chr', (int) $chr)
-                           ->where('start37', '>=', (int) $start)
-                           ->where('stop37', '<=', (int) $stop)->get();
-           else if ($type == 'GRCh38')
-               $regions = self::where('chr', (int) $chr)
-                           ->where('start38', '>=', (int) $start)
-                           ->where('stop38', '<=', (int) $stop)->get();
-           }
-           else
-           {
-               if ($type == 'GRCh37')
-                   $regions = self::where('chr', (int) $chr)
-                           ->where('start37', '<=', (int) $stop)
-                           ->where('stop37', '>=', (int) $start)->get();
-               else if ($type == 'GRCh38')
-                   $regions = self::where('chr', (int) $chr)
-                           ->where('start38', '<=', (int) $stop)
-                           ->where('stop38', '>=', (int) $start)->get();
-           }
-
-         foreach ($regions as $region)
-         {
-              $region->type = $type;
-              $gene_count++;
-
-              if ($type == 'GRCh37')
-              {
-                   $region->start = $region->start37;
-                   $region->stop = $region->stop37;
-              }
-              else if ($type == 'GRCh38')
-              {
-                   $region->start = $region->start38;
-                   $region->stop = $region->stop38;
-              }
-
-              $region->relationship = ($region->start >= (int) $start && $region->stop <= (int) $stop ? 'Contained' : 'Overlap');
-
-              $collection->push($region);
-         }
-
-         return (object) ['count' => $collection->count(), 'collection' => $collection,
-                     'gene_count' => $gene_count, 'region_count' => $region_count];
-   }
-
-
-   /**
-    * Map various gene references gene record
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-   public static function rosetta($id)
-   {
-       if (empty($id))
-           return null;
-
-       // do some cleanup
-       $id = basename(trim($id));
-
-       $parts = explode(':', $id);
-
-       if (!isset($parts[1]))
-       {
-           if (is_numeric($id))
-               $check = Gene::omim($id)->first();
-           else
-               $check = Gene::name($id)->first();
-       }
-       else
-       {
-           $id = $parts[1];
-
-           switch (strtoupper($parts[0]))
-           {
-               case 'MIM':
-               case 'OMIM':
-                   $check = Gene::omim($id)->first();
-                   break;
-               case 'ENSEMBL':
-               case 'NCBI':
-                   $check = Gene::ensembl($id)->first();
-                   break;
-               case 'ENTREZ':
-                   $check = Gene::entrez($id)->first();
-                   break;
-               case 'HGNC':
-                   $check = Gene::hgnc('HGNC:' . $id)->first();
-                   break;
-               case 'UCSC':
-                   $check = Gene::ucsc($id)->first();
-                   break;
-               default:
-                   $check = null;
-
-           }
-
-       }
-
-       return $check;
-   }
 }

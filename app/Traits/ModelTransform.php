@@ -17,25 +17,22 @@ trait ModelTransform
    */
   public function displayStatChartBarPercentSubmitter($data, $field, $action = false)
   {
-    $data = $data->toArray();
     $return = "0";
 
-    // if($data != 0) {
-    //   return "data";
-    //   return $return;
-    // }
+    // Access the attribute directly instead of converting to array (much faster)
+    $fieldValue = $data->$field ?? 0;
 
     if ($action == 'count') {
-      return $data[$field];
+      return $fieldValue;
     }
 
-    if ($data[$field] == 0) {
+    if ($fieldValue == 0) {
       return $return;
     }
 
-    if(!empty($data)) {
-      $return = ($data[$field] / $data['count_submissions']) * 100;
-        //dd($return);
+    $countSubmissions = $data->count_submissions ?? 0;
+    if ($countSubmissions > 0) {
+      $return = ($fieldValue / $countSubmissions) * 100;
     }
 
     return $return;

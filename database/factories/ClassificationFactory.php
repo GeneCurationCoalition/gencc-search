@@ -24,7 +24,7 @@ class ClassificationFactory extends Factory
 
         return [
             'curie' => 'GENCC:' . str_pad($this->faker->unique()->numberBetween(1, 999999), 7, '0', STR_PAD_LEFT),
-            'uuid' => $this->faker->uuid,
+            'uuid' => 'class-' . $this->faker->uuid(),
             'title' => $classification['title'],
             'abbreviation' => $classification['abbreviation'],
             'slug' => $classification['slug'],
@@ -32,6 +32,7 @@ class ClassificationFactory extends Factory
             'hex_color' => $classification['hex_color'],
             'css_class' => $classification['css_class'],
             'description' => $this->faker->sentence(),
+            'status' => 1,
         ];
     }
 
