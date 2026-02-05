@@ -26,6 +26,7 @@
           </div>
         </div>
         @if($submitter->count_submissions != 0)
+        {{-- Submitters with live submissions always show stats --}}
         <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between  border-t">
 
           <p class="flex justify-between mt-2 text-sm leading-5 font-medium text-gray-500">
@@ -62,16 +63,17 @@
                 </div>
           </div>
         </div>
-
-          @elseif($submitter->member == 0)
+        @elseif($submitter->allow_submissions)
+            {{-- No submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 Submission Data Coming Soon
             </p>
-          @else
+        @else
+            {{-- No submissions and allow_submissions=false --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 Member
             </p>
-          @endif
+        @endif
       </div>
     @empty
         Sorry, we don't seem to have anything...

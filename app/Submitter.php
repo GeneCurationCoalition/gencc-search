@@ -188,6 +188,7 @@ class Submitter extends Model
     /**
      * Get logo attribute - returns data URI from logo_contents.
      * The logo is stored as base64-encoded binary in logo_contents with logo_mime_type.
+     * Returns a placeholder SVG if no logo is available.
      */
     public function getLogoAttribute()
     {
@@ -199,7 +200,40 @@ class Submitter extends Model
         }
 
         // Fallback to legacy path field if no binary content
-        return $this->attributes['logo'] ?? null;
+        $legacyLogo = $this->attributes['logo'] ?? null;
+        if ($legacyLogo) {
+            return $legacyLogo;
+        }
+
+        // Return placeholder SVG when no logo exists
+        return $this->getNoLogoPlaceholder();
+    }
+
+    /**
+     * Check if submitter has a real logo (not placeholder).
+     */
+    public function getHasLogoAttribute(): bool
+    {
+        $contents = $this->attributes['logo_contents'] ?? null;
+        $legacyLogo = $this->attributes['logo'] ?? null;
+
+        return !empty($contents) || !empty($legacyLogo);
+    }
+
+    /**
+     * Generate a simple SVG placeholder for submitters without logos.
+     * Uses the submitter's name as the placeholder text.
+     */
+    protected function getNoLogoPlaceholder(): string
+    {
+        $name = htmlspecialchars($this->attributes['name'] ?? 'Unknown', ENT_XML1, 'UTF-8');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+            . '<rect width="400" height="200" fill="#f3f4f6"/>'
+            . '<text x="200" y="100" font-family="Arial, sans-serif" font-size="20" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">' . $name . '</text>'
+            . '</svg>';
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     // Curation count accessors provided by HasCurationCounts trait
