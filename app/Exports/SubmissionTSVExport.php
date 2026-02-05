@@ -20,12 +20,16 @@ class SubmissionTSVExport implements FromQuery, WithHeadings, WithMapping, WithC
     /**
      * Return a query builder for chunked processing.
      * Eager loads relationships to prevent N+1 queries.
+     * Only includes submissions from submitters with downloadable=true.
      */
     public function query()
     {
         return Submission::query()
             ->where('is_live', '=', true)
             ->where('status', '=', Submission::STATUS_PUBLISHED)
+            ->whereHas('submitter', function ($query) {
+                $query->where('downloadable', true);
+            })
             ->with(['gene', 'disease', 'disease_original', 'classification', 'inheritance', 'submitter']);
     }
 
