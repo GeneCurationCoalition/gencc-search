@@ -17,6 +17,11 @@ Route::group(['prefix' => 'gencc-members'], function () {
   Auth::routes();
 });
 
+// Load balancer / container health check (public - no auth required)
+Route::get('/-/healthz', function () {
+  return response('ok', 200);
+});
+
 /*
  * Gene display routes
  */

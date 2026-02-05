@@ -49,6 +49,26 @@ GenCC Search is a **read-only** application that connects to the GenCC submissio
 - Node.js and npm
 - MySQL 8.0+ (access to gencc-sub database)
 
+## Production container (Podman/Docker)
+
+This repo includes a production-oriented container build:
+- `Dockerfile` (nginx + php-fpm; no `artisan serve`)
+
+Build locally (no push):
+```bash
+podman build -f Dockerfile -t gencc-search:local .
+```
+
+Run locally:
+```bash
+podman run --rm -p 8081:80 \
+  -e DB_HOST=host.containers.internal \
+  -v $(pwd)/.env:/var/www/html/.env:ro \
+  gencc-search:local
+```
+
+Health endpoint (for load balancers): `GET /-/healthz` returns `200 ok`.
+
 ## Installation
 
 1. Clone the repository:
