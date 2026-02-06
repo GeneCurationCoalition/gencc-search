@@ -18,11 +18,13 @@ class StatController extends Controller
      */
     public function index()
     {
-        $genesCount = Gene::with('submissions')->has('submissions')->count();
-        $diseasesCount = Disease::with('submissions')->has('submissions')->count();
+        // Use count() without eager loading to avoid memory issues
+        $genesCount = Gene::has('submissions')->count();
+        $diseasesCount = Disease::has('submissions')->count();
         $submitters_with_submissions = Submitter::has('submissions');
         $submissionsCount = Submission::where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->count();
-        $classifications = Classification::with('submissions')->get();
+        // Use withCount instead of with('submissions') to avoid loading all 28k+ submissions
+        $classifications = Classification::withCount('submissions')->get();
         // Show all active submitters - the view will handle displaying stats vs "Member" vs "Coming Soon"
         $submitters = Submitter::where('status', 1)->paginate(25);
         $page_meta['seo']['title'] = "GenCC Submission Statistics";

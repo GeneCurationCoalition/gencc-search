@@ -44,16 +44,16 @@
         </div>
       </div>
       <div class="col-span-8 xl:col-span-9 py-1 px-2">
-        @if( $item->displayStatChartBarPercent($submissionsCount, $item->submissions->count()) != 0)
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($submissionsCount, $item->submissions->count()) }}%">
+        @if( $item->displayStatChartBarPercent($submissionsCount, $item->submissions_count) != 0)
+        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($submissionsCount, $item->submissions_count) }}%">
           &nbsp;
         </a>
         <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{  $item->submissions->count() }} </span> Submissions
+            <span class="font-bold">{{ $item->submissions_count }} </span> Submissions
           </a>
         @else
         <a class="pt-1 inline-block" href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{  $item->submissions->count() }} </span> Submissions
+            <span class="font-bold">{{ $item->submissions_count }} </span> Submissions
           </a>
         @endif
       </div>

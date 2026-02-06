@@ -134,9 +134,14 @@ class ListingOfSubmissions extends Component
     {
 
         $submitter_id = $this->submitter_id;
-        $records = Submission::where('submitter_id', '=', $submitter_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
 
-        $count_submissions = $records->count();
+        // Build base query for submissions
+        $baseQuery = Submission::where('submitter_id', '=', $submitter_id)
+            ->where('is_live', '=', true)
+            ->where('status', '=', Submission::STATUS_PUBLISHED);
+
+        // Get count without loading all records
+        $count_submissions = $baseQuery->count();
 
         $this->filter = [
             'classifications' => [],
@@ -146,54 +151,85 @@ class ListingOfSubmissions extends Component
             'submitters' => [],
         ];
 
-        foreach ($records as $submission) {
-            $count_submissions++;
-            $this->filter['classifications'][$submission->classification->uuid]['title']        = $submission->classification->title;
-            $this->filter['classifications'][$submission->classification->uuid]['ref']          = $submission->classification->id;
-            $this->filter['classifications'][$submission->classification->uuid]['uuid']         = $submission->classification->uuid;
-            //$this->filter['classifications_id']['ref_' . $submission->classification->id]   = $submission->classification->id;
-            $this->filter['genes'][$submission->gene->uuid]['title']                            = $submission->gene->title;
-            $this->filter['genes'][$submission->gene->uuid]['ref']                              = $submission->gene->id;
-            $this->filter['genes'][$submission->gene->uuid]['uuid']                             = $submission->gene->uuid;
-            //$this->filter['genes_id']['ref_' . $submission->gene->id]                       = $submission->gene->id;
+        // Build filter options using efficient database queries with minimal columns
+        // This avoids loading full Eloquent models for thousands of records
 
-            // if ($submission->displayMondoDisease($submission->diseases)->first()) {
-            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['title']                      = ucfirst($submission->displayMondoDisease($submission->diseases)->first()->title);
-            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['ref']                        = $submission->displayMondoDisease($submission->diseases)->first()->id;
-            // $this->filter['diseases'][$submission->displayMondoDisease($submission->diseases)->first()->uuid]['uuid']                       = $submission->displayMondoDisease($submission->diseases)->first()->uuid;
-            // }
-
-            if ($submission->disease) {
-                $this->filter['diseases'][$submission->disease->uuid]['title']                      = ucfirst($submission->disease->title);
-                $this->filter['diseases'][$submission->disease->uuid]['ref']                        = $submission->disease->id;
-                $this->filter['diseases'][$submission->disease->uuid]['uuid']                       = $submission->disease->uuid;
-            }
-            //$this->filter['diseases_id']['ref_' . $submission->disease->id]                 = $submission->disease->id;
-            if ($submission->inheritance) {
-                $this->filter['inheritances'][$submission->inheritance->uuid]['title']              = $submission->inheritance->title;
-                $this->filter['inheritances'][$submission->inheritance->uuid]['ref']                = $submission->inheritance->id;
-                $this->filter['inheritances'][$submission->inheritance->uuid]['uuid']               = $submission->inheritance->uuid;
-            }
-            //$this->filter['inheritances_id']['ref_' . $submission->inheritance->id]         = $submission->inheritance->id;
-            $this->filter['submitters'][$submission->submitter->uuid]['title']                  = $submission->submitter->title;
-            $this->filter['submitters'][$submission->submitter->uuid]['ref']                    = $submission->submitter->id;
-            $this->filter['submitters'][$submission->submitter->uuid]['uuid']                   = $submission->submitter->uuid;
-            //$this->filter['submitters_id']['ref_' . $submission->submitter->id]             = $submission->submitter->id;
+        // Get distinct classifications (only ~9 possible, safe to load)
+        $classificationIds = (clone $baseQuery)->distinct()->pluck('classification_id');
+        $classifications = Classification::whereIn('id', $classificationIds)
+            ->select('id', 'ident', 'name')
+            ->get();
+        foreach ($classifications as $classification) {
+            $this->filter['classifications'][$classification->ident] = [
+                'title' => $classification->name,
+                'ref' => $classification->id,
+                'uuid' => $classification->ident,
+            ];
         }
 
-        if($records->count()) {
-            $this->filter['genes'] = Arr::sortRecursive($this->filter['genes']);
-            //this->filter['diseases'] = Arr::sortRecursive($this->filter['diseases']);
-            $this->filter['diseases'] = array_values(Arr::sort($this->filter['diseases'], function ($value) {
-                return $value['title'];
-            }));
+        // Get distinct genes - use cursor for memory efficiency with large sets
+        $geneIds = (clone $baseQuery)->distinct()->pluck('gene_id');
+        $genes = \Illuminate\Support\Facades\DB::table('genes')
+            ->whereIn('id', $geneIds)
+            ->select('id', 'ident', 'symbol')
+            ->orderBy('symbol')
+            ->cursor();
+        foreach ($genes as $gene) {
+            $this->filter['genes'][$gene->ident] = [
+                'title' => $gene->symbol,
+                'ref' => $gene->id,
+                'uuid' => $gene->ident,
+            ];
+        }
+
+        // Get distinct diseases - use cursor for memory efficiency with large sets
+        $diseaseIds = (clone $baseQuery)->distinct()->pluck('disease_id');
+        $diseases = \Illuminate\Support\Facades\DB::table('diseases')
+            ->whereIn('id', $diseaseIds)
+            ->select('id', 'ident', 'name')
+            ->orderBy('name')
+            ->cursor();
+        foreach ($diseases as $disease) {
+            $this->filter['diseases'][$disease->ident] = [
+                'title' => ucfirst($disease->name),
+                'ref' => $disease->id,
+                'uuid' => $disease->ident,
+            ];
+        }
+
+        // Get distinct inheritances (limited set, safe to load)
+        $inheritanceIds = (clone $baseQuery)->distinct()->whereNotNull('inheritance_id')->pluck('inheritance_id');
+        $inheritances = \Illuminate\Support\Facades\DB::table('inheritances')
+            ->whereIn('id', $inheritanceIds)
+            ->select('id', 'ident', 'name')
+            ->get();
+        foreach ($inheritances as $inheritance) {
+            $this->filter['inheritances'][$inheritance->ident] = [
+                'title' => $inheritance->name,
+                'ref' => $inheritance->id,
+                'uuid' => $inheritance->ident,
+            ];
+        }
+
+        // Get the submitter for this page (just one)
+        $submitter = \Illuminate\Support\Facades\DB::table('submitters')
+            ->where('id', $submitter_id)
+            ->select('id', 'ident', 'name')
+            ->first();
+        if ($submitter) {
+            $this->filter['submitters'][$submitter->ident] = [
+                'title' => $submitter->name,
+                'ref' => $submitter->id,
+                'uuid' => $submitter->ident,
+            ];
+        }
+
+        // Genes and diseases are already sorted by DB query
+        // Only need to sort inheritances and submitters if needed
+        if($count_submissions > 0) {
             $this->filter['inheritances'] = Arr::sortRecursive($this->filter['inheritances']);
             $this->filter['submitters'] = Arr::sortRecursive($this->filter['submitters']);
         }
-        //dd($this->filter);
-
-        //  dd($records);
-        //dd($this->filter);
 
         $filter        = $this->filter;
         $filter_set        = $this->filter_set;

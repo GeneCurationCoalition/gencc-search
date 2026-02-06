@@ -68,6 +68,9 @@ COPY . .
 COPY --from=vendor /app/vendor/ ./vendor/
 COPY --from=assets /app/public/ ./public/
 
+# PHP configuration (increase memory limit for large submitters)
+COPY docker/php.ini /usr/local/etc/php/conf.d/app.ini
+
 # Nginx + supervisor config
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
