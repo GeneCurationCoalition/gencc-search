@@ -249,6 +249,137 @@ class GenesListingTest extends TestCase
     }
 
     /**
+     * @test
+     * @group mysql
+     *
+     * This test verifies the submitter filter correctly filters genes by submitter.
+     * This is a regression test for the query optimization that uses submitter_id
+     * directly instead of nested whereHas through the submitter relationship.
+     */
+    public function genes_listing_filters_correctly_by_submitter()
+    {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
+        // Create two submitters with different submissions
+        $submitter1 = Submitter::factory()->create(['ident' => 'GENCC_TEST001']);
+        $submitter2 = Submitter::factory()->create(['ident' => 'GENCC_TEST002']);
+
+        // Create two genes - one for each submitter
+        $gene1 = Gene::factory()->create(['symbol' => 'TESTGENE1', 'title' => 'TESTGENE1']);
+        $gene2 = Gene::factory()->create(['symbol' => 'TESTGENE2', 'title' => 'TESTGENE2']);
+
+        $disease = Disease::factory()->create();
+        $classification = Classification::factory()->definitive()->create();
+        $inheritance = Inheritance::factory()->create();
+
+        // Gene 1 has submission from submitter 1 only
+        Submission::factory()->create([
+            'gene_id' => $gene1->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter1->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        // Gene 2 has submission from submitter 2 only
+        Submission::factory()->create([
+            'gene_id' => $gene2->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter2->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        // Filter by submitter 1 only using the ident (uuid)
+        $component = Livewire::test(Listing::class)
+            ->set('curations_from_submitters', [$submitter1->ident]);
+
+        // Should show TESTGENE1 (has submission from submitter1)
+        $component->assertSee('TESTGENE1');
+        // Should NOT show TESTGENE2 (only has submission from submitter2)
+        $component->assertDontSee('TESTGENE2');
+    }
+
+    /**
+     * @test
+     * @group mysql
+     *
+     * Verify that the submitter filtering uses the optimized query pattern.
+     * This test ensures the fix using whereIn('submitter_id', ...) is preserved.
+     */
+    public function genes_listing_submitter_filter_returns_correct_results_with_multiple_submitters()
+    {
+        // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
+        if (config('database.default') === 'sqlite') {
+            $this->markTestSkipped('This test requires MySQL for REGEXP_SUBSTR ordering');
+        }
+
+        // Create three submitters
+        $submitter1 = Submitter::factory()->create(['ident' => 'GENCC_MULTI_001']);
+        $submitter2 = Submitter::factory()->create(['ident' => 'GENCC_MULTI_002']);
+        $submitter3 = Submitter::factory()->create(['ident' => 'GENCC_MULTI_003']);
+
+        // Create three genes
+        $geneA = Gene::factory()->create(['symbol' => 'MULTIGENE_A', 'title' => 'MULTIGENE_A']);
+        $geneB = Gene::factory()->create(['symbol' => 'MULTIGENE_B', 'title' => 'MULTIGENE_B']);
+        $geneC = Gene::factory()->create(['symbol' => 'MULTIGENE_C', 'title' => 'MULTIGENE_C']);
+
+        $disease = Disease::factory()->create();
+        $classification = Classification::factory()->definitive()->create();
+        $inheritance = Inheritance::factory()->create();
+
+        // Gene A: submitter 1
+        Submission::factory()->create([
+            'gene_id' => $geneA->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter1->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        // Gene B: submitter 2
+        Submission::factory()->create([
+            'gene_id' => $geneB->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter2->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        // Gene C: submitter 3
+        Submission::factory()->create([
+            'gene_id' => $geneC->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter3->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        // Filter by submitters 1 and 2 only
+        $component = Livewire::test(Listing::class)
+            ->set('curations_from_submitters', [$submitter1->ident, $submitter2->ident]);
+
+        // Should show genes A and B
+        $component->assertSee('MULTIGENE_A');
+        $component->assertSee('MULTIGENE_B');
+        // Should NOT show gene C (only has submission from submitter3)
+        $component->assertDontSee('MULTIGENE_C');
+    }
+
+    /**
      * Helper to create a complete test submission
      */
     private function createTestSubmission(): Submission

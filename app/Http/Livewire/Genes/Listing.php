@@ -263,8 +263,11 @@ class Listing extends Component
         if ($filter['num_curations_animal'] > 0) $enabledClassifications[] = 8;
         if ($filter['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
 
+        // Get submitter IDs from idents for optimized query (avoids slow nested whereHas)
+        $submitterIds = Submitter::whereIn('ident', $value)->pluck('id')->toArray();
+
         $this->return = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
-            ->whereHas('submissions', function ($query) use($query_disease, $enabledClassifications) {
+            ->whereHas('submissions', function ($query) use($query_disease, $enabledClassifications, $submitterIds) {
                 if (!empty($query_disease)) {
                     // Filter by disease name via disease relationship
                     // gencc-sub stores disease name in diseases.name column
@@ -276,8 +279,10 @@ class Listing extends Component
                 if (!empty($enabledClassifications)) {
                     $query->whereIn('classification_id', $enabledClassifications);
                 }
-            })->whereHas('submissions.submitter', function ($query) use ($value) {
-                $query->whereIn('ident', $value);
+                // Filter by submitter IDs (optimized: uses submitter_id directly instead of nested whereHas)
+                if (!empty($submitterIds)) {
+                    $query->whereIn('submitter_id', $submitterIds);
+                }
             })
             // extract nonnumeric and numeric terms from symbol,
             // order by first 3 pairs, then remainder
