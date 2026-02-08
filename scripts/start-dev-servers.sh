@@ -63,6 +63,50 @@ detect_container_runtime() {
     fi
 }
 
+# Check if Podman machine is accessible and restart if needed
+ensure_podman_running() {
+    if ! command -v podman &> /dev/null; then
+        return 0  # Not using podman, skip
+    fi
+
+    # Try a simple podman command to test connection
+    if podman info &> /dev/null; then
+        return 0  # Connection works
+    fi
+
+    echo -e "${YELLOW}Podman connection issue detected. Restarting Podman machine...${NC}"
+
+    # Check if machine exists
+    if ! podman machine list 2>/dev/null | grep -q "podman-machine"; then
+        echo -e "${RED}No Podman machine found. Please run: podman machine init${NC}"
+        return 1
+    fi
+
+    # Stop and start the machine to reset the socket
+    echo -e "${YELLOW}Stopping Podman machine...${NC}"
+    podman machine stop 2>/dev/null || true
+    sleep 2
+
+    echo -e "${YELLOW}Starting Podman machine...${NC}"
+    if ! podman machine start; then
+        echo -e "${RED}Failed to start Podman machine.${NC}"
+        return 1
+    fi
+
+    # Wait for machine to be ready
+    sleep 3
+
+    # Verify connection now works
+    if podman info &> /dev/null; then
+        echo -e "${GREEN}Podman machine restarted successfully.${NC}"
+        echo ""
+        return 0
+    else
+        echo -e "${RED}Podman still not responding after restart.${NC}"
+        return 1
+    fi
+}
+
 show_usage() {
     echo -e "${BLUE}GenCC Search - Development Server Script${NC}"
     echo ""
@@ -355,6 +399,14 @@ start_docker() {
     echo -e "${YELLOW}Using container runtime: ${CONTAINER_CMD}${NC}"
     echo ""
 
+    # Ensure Podman machine is running (if using Podman)
+    if [ "$CONTAINER_CMD" = "podman" ]; then
+        if ! ensure_podman_running; then
+            echo -e "${RED}Cannot connect to Podman. Please check your Podman installation.${NC}"
+            exit 1
+        fi
+    fi
+
     # Generate version
     APP_VERSION=$("$SCRIPT_DIR/version.sh")
     export APP_VERSION
@@ -398,6 +450,14 @@ build_docker() {
 
     echo -e "${YELLOW}Using container runtime: ${CONTAINER_CMD}${NC}"
     echo ""
+
+    # Ensure Podman machine is running (if using Podman)
+    if [ "$CONTAINER_CMD" = "podman" ]; then
+        if ! ensure_podman_running; then
+            echo -e "${RED}Cannot connect to Podman. Please check your Podman installation.${NC}"
+            exit 1
+        fi
+    fi
 
     docker_build
 
