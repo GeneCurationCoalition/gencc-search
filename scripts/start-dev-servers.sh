@@ -35,6 +35,9 @@ IMAGE_NAME="gencc-search"
 LOCAL_PORT="${LOCAL_PORT:-8000}"
 ARTISAN_PORT="${ARTISAN_PORT:-8000}"
 
+# PID file for tracking local server
+PID_FILE="${PROJECT_DIR}/storage/logs/artisan-serve.pid"
+
 # Database configuration (override with environment variables)
 DB_PORT="${DB_PORT:-3306}"
 DB_DATABASE="${DB_DATABASE:-gencc_sub}"
@@ -67,11 +70,11 @@ show_usage() {
     echo -e "  $0 [command]"
     echo ""
     echo -e "${BLUE}Commands:${NC}"
-    echo -e "  local    Start server locally using php artisan serve (default)"
+    echo -e "  local    Start server locally in background (default)"
     echo -e "  docker   Start server using Docker/Podman container"
     echo -e "  stop     Stop all servers (both local and Docker)"
     echo -e "  status   Show server status"
-    echo -e "  logs     View Docker container logs"
+    echo -e "  logs     View server logs (local or Docker)"
     echo -e "  shell    Open shell in Docker container"
     echo -e "  build    Build Docker image only"
     echo ""
@@ -85,9 +88,10 @@ show_usage() {
     echo -e "  APP_KEY        Laravel app key (auto-generated if not set)"
     echo ""
     echo -e "${BLUE}Examples:${NC}"
-    echo -e "  $0                           # Start locally on port 8000"
-    echo -e "  $0 docker                    # Start Docker container on port 8000"
-    echo -e "  LOCAL_PORT=8080 $0 docker    # Start Docker on port 8080"
+    echo -e "  $0                           # Start locally in background"
+    echo -e "  $0 docker                    # Start Docker container"
+    echo -e "  $0 status                    # Check what's running"
+    echo -e "  $0 logs                      # View server logs"
     echo -e "  $0 stop                      # Stop all servers"
     echo ""
 }
@@ -106,14 +110,33 @@ clear_caches() {
 
 # Function to check if local server is running
 is_local_running() {
-    if pgrep -f "artisan serve.*--port=${ARTISAN_PORT}" > /dev/null 2>&1; then
-        return 0
+    # Check PID file first
+    if [ -f "$PID_FILE" ]; then
+        local pid
+        pid=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            return 0
+        fi
     fi
     # Also check if port is in use
-    if lsof -ti:${ARTISAN_PORT} > /dev/null 2>&1; then
+    if lsof -ti:"${ARTISAN_PORT}" > /dev/null 2>&1; then
         return 0
     fi
     return 1
+}
+
+# Function to get local server PID
+get_local_pid() {
+    if [ -f "$PID_FILE" ]; then
+        local pid
+        pid=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "$pid"
+            return
+        fi
+    fi
+    # Fallback to lsof
+    lsof -ti:"${ARTISAN_PORT}" 2>/dev/null | head -1
 }
 
 # Function to check if Docker container is running
@@ -145,21 +168,27 @@ start_local() {
     # Stop any existing local server on this port
     if is_local_running; then
         echo -e "${YELLOW}Stopping existing server on port ${ARTISAN_PORT}...${NC}"
-        lsof -ti:${ARTISAN_PORT} | xargs kill -9 2>/dev/null || true
+        stop_local_server
         sleep 1
     fi
 
     clear_caches
 
-    # Start the server
-    echo -e "${YELLOW}Starting Laravel development server...${NC}"
-    php artisan serve --port=${ARTISAN_PORT} &
+    # Ensure log directory exists
+    mkdir -p "$(dirname "$PID_FILE")"
+
+    # Start the server in background, redirect output to log
+    echo -e "${YELLOW}Starting Laravel development server in background...${NC}"
+    nohup php artisan serve --port="${ARTISAN_PORT}" > storage/logs/artisan-serve.log 2>&1 &
     SERVER_PID=$!
+
+    # Save PID to file
+    echo "$SERVER_PID" > "$PID_FILE"
 
     sleep 2
 
     # Check if server started successfully
-    if kill -0 $SERVER_PID 2>/dev/null; then
+    if kill -0 "$SERVER_PID" 2>/dev/null; then
         echo ""
         echo -e "${GREEN}========================================${NC}"
         echo -e "${GREEN}  Server started successfully!${NC}"
@@ -167,20 +196,29 @@ start_local() {
         echo ""
         echo -e "${BLUE}Server URL:${NC} http://127.0.0.1:${ARTISAN_PORT}"
         echo -e "${BLUE}Process ID:${NC} ${SERVER_PID}"
+        echo -e "${BLUE}Log file:${NC} storage/logs/artisan-serve.log"
         echo ""
         echo -e "${BLUE}Useful commands:${NC}"
         echo -e "  $0 status    - Check server status"
         echo -e "  $0 stop      - Stop the server"
-        echo -e "  tail -f storage/logs/laravel.log  - View Laravel logs"
+        echo -e "  tail -f storage/logs/artisan-serve.log  - View server logs"
+        echo -e "  tail -f storage/logs/laravel.log        - View Laravel logs"
         echo ""
-        echo -e "${YELLOW}Press Ctrl+C to stop the server${NC}"
-
-        # Wait for the server process
-        wait $SERVER_PID
     else
+        rm -f "$PID_FILE"
         echo -e "${RED}Failed to start server!${NC}"
         exit 1
     fi
+}
+
+# Function to stop local server
+stop_local_server() {
+    local pid
+    pid=$(get_local_pid)
+    if [ -n "$pid" ]; then
+        kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
+    fi
+    rm -f "$PID_FILE"
 }
 
 # Function to build Docker image
@@ -382,7 +420,7 @@ stop_all() {
     # Stop local server
     echo -e "${YELLOW}Stopping local server...${NC}"
     if is_local_running; then
-        lsof -ti:${ARTISAN_PORT} | xargs kill -9 2>/dev/null || true
+        stop_local_server
         echo -e "${GREEN}Local server stopped${NC}"
     else
         echo -e "${YELLOW}No local server running${NC}"
@@ -417,8 +455,10 @@ show_status() {
     # Check local server
     echo -e "${YELLOW}Local Server:${NC}"
     if is_local_running; then
-        PID=$(lsof -ti:${ARTISAN_PORT} 2>/dev/null | head -1)
-        echo -e "  ${GREEN}Running${NC} on port ${ARTISAN_PORT} (PID: ${PID})"
+        local pid
+        pid=$(get_local_pid)
+        echo -e "  ${GREEN}Running${NC} on port ${ARTISAN_PORT} (PID: ${pid})"
+        echo -e "  Log: storage/logs/artisan-serve.log"
     else
         echo -e "  ${YELLOW}Not running${NC}"
     fi
@@ -434,21 +474,25 @@ show_status() {
 show_logs() {
     cd "$PROJECT_DIR"
 
-    CONTAINER_CMD=$(detect_container_runtime)
-    if [ -z "$CONTAINER_CMD" ]; then
-        echo -e "${RED}Error: Neither podman nor docker found.${NC}"
-        exit 1
+    # Check if local server is running first
+    if is_local_running; then
+        echo -e "${BLUE}Showing local server logs (Ctrl+C to exit)...${NC}"
+        echo ""
+        tail -f storage/logs/artisan-serve.log
+        return
     fi
 
+    # Check Docker
     if is_docker_running; then
         echo -e "${BLUE}Showing container logs (Ctrl+C to exit)...${NC}"
         echo ""
         docker_logs
-    else
-        echo -e "${RED}Error: Container is not running.${NC}"
-        echo -e "${YELLOW}Start it first with: $0 docker${NC}"
-        exit 1
+        return
     fi
+
+    echo -e "${YELLOW}No server is currently running.${NC}"
+    echo -e "${YELLOW}Start one with: $0 local  or  $0 docker${NC}"
+    exit 1
 }
 
 # Function to open shell in Docker container
