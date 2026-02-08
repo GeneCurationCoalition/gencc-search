@@ -36,6 +36,10 @@ RUN npm run production
 # -- Production stage --
 FROM php:7.4-fpm-alpine
 
+# Build argument for application version
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 WORKDIR /var/www/html
 
 # System deps + runtime services (nginx + supervisord)
