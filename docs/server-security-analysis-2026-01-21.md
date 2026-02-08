@@ -224,7 +224,7 @@ LOG_CHANNEL=stderr
 
 ### 3. Health Check Endpoint
 
-The application has a `/healthcheck` endpoint for container health monitoring.
+The application has a `/-/healthz` endpoint for container health monitoring.
 
 ---
 
