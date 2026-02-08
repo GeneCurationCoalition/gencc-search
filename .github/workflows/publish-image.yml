@@ -33,9 +33,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine image tags
+      - name: Determine version
         id: version
         run: |
+          APP_VERSION=$(./scripts/version.sh)
+          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+
           if [ -n "${{ inputs.version }}" ]; then
             IMAGE_TAG="${{ inputs.version }}"
           elif [ "${{ github.event_name }}" = "release" ]; then
@@ -54,6 +57,7 @@ jobs:
           echo "::notice::IMAGE=${IMAGE}"
           echo "::notice::IMAGE_TAG=${IMAGE_TAG}"
           echo "::notice::SHA_TAG=${SHA_TAG}"
+          echo "::notice::APP_VERSION=${APP_VERSION}"
 
       - name: Build and push (Dockerfile)
         uses: docker/build-push-action@v5
@@ -61,6 +65,8 @@ jobs:
           context: .
           file: Dockerfile
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.app_version }}
           tags: |
             ${{ steps.version.outputs.image }}:${{ steps.version.outputs.image_tag }}
             ${{ steps.version.outputs.image }}:${{ steps.version.outputs.sha_tag }}
