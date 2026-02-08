@@ -10,12 +10,12 @@ The Gene Curation Coalition (GenCC) is an international collaboration of genetic
 
 ## Features
 
-- **Gene Search** - Search by gene symbol, HGNC ID, OMIM ID, Ensembl ID, or other identifiers
-- **Disease Search** - Search by disease name or ontology ID (MONDO, OMIM, Orphanet)
-- **Genomic Region Search** - Search by genomic coordinates (GRCh37/GRCh38)
-- **Submission Browser** - View and filter gene-disease curations from all member organizations
-- **Classification Summary** - Aggregate view of curation classifications (Definitive, Strong, Moderate, Limited, etc.)
-- **Data Export** - Download curations in CSV, TSV, or Excel format
+- **Gene Search** - Filter genes by symbol
+- **Disease Filter** - Filter results by disease name
+- **Classification Filters** - Filter by curation classification (Definitive, Strong, Moderate, Limited, etc.)
+- **Member Filters** - Filter curations by submitting organization
+- **Gene Detail Pages** - View all submissions for a gene with disease and classification details
+- **Data Export** - Download all curations in CSV, TSV, or Excel format
 - **Statistics Dashboard** - Overview of submissions, genes, and diseases in the database
 
 ## Architecture
@@ -116,6 +116,55 @@ Health endpoint (for load balancers): `GET /-/healthz` returns `200 ok`.
    php artisan serve
    ```
 
+## Development Scripts
+
+The `scripts/` directory contains helper scripts for local development:
+
+### Start Development Server
+
+```bash
+# Start locally with php artisan serve (default)
+./scripts/start-dev-servers.sh
+
+# Or explicitly
+./scripts/start-dev-servers.sh local
+```
+
+### Docker/Podman Development
+
+```bash
+# Build and run container
+./scripts/start-dev-servers.sh docker
+```
+
+### Other Commands
+
+```bash
+# Check server status
+./scripts/start-dev-servers.sh status
+
+# Stop all servers (local and Docker)
+./scripts/start-dev-servers.sh stop
+
+# View Docker container logs
+./scripts/start-dev-servers.sh logs
+
+# Open shell in container
+./scripts/start-dev-servers.sh shell
+
+# Build Docker image only
+./scripts/start-dev-servers.sh build
+```
+
+### Script Environment Variables
+
+| Variable       | Default                              | Description               |
+| -------------- | ------------------------------------ | ------------------------- |
+| `LOCAL_PORT`   | 8000                                 | Port for Docker container |
+| `ARTISAN_PORT` | 8000                                 | Port for artisan serve    |
+| `DB_HOST`      | 127.0.0.1 / host.containers.internal | Database host             |
+| `DB_DATABASE`  | gencc_sub                            | Database name             |
+
 ## Project Structure
 
 ```
@@ -125,11 +174,10 @@ app/
 ├── Http/
 │   ├── Controllers/      # Request handlers
 │   └── Livewire/         # Livewire components for dynamic UI
-├── Query/Filters/        # Search filter implementations
 ├── Traits/               # Shared model functionality
 ├── Classification.php    # Curation classification levels
-├── Disease.php           # Disease model with cross-ontology resolution
-├── Gene.php              # Gene model with multi-ID search
+├── Disease.php           # Disease model
+├── Gene.php              # Gene model with identifier fields
 ├── Inheritance.php       # Mode of inheritance
 ├── Submission.php        # Gene-disease curation submissions
 └── Submitter.php         # Member organizations
