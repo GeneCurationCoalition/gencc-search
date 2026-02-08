@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\SubmissionExport;
 use App\Exports\SubmissionTSVExport;
-use App\Exports\SubmissionWithRowIDExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DownloadController extends Controller
@@ -30,11 +29,6 @@ class DownloadController extends Controller
     public function export_XLSX()
     {
         return Excel::download(new SubmissionExport, 'gencc-submissions.xlsx');
-    }
-
-    public function export_rowid_XLSX()
-    {
-        return Excel::download(new SubmissionWithRowIDExport, 'gencc-submissions.xlsx');
     }
 
     public function export_CSV()

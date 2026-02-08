@@ -5,9 +5,7 @@ namespace App\Http\Livewire\Genes;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Gene;
-use App\Query\Query;
 use App\Submitter;
-use Illuminate\Http\Request;
 
 class Listing extends Component
 {
