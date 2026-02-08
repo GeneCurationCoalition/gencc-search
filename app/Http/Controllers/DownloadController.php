@@ -16,12 +16,6 @@ class DownloadController extends Controller
      */
     public function index()
     {
-        //
-        //Log::channel('slack')->info('Something happened!');
-        //
-        //$items = Gene::has('submissions')->orderBy('title')->paginate(10);
-        //dd($items);
-        //return view('genes.index', ['genes' => $items]);
         $page_meta['seo']['title'] = "Download GenCC Data";
         return view('download.index', ['page_meta' => $page_meta]);
     }

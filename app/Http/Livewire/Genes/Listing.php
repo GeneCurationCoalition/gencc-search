@@ -28,26 +28,7 @@ class Listing extends Component
     public $filtering_by_submitter          = false;
     public $sort                            = '';
     public $page                            = 1;
-    protected $items;
-    protected $return;
     protected $submitters;
-    // protected $queryString = [
-    //     'title'                             => ['except' => ''],
-    //     'hasDisease'                        => ['except' => ''],
-    //     'curations_definitive'              => ['except' => ''],
-    //     'curations_strong'                  => ['except' => ''],
-    //     'curations_moderate'                => ['except' => ''],
-    //     'curations_limited'                 => ['except' => ''],
-    //     'curations_disputed'                => ['except' => ''],
-    //     'curations_refuted'                 => ['except' => ''],
-    //     'curations_animal'                  => ['except' => ''],
-    //     'curations_noknown'                 => ['except' => ''],
-    //     'curations_supportive'              => ['except' => ''],
-    //     'count_submissions'                 => ['except' => ''],
-    //     'count_unique_diseases'             => ['except' => ''],
-    //     'sort'                              => ['except' => ''],
-    //     'page'                              => ['except' => 1],
-    // ];
 
     protected $rules = [
         'curations_definitive' => 'numeric',
@@ -67,88 +48,14 @@ class Listing extends Component
 
     public function mount()
     {
-
-        $this->submitters     = Submitter::has('submissions')->orderBy('name')->get();
-
-        //$curations_from_submitters = $this->submitters->toArray();
-        $curations_from_submitters = $this->submitters->pluck(['uuid']);
-        //$curations_from_submitters->all();
-        //$curations_from_submitters->toArray();
-
-        // $result = Gene::orwhere('curations_definitive', '>', '0')->orwhere('curations_strong', '>', '0')->get();
-        // dd($result);'
-        //$value = ["GENCC_000104", "GENCC_000105","GENCC_000108","GENCC_000111","GENCC_000102"];
-        //$value = ["GENCC_000111", "GENCC_000105"];
-        //$result = Gene::whereHas('submissions.submitter', function ($query) use ($value) {
-            //return $query->whereIn('uuid', $value);
-        //})->get();
-
-        // $result = Submitter::has('submissions')->with('submissions.gene')->orderBy('title')->get();
-        //dd($result);
-
+        $this->submitters = Submitter::has('submissions')->orderBy('name')->get();
 
         $this->title                        = request('title');
         $this->hasDisease                   = request('hasDisease');
-        // $this->curations_definitive         = (int)request('curations_definitive') ?? 1;
-        // $this->curations_strong             = (int)request('curations_strong') ?? 1;
-        // $this->curations_moderate           = (int)request('curations_moderate') ?? 1;
-        // $this->curations_limited            = (int)request('curations_limited') ?? 1;
-        // $this->curations_disputed           = (int)request('curations_disputed') ?? 1;
-        // $this->curations_refuted            = (int)request('curations_refuted') ?? 1;
-        // $this->curations_animal             = (int)request('curations_animal') ?? 1;
-        // $this->curations_noknown            = (int)request('curations_noknown') ?? 1;
-        // $this->curations_supportive         = (int)request('curations_supportive') ?? 1;
         $this->curations_from_submitters    = request('curations_from_submitters');
         $this->count_submissions            = request('count_submissions');
         $this->count_unique_diseases        = request('count_unique_diseases');
-
-        //dd($this);
     }
-
-    // public function toggle_curations_definitive()
-    // {
-    //     $this->curations_definitive = ($this->curations_definitive == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_strong()
-    // {
-    //     $this->curations_strong = ($this->curations_strong == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_moderate()
-    // {
-    //     $this->curations_moderate = ($this->curations_moderate == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_limited()
-    // {
-    //     $this->curations_limited = ($this->curations_limited == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_disputed()
-    // {
-    //     $this->curations_disputed = ($this->curations_disputed == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_refuted()
-    // {
-    //     $this->curations_refuted = ($this->curations_refuted == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_animal()
-    // {
-    //     $this->curations_animal = ($this->curations_animal == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_noknown()
-    // {
-    //     $this->curations_noknown = ($this->curations_noknown == 0) ? 1 : '';
-    // }
-    // public function toggle_curations_supportive()
-    // {
-    //     $this->curations_supportive = ($this->curations_supportive == 0) ? 1 : '';
-    // }
-    // public function toggle_count_submissions()
-    // {
-    //     $this->count_submissions = ($this->count_submissions == 0) ? 1 : '';
-    // }
-    // public function toggle_count_unique_diseases()
-    // {
-    //     $this->count_unique_diseases = ($this->count_unique_diseases == 0) ? 1 : '';
-    // }
 
     public function curationsFromSubmitters($value)
     {
@@ -227,63 +134,39 @@ class Listing extends Component
             //'count_unique_diseases'         => $this->count_unique_diseases,
         ];
         //dd($query);
-        $submissions    = Gene::has('submissions')->get();
-        //$this->return = Gene::orderBy('title')->paginate(5000);
-        //$this->return = Query::apply($query)->orderBy('title')->paginate(150);
+        $totalGenesCount = Gene::has('submissions')->count();
+        $submitterIds = $this->curations_from_submitters
+            ? Submitter::whereIn('ident', $this->curations_from_submitters)->pluck('id')->toArray()
+            : [];
 
-        //$value = ["GENCC_000104", "GENCC_000105", "GENCC_000108", "GENCC_000111", "GENCC_000102"];
-        //dd($this->curations_from_submitters);
-        $value = $this->curations_from_submitters;
-        $filter = $query;
-        $query_disease = $this->hasDisease;
-        $query_title = strtoupper($this->title);
-        // DB::table('users')
-        //     ->where('name', '=', 'John')
-        //     ->where(function ($query) {
-        //         $query->where('votes', '>', 100)
-        //               ->orWhere('title', '=', 'Admin');
-        //     })
-        //     ->get();
-        //$this->return = Gene::where('title', 'LIKE', '%' . $this->title . '%')
-
-            //dd($query_title);
         // Build array of enabled classification IDs based on filter toggles
-        // Classification IDs: 1=Definitive, 2=Strong, 3=Moderate, 4=Supportive,
-        // 5=Limited, 6=Disputed, 7=Refuted, 8=Animal Model, 9=No Known Disease
         $enabledClassifications = [];
-        if ($filter['num_curations_definitive'] > 0) $enabledClassifications[] = 1;
-        if ($filter['num_curations_strong'] > 0) $enabledClassifications[] = 2;
-        if ($filter['num_curations_moderate'] > 0) $enabledClassifications[] = 3;
-        if ($filter['num_curations_supportive'] > 0) $enabledClassifications[] = 4;
-        if ($filter['num_curations_limited'] > 0) $enabledClassifications[] = 5;
-        if ($filter['num_curations_disputed'] > 0) $enabledClassifications[] = 6;
-        if ($filter['num_curations_refuted'] > 0) $enabledClassifications[] = 7;
-        if ($filter['num_curations_animal'] > 0) $enabledClassifications[] = 8;
-        if ($filter['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
+        if ($query['num_curations_definitive'] > 0) $enabledClassifications[] = 1;
+        if ($query['num_curations_strong'] > 0) $enabledClassifications[] = 2;
+        if ($query['num_curations_moderate'] > 0) $enabledClassifications[] = 3;
+        if ($query['num_curations_supportive'] > 0) $enabledClassifications[] = 4;
+        if ($query['num_curations_limited'] > 0) $enabledClassifications[] = 5;
+        if ($query['num_curations_disputed'] > 0) $enabledClassifications[] = 6;
+        if ($query['num_curations_refuted'] > 0) $enabledClassifications[] = 7;
+        if ($query['num_curations_animal'] > 0) $enabledClassifications[] = 8;
+        if ($query['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
 
-        // Get submitter IDs from idents for optimized query (avoids slow nested whereHas)
-        $submitterIds = Submitter::whereIn('ident', $value)->pluck('id')->toArray();
+        $query_disease = $this->hasDisease;
 
-        $this->return = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
-            ->whereHas('submissions', function ($query) use($query_disease, $enabledClassifications, $submitterIds) {
+        $genes = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
+            ->whereHas('submissions', function ($q) use ($query_disease, $enabledClassifications, $submitterIds) {
                 if (!empty($query_disease)) {
-                    // Filter by disease name via disease relationship
-                    // gencc-sub stores disease name in diseases.name column
-                    $query->whereHas('disease', function ($diseaseQuery) use ($query_disease) {
+                    $q->whereHas('disease', function ($diseaseQuery) use ($query_disease) {
                         $diseaseQuery->where('name', 'like', '%' . $query_disease . '%');
                     });
                 }
-                // Filter by enabled classification types
                 if (!empty($enabledClassifications)) {
-                    $query->whereIn('classification_id', $enabledClassifications);
+                    $q->whereIn('classification_id', $enabledClassifications);
                 }
-                // Filter by submitter IDs (optimized: uses submitter_id directly instead of nested whereHas)
                 if (!empty($submitterIds)) {
-                    $query->whereIn('submitter_id', $submitterIds);
+                    $q->whereIn('submitter_id', $submitterIds);
                 }
             })
-            // extract nonnumeric and numeric terms from symbol,
-            // order by first 3 pairs, then remainder
             ->with('submissions')
             ->orderByRaw("
                 REGEXP_SUBSTR(symbol, '^[^0-9]+') ASC,
@@ -295,20 +178,12 @@ class Listing extends Component
                 REGEXP_SUBSTR(symbol, '[^0-9]+', 1, 4) ASC")
             ->paginate(25);
 
-        //dd(count($this->return));
-
-        if(count($this->return) != count($submissions)) {
-            $tableHeading = " Genes with classifications based on your filters";
-        } else {
-            $tableHeading = " Genes with classifications";
-        }
-
-        //dd($this->return);
-        //dd($this->submitters);
-        //dd($this->curations_from_submitters);
+        $tableHeading = count($genes) != $totalGenesCount
+            ? " Genes with classifications based on your filters"
+            : " Genes with classifications";
 
         return view('livewire.genes.listing', [
-            'genes' => $this->return,
+            'genes' => $genes,
             'submitters' => $this->submitters,
             'curations_from_submitters' => $this->curations_from_submitters,
             'tableHeading' => $tableHeading,

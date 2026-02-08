@@ -56,46 +56,12 @@ trait ModelTransform
 
 
 
-
-
   /**
-   * Return a displayable string of date parameter
+   * Group submissions by classification curie.
    *
-   * @param
-   * @return string
-   */
-  public function displayGroupSubmissionsByMondoDisease($data)
-  {
-    // $data->whereHas('diseases', function (Builder $data) use ($value) {
-
-    //dd($data);
-    $mondo = [];
-    foreach($data as $item) {
-      //dd($item);
-      // Support both old string type ('MONDO') and new integer type constant
-      $mondoDiseases = $item->diseases->filter(function ($disease) {
-          return $disease->type === 'MONDO' || $disease->type === Disease::TYPE_MONDO;
-      });
-      foreach ($mondoDiseases as $element) {
-        //  dd($element);
-        $mondo[$element->id]["title"] =  $element->title;
-        $mondo[$element->id]["curie"] =  $element->curie;
-        $mondo[$element->id]["submissions"][$item->id] = $item;
-      }
-    }
-    $data = collect($mondo);
-    //dd($mondo);
-    $data->all();
-    //dd($data);
-    return $data;
-  }
-
-
-  /**
-   * Return a displayable string of date parameter
-   *
-   * @param
-   * @return string
+   * @param Collection $data
+   * @param object $classification
+   * @return Collection
    */
   public function displayGroupSubmissionsByClassification($data, $classification)
   {
@@ -140,22 +106,11 @@ trait ModelTransform
   }
 
   /**
-   * Return a displayable string of date parameter
+   * Return a displayable pill for curation label.
    *
-   * @param
-   * @return string
-   */
-  public function displaySortSubmissionsByClassification($data)
-  {
-    //dd($data);
-    $sorted = $data->sortBy('classification_id');
-    return $sorted;
-  }
-
-  /**
-   * Return a displayable string of date parameter
-   *
-   * @param
+   * @param object $data
+   * @param mixed $label
+   * @param string|null $action
    * @return string
    */
   public function displayCurationLabelPill($data, $label = null, $action = null)

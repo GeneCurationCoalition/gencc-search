@@ -434,17 +434,6 @@ class Submission extends Model
         return $id . '.' . ($this->version_number ?? 1);
     }
 
-
-    /**
-     * Get the user's full name.
-     *
-     * @return string
-     */
-    public function getFullNameAttribute()
-    {
-        return "{$this->curie} {$this->title}";
-    }
-
     /**
      * Render markdown text to HTML.
      *
