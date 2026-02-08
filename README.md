@@ -57,6 +57,11 @@ This repo includes a production-oriented container build:
 Build locally (no push):
 ```bash
 podman build -f Dockerfile -t gencc-search:local .
+
+# With version tag from git
+podman build -f Dockerfile \
+  --build-arg APP_VERSION=$(./scripts/version.sh) \
+  -t gencc-search:local .
 ```
 
 Run locally:
@@ -167,31 +172,32 @@ The `scripts/` directory contains helper scripts for local development:
 
 ## Project Structure
 
-```
+```text
 app/
-├── Console/Commands/     # Utility commands
+├── Console/Commands/     # Artisan commands (logo import)
 ├── Exports/              # Data export classes (CSV, TSV, XLSX)
 ├── Http/
 │   ├── Controllers/      # Request handlers
 │   └── Livewire/         # Livewire components for dynamic UI
 ├── Traits/               # Shared model functionality
 ├── Classification.php    # Curation classification levels
-├── Disease.php           # Disease model
-├── Gene.php              # Gene model with identifier fields
-├── Inheritance.php       # Mode of inheritance
+├── Disease.php           # Disease model with ontology mappings
+├── Gene.php              # Gene model with HGNC identifiers
+├── Inheritance.php       # Mode of inheritance (HPO terms)
 ├── Submission.php        # Gene-disease curation submissions
-└── Submitter.php         # Member organizations
+├── Submitter.php         # Member organizations
+└── User.php              # User model (for gencc-sub auth)
 
-resources/
-├── views/                # Blade templates
-│   ├── livewire/         # Livewire component views
-│   └── partials/         # Reusable view components
-├── css/                  # Stylesheets
-└── js/                   # JavaScript
+resources/views/
+├── livewire/             # Livewire component views
+├── partials/             # Reusable view components
+├── genes/                # Gene detail pages
+├── submitters/           # Submitter pages
+└── statistics/           # Statistics dashboard
 
-database/
-├── factories/            # Model factories for testing
-└── migrations/           # Test database schema
+scripts/
+├── start-dev-servers.sh  # Development server management
+└── version.sh            # Generate APP_VERSION for builds
 ```
 
 ## Testing
