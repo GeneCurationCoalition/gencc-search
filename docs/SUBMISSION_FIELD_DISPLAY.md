@@ -34,14 +34,14 @@ Disease information is displayed using this pattern:
 1. **Primary Display (Always Shown):**
    - Disease title: `$submission->disease->title`
    - Disease CURIE: `$submission->disease->curie`
-   - Clickable link to appropriate database (MONDO → Monarch Initiative)
+   - Clickable link to appropriate database (MONDO -> Monarch Initiative)
 
 2. **Secondary Display (Conditionally Shown):**
    - **Only displays** when `$submission->disease->id != $submission->disease_original->id`
    - Labeled as **"Submitted as:"**
    - Disease title: `$submission->disease_original->title`
    - Disease CURIE: `$submission->disease_original->curie`
-   - Clickable link to appropriate database (OMIM → omim.org, Orphanet → orpha.net)
+   - Clickable link to appropriate database (OMIM -> omim.org, Orphanet -> orpha.net)
 
 ### View Implementation
 
@@ -61,7 +61,7 @@ Example from `resources/views/partials/genes/submission-row-common.blade.php:18-
 
 If a submitter publishes with `OMIM:615123 - "Metabolic Disease"` but the system normalizes it to `MONDO:0005066 - "Metabolic Disorder"`, the display would be:
 
-```
+```text
 Metabolic Disorder
 MONDO:0005066 [link to Monarch Initiative]
 
@@ -74,35 +74,55 @@ Note: The original OMIM name "Metabolic Disease" is shown via `$submission->dise
 
 ### Summary Table
 
-| Field Category | Foreign Key (Normalized) | String Fields (Raw Submitted) | Displayed Side-by-Side? |
-|---------------|-------------------------|-------------------------------|------------------------|
-| **Disease** | `disease_id`, `disease_original_id` | `submitted_as_disease_id`, `submitted_as_disease_name` | ✅ **YES** |
-| **Gene** | `gene_id` | `submitted_as_hgnc_id`, `submitted_as_hgnc_symbol` | ❌ No |
-| **Classification** | `classification_id` | `submitted_as_classification_id`, `submitted_as_classification_name` | ❌ No |
-| **Mode of Inheritance** | `moi_id` | `submitted_as_moi_id`, `submitted_as_moi_name` | ❌ No |
-| **Submitter** | `submitter_id` | `submitted_as_submitter_id`, `submitted_as_submitter_name` | ❌ No |
+| Field Category | Foreign Key (Normalized) | Accessor (from original_submission_data) | Displayed Side-by-Side? |
+| -------------- | ------------------------ | ----------------------------------------- | ----------------------- |
+| **Disease** | `disease_id`, `original_disease_id` | `submitted_as_disease_id`, `submitted_as_disease_name` | YES |
+| **Gene** | `gene_id` | `submitted_as_hgnc_id`, `submitted_as_hgnc_symbol` | No |
+| **Classification** | `classification_id` | `submitted_as_classification_id`, `submitted_as_classification_name` | No |
+| **Mode of Inheritance** | `inheritance_id` | `submitted_as_moi_id`, `submitted_as_moi_name` | No |
+| **Submitter** | `submitter_id` | `submitted_as_submitter_id`, `submitted_as_submitter_name` | No |
 
-### Submitted-As String Fields
+### Submitted-As Accessors
 
-The submissions table stores `submitted_as_*` string values for all major fields:
+The `submitted_as_*` values are **not separate database columns**. They are Eloquent accessors in `app/Submission.php` that extract values from the `original_submission_data` JSON column:
 
-- `submitted_as_hgnc_id`, `submitted_as_hgnc_symbol`
-- `submitted_as_disease_id`, `submitted_as_disease_name`
-- `submitted_as_moi_id`, `submitted_as_moi_name`
-- `submitted_as_classification_id`, `submitted_as_classification_name`
-- `submitted_as_submitter_id`, `submitted_as_submitter_name`
+```php
+// Example accessor from Submission.php
+public function getSubmittedAsHgncIdAttribute()
+{
+    $data = $this->original_submission_data;
+    return $data['gene']['id'] ?? null;
+}
+```
 
-**Important:** These string fields are stored for audit/tracking purposes but are **NOT displayed** in the UI to show comparisons with normalized values.
+Available accessors:
 
-### Purpose of String Fields
+- `submitted_as_hgnc_id` - from `original_submission_data.gene.id`
+- `submitted_as_hgnc_symbol` - from `original_submission_data.gene.symbol`
+- `submitted_as_disease_id` - from `original_submission_data.disease.id`
+- `submitted_as_disease_name` - from `original_submission_data.disease.name`
+- `submitted_as_moi_id` - from `original_submission_data.moi.id`
+- `submitted_as_moi_name` - from `original_submission_data.moi.name`
+- `submitted_as_classification_id` - from `original_submission_data.classification.id`
+- `submitted_as_classification_name` - from `original_submission_data.classification.name`
+- `submitted_as_submitter_id` - from `original_submission_data.additional_information.submitter_curie`
+- `submitted_as_submitter_name` - from `original_submission_data.additional_information.submitter_title`
+- `submitted_as_public_report_url` - from `original_submission_data.report.ext_url`
+- `submitted_as_notes` - from `original_submission_data.notes.display`
+- `submitted_as_pmids` - from `normalized_pmids` column (with formatting)
+- `submitted_as_date` - from `report_date` column
+- `submitted_run_date` - from `publish_date` column (date only)
 
-These fields are used for:
-- Import processing and validation
-- Audit trails and historical record keeping
-- Data integrity checks
-- Debugging submission processing issues
+### Purpose of original_submission_data
 
-They are **not** rendered in the public or administrative views.
+The `original_submission_data` JSON column stores:
+
+- The complete original submission as received
+- Preserves exact values before normalization
+- Used for audit trails and historical record keeping
+- Enables debugging submission processing issues
+
+These values are **not** rendered in the public views but are accessible via the accessors for data exports and administrative purposes.
 
 ## The `displayLinkToDisease()` Method
 
@@ -135,9 +155,9 @@ public function displayLinkToDisease($text, $href, $css = null, $target = "_blan
 
 ### Supported External Links
 
-- **MONDO** → https://monarchinitiative.org/disease/
-- **OMIM** → https://omim.org/entry/
-- **Orphanet/Orpha** → https://www.orpha.net/consor/cgi-bin/OC_Exp.php
+- **MONDO** -> <https://monarchinitiative.org/disease/>
+- **OMIM** -> <https://omim.org/entry/>
+- **Orphanet/Orpha** -> <https://www.orpha.net/consor/cgi-bin/OC_Exp.php>
 
 ## Why Disease is Unique
 
@@ -154,20 +174,17 @@ Disease is the only field with this dual display behavior for several important 
 ## Related Files
 
 ### Models
+
 - `app/Submission.php` - Submission model with disease relationships
 - `app/Disease.php` - Disease model
 
 ### Views
+
 - `resources/views/partials/genes/submission-row-common.blade.php` - Public submission row display
-- `resources/views/partials/dashboard/manage-submission-row-common.blade.php` - Admin submission row display
-- `resources/views/livewire/dashboard/submitter/submitter-submission-manage.blade.php` - Detailed submission management view
 
 ### Traits
-- `app/Traits/DisplayTransform.php` - Contains `displayLinkToDisease()` and other display helper methods
 
-### Migrations
-- `database/migrations/2020_03_04_015442_create_submissions_table.php` - Initial submissions table
-- `database/migrations/2020_12_04_011611_add_disease_original_to_submissions_table.php` - Added disease_original_id field
+- `app/Traits/DisplayTransform.php` - Contains `displayLinkToDisease()` and other display helper methods
 
 ## Future Considerations
 

@@ -108,36 +108,6 @@ class Submitter extends Model
     }
 
     /**
-     * Get text_assertions attribute.
-     * Returns unique assertion criteria URLs from live, published submissions.
-     * Each URL is separated by <br> for display in the view.
-     */
-    public function getTextAssertionsAttribute()
-    {
-        // Get unique criteria URLs from live, published submissions
-        $criteriaUrls = $this->submissions()
-            ->pluck('submission_data')
-            ->map(function ($data) {
-                return $data['criteria']['url'] ?? null;
-            })
-            ->filter(function ($url) {
-                // Filter out empty values and non-URL values like "PMID: 12345"
-                return !empty($url) && (
-                    str_starts_with($url, 'http://') ||
-                    str_starts_with($url, 'https://')
-                );
-            })
-            ->unique()
-            ->values();
-
-        if ($criteriaUrls->isEmpty()) {
-            return null;
-        }
-
-        return $criteriaUrls->implode('<br>');
-    }
-
-    /**
      * Get text_contact attribute (formats contact info from contact user).
      * Returns HTML with contact user's name, title, phone, and email.
      * Returns placeholder text if no contact user is found.

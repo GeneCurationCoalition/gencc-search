@@ -30,10 +30,6 @@ class SubmitterController extends Controller
      */
     public function show($id)
     {
-        $sortPram = ['classification_id', 'DESC'];
-        // $classifications = Classification::with('submissions')->with('submissions')->get();
-        // $submitter = Submitter::uuid($id)->with('submissions')->firstOrFail();
-
         $classifications = Classification::all();
         $submitter = Submitter::ident($id)->with('submissions')->firstOrFail();
         $page_meta['seo']['title'] = $submitter->title . " submitter information and submissions";

@@ -1,8 +1,5 @@
 <?php
 
-
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -47,8 +44,6 @@ Route::group(['prefix' => 'members'], function () {
 Route::group(['prefix' => 'disease'], function () {
   Route::get('/', 'DiseaseController@index')->name('diseases');
   Route::get('/{id?}', 'DiseaseController@show')->name('disease-show');
-  Route::get('/{id}/diseases', 'DiseaseController@disease')->name('disease-show-disease');
-  Route::get('/{id}/submitters', 'DiseaseController@submitter')->name('disease-show-submitter');
 });
 
 
@@ -68,8 +63,3 @@ Route::get('/about', 'AboutController@index')->name('about');
 Route::get('/privacy', 'PrivacyController@index')->name('privacy');
 Route::get('/terms', 'TermsController@index')->name('terms');
 Route::get('/faq', 'FaqController@index')->name('faq');
-
-Route::get('/reset/modal', function (Request $request) {
-  $request->session()->forget('modal.welcome.dismiss');
-  return redirect('/');
-})->name('reset-modal');

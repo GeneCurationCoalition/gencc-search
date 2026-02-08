@@ -59,11 +59,8 @@ RUN apk add --no-cache \
 # Create an unprivileged user for the app processes
 RUN addgroup -g 1000 -S www && adduser -u 1000 -S -D -G www www
 
-# Configure PHP-FPM pool to run as the unprivileged user
-RUN sed -i \
-    -e 's/^user = .*/user = www/' \
-    -e 's/^group = .*/group = www/' \
-    /usr/local/etc/php-fpm.d/www.conf
+# PHP-FPM pool configuration (optimized for ~100 concurrent users)
+COPY docker/php-fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Copy application code (without vendor/node_modules; see .dockerignore)
 COPY . .

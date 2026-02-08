@@ -143,19 +143,6 @@ trait DisplayTransform
   }
 
 
-
-  /**
-   * Return a displayable string of date parameter
-   *
-   * @param
-   * @return string
-   */
-  public function displayCurationsCountFilter($type, $var)
-  {
-    $test = '<button class="text-green-600 rounded-full h-8 border-2 mt-1 w-100 border-gray-300 bg-gray-200" wire:click="toggle_curations_definitive">'.$var.'</button>';
-    return $test;
-  }
-
   /**
    * Return a deprecation indicator icon for deprecated diseases
    *

@@ -267,39 +267,4 @@ class Gene extends Model
         return $query->where('symbol', '=', $id)->orderBy('updated_at', 'asc');
     }
 
-
-    /**
-    * Query scope by symbol name
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeName($query, $name)
-    {
-       return $query->where('name', $name);
-    }
-
-
-    /**
-    * Query scope by hgncid name
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-     public function scopeHgnc($query, $id)
-    {
-       return $query->where('hgnc_id', $id);
-    }
-
-
-    /**
-    * Query scope by ACMG SF 3 flag
-    *
-    * @@param	string	$ident
-    * @return Illuminate\Database\Eloquent\Collection
-    */
-    public function scopeAcmg($query)
-    {
-       return $query->where('acmg59', 1);
-    }
 }

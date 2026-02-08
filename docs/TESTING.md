@@ -104,11 +104,25 @@ DB_CONNECTION=mysql DB_DATABASE=gencc_test php artisan test --group=mysql
 | Test File                      | Description                              |
 | ------------------------------ | ---------------------------------------- |
 | `DiseaseFeatureTest.php`       | Disease listing and detail pages         |
+| `DownloadFeatureTest.php`      | Data export/download functionality       |
 | `GeneFeatureTest.php`          | Gene search and detail pages             |
+| `Genes200Test.php`             | Gene page HTTP 200 response tests        |
+| `MemberFeatureTest.php`        | Member/submitter organization pages      |
+| `StaticPagesFeatureTest.php`   | Static content pages (about, FAQ, etc.)  |
 | `StatisticsFeatureTest.php`    | Statistics dashboard                     |
+| `Stats200Test.php`             | Statistics page HTTP 200 response tests  |
 | `SubmissionFeatureTest.php`    | Submission detail pages                  |
-| `SubmitterFeatureTest.php`     | Submitter profiles                       |
-| `Livewire/GenesListingTest.php`| Livewire gene listing component          |
+| `Submitters200Test.php`        | Submitter pages HTTP 200 response tests  |
+
+### Livewire Tests
+
+| Test File                                        | Description                             |
+| ------------------------------------------------ | --------------------------------------- |
+| `Livewire/GenesListingTest.php`                  | Main gene listing component             |
+| `Livewire/GeneListingByClassificationTest.php`   | Gene listing filtered by classification |
+| `Livewire/GeneListingByDiseaseTest.php`          | Gene listing filtered by disease        |
+| `Livewire/GeneListingBySubmitterTest.php`        | Gene listing filtered by submitter      |
+| `Livewire/SubmitterListingOfSubmissionsTest.php` | Submitter's submissions listing         |
 
 ### Unit Tests
 

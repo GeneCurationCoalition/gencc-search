@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Submitter;
-use Illuminate\Http\Request;
 
 class LogoController extends Controller
 {

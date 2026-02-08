@@ -61,12 +61,4 @@ class StaticPagesFeatureTest extends TestCase
 
         $response->assertStatus(200);
     }
-
-    /** @test */
-    public function reset_modal_clears_session_and_redirects()
-    {
-        $response = $this->get('/reset/modal');
-
-        $response->assertRedirect('/');
-    }
 }

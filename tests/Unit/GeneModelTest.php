@@ -73,28 +73,6 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_has_hgnc_scope()
-    {
-        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:1100']);
-
-        $found = Gene::hgnc('HGNC:1100')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
-    public function gene_has_name_scope()
-    {
-        $gene = Gene::factory()->create(['name' => 'breast cancer 1']);
-
-        $found = Gene::name('breast cancer 1')->first();
-
-        $this->assertNotNull($found);
-        $this->assertEquals($gene->id, $found->id);
-    }
-
-    /** @test */
     public function gene_has_submissions_relationship()
     {
         $gene = Gene::factory()->create();

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\SubmissionExport;
 use App\Exports\SubmissionTSVExport;
-use App\Exports\SubmissionWithRowIDExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DownloadController extends Controller
@@ -17,12 +16,6 @@ class DownloadController extends Controller
      */
     public function index()
     {
-        //
-        //Log::channel('slack')->info('Something happened!');
-        //
-        //$items = Gene::has('submissions')->orderBy('title')->paginate(10);
-        //dd($items);
-        //return view('genes.index', ['genes' => $items]);
         $page_meta['seo']['title'] = "Download GenCC Data";
         return view('download.index', ['page_meta' => $page_meta]);
     }
@@ -30,11 +23,6 @@ class DownloadController extends Controller
     public function export_XLSX()
     {
         return Excel::download(new SubmissionExport, 'gencc-submissions.xlsx');
-    }
-
-    public function export_rowid_XLSX()
-    {
-        return Excel::download(new SubmissionWithRowIDExport, 'gencc-submissions.xlsx');
     }
 
     public function export_CSV()
