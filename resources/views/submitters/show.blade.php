@@ -20,32 +20,17 @@
       @endif
       @if(!($submitter->member == 1 && empty($submitter->text_contact)))
       <hr class="mt-3 mb-3 border" />
-      <strong>Personnel</strong>
+      <strong>Contact</strong>
       <div class="mb-2">
         {!! $submitter->text_contact !!}
       </div>
       @endif
-      @if(!empty($submitter->text_assertions) && !($submitter->member == 1 && empty(trim($submitter->text_assertions))))
-        @php
-          $assertionItems = explode('<br>', $submitter->text_assertions);
-          $totalCount = count($assertionItems);
-          $hasMore = $totalCount > 3;
-        @endphp
-        <hr class="mt-3 mb-3 border" />
-        <div x-data="{ showAll: false }">
-          <strong>Assertion Criteria</strong>
-          @if($hasMore)
-            <a href="#" class="text-blue-600 text-sm ml-2" @click.prevent="showAll = !showAll">
-              <span x-show="!showAll">show more ({{ $totalCount }} total)</span>
-              <span x-show="showAll" x-cloak>show less</span>
-            </a>
-          @endif
-          <div class="mb-2">
-            @foreach ($assertionItems as $index => $item)
-              <div class="truncate" x-show="showAll || {{ $index }} < 3" x-cloak><a class="text-blue-700 underline" href="{{ $item }}" target="_blank">{{ $item }} <i class="fas fa-external-link-alt"></i></a></div>
-            @endforeach
-          </div>
-        </div>
+      @if($submitter->assertion)
+      <hr class="mt-3 mb-3 border" />
+      <strong>Assertion Criteria</strong>
+      <div class="mb-2">
+        <a class="text-blue-700 underline" href="{{ $submitter->assertion }}" target="_blank">{{ $submitter->assertion }} <i class="fas fa-external-link-alt"></i></a>
+      </div>
       @endif
 
     </div>
