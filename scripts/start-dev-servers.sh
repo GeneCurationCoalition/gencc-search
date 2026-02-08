@@ -325,6 +325,7 @@ docker_run() {
         --env "APP_KEY=${APP_KEY}" \
         --env "APP_DEBUG=${APP_DEBUG}" \
         --env "APP_URL=${APP_URL}" \
+        --env "APP_VERSION=${APP_VERSION}" \
         --env "DB_CONNECTION=mysql" \
         --env "DB_HOST=${DB_HOST}" \
         --env "DB_PORT=${DB_PORT}" \
