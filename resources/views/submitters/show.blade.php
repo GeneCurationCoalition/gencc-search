@@ -28,9 +28,16 @@
       @if($submitter->assertion)
       <hr class="mt-3 mb-3 border" />
       <strong>Assertion Criteria</strong>
-      <div class="mb-2">
-        <a class="text-blue-700 underline" href="{{ $submitter->assertion }}" target="_blank">{{ $submitter->assertion }} <i class="fas fa-external-link-alt"></i></a>
+      <div class="mb-2 assertion-content">
+        {!! Str::markdown($submitter->assertion) !!}
       </div>
+      <style>
+        .assertion-content a { color: #1d4ed8; text-decoration: underline; }
+        .assertion-content a:hover { color: #1e40af; }
+        .assertion-content p { margin-bottom: 0.5rem; }
+        .assertion-content ul, .assertion-content ol { margin-left: 1.5rem; margin-bottom: 0.5rem; }
+        .assertion-content li { margin-bottom: 0.25rem; }
+      </style>
       @endif
 
     </div>
