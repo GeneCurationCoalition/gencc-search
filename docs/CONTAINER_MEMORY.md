@@ -6,10 +6,10 @@ Guide for configuring memory settings for the GenCC Search container to handle e
 
 | Workload | Concurrent Users | Container Memory | PHP-FPM max_children |
 | -------- | ---------------- | ---------------- | -------------------- |
-| Light | 25 | 2 GB | 15 |
-| Medium | 50 | 4 GB | 25 |
-| Standard | 100 | 8 GB | 50 |
-| High | 200 | 16 GB | 100 |
+| Light | 25 | 1 GB | 15 |
+| Medium | 50 | 2 GB | 25 |
+| Standard | 100 | 4 GB | 50 |
+| High | 200 | 8 GB | 100 |
 
 ## How Memory is Used
 
@@ -19,8 +19,11 @@ Guide for configuring memory settings for the GenCC Search container to handle e
 | ------------ | ----------------- |
 | Normal page views | 50-100 MB |
 | Gene search queries | 100-150 MB |
-| CSV/TSV exports | 300-400 MB |
-| XLSX exports | up to 512 MB |
+| CSV/TSV exports | 50-100 MB |
+| XLSX exports | 100-150 MB |
+
+Note: XLSX exports use batch cell caching (configured in `config/excel.php`) which
+flushes cells to disk when memory limit is reached, significantly reducing peak memory.
 
 ### Calculation
 
@@ -33,10 +36,10 @@ Not all concurrent users execute PHP simultaneously:
 
 For 100 concurrent users:
 - Peak PHP processes: ~50
-- Average memory per process: ~150 MB (mixed workload)
-- Worst case (all doing exports): 50 × 512 MB = 25 GB
-- Realistic peak: 45 × 150 MB + 5 × 400 MB = 8.75 GB
-- **Recommended container memory: 8 GB**
+- Average memory per process: ~80 MB (mixed workload)
+- Worst case (all doing exports): 50 × 150 MB = 7.5 GB
+- Realistic peak: 45 × 80 MB + 5 × 150 MB = 4.35 GB
+- **Recommended container memory: 4 GB** (with headroom for spikes)
 
 ## Configuration Files
 
@@ -45,8 +48,8 @@ For 100 concurrent users:
 File: `docker/php.ini`
 
 ```ini
-; 512M needed for XLSX export of 28k+ submissions
-memory_limit = 512M
+; 256M sufficient with batch caching for exports
+memory_limit = 256M
 max_execution_time = 300
 ```
 
@@ -73,18 +76,18 @@ pm.max_spare_servers = 20
 ### Docker / Podman
 
 ```bash
-# Run with 8GB memory limit (recommended for 100 users)
+# Run with 4GB memory limit (recommended for 100 users)
 podman run --rm -p 8080:80 \
-  --memory=8g \
-  --memory-swap=8g \
+  --memory=4g \
+  --memory-swap=4g \
   -e DB_HOST=host.containers.internal \
   -v $(pwd)/.env:/var/www/html/.env:ro \
   gencc-search:latest
 
-# Run with 4GB memory limit (for 50 users)
+# Run with 2GB memory limit (for 50 users)
 podman run --rm -p 8080:80 \
-  --memory=4g \
-  --memory-swap=4g \
+  --memory=2g \
+  --memory-swap=2g \
   -e DB_HOST=host.containers.internal \
   -v $(pwd)/.env:/var/www/html/.env:ro \
   gencc-search:latest
@@ -105,10 +108,10 @@ spec:
           image: gencc-search:latest
           resources:
             requests:
-              memory: "4Gi"
+              memory: "2Gi"
               cpu: "1000m"
             limits:
-              memory: "8Gi"
+              memory: "4Gi"
               cpu: "4000m"
 ```
 
@@ -121,9 +124,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8G
-        reservations:
           memory: 4G
+        reservations:
+          memory: 2G
     ports:
       - "8080:80"
 ```
@@ -133,7 +136,7 @@ services:
 ```bash
 gcloud run deploy gencc-search \
   --image=gcr.io/PROJECT/gencc-search:latest \
-  --memory=8Gi \
+  --memory=4Gi \
   --cpu=4 \
   --concurrency=100 \
   --max-instances=10
@@ -146,7 +149,7 @@ gcloud run deploy gencc-search \
 Edit `docker/php-fpm-pool.conf`:
 
 ```ini
-; For 50 concurrent users with 4GB container
+; For 50 concurrent users with 2GB container
 pm.max_children = 25
 pm.start_servers = 5
 pm.min_spare_servers = 3
@@ -158,7 +161,7 @@ Rebuild and redeploy the container.
 ### Increase max_children (handle more traffic)
 
 ```ini
-; For 200 concurrent users with 16GB container
+; For 200 concurrent users with 8GB container
 pm.max_children = 100
 pm.start_servers = 20
 pm.min_spare_servers = 10

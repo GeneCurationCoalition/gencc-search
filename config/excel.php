@@ -226,8 +226,11 @@ return [
         |
         | Drivers: memory|illuminate|batch
         |
+        | Using 'batch' for XLSX exports of 25K+ submissions to reduce peak
+        | memory from ~500MB to ~100-150MB by flushing cells to disk.
+        |
         */
-        'driver'     => 'memory',
+        'driver'     => 'batch',
 
         /*
         |--------------------------------------------------------------------------
