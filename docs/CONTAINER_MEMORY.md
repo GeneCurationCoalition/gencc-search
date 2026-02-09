@@ -19,8 +19,11 @@ Guide for configuring memory settings for the GenCC Search container to handle e
 | ------------ | ----------------- |
 | Normal page views | 50-100 MB |
 | Gene search queries | 100-150 MB |
-| CSV/TSV exports | 300-400 MB |
+| CSV/TSV exports | 50-100 MB |
 | XLSX exports | up to 512 MB |
+
+Note: XLSX exports use batch cell caching (configured in `config/excel.php`) which
+reduces memory churn, but PhpSpreadsheet still requires ~500MB for 25K+ records.
 
 ### Calculation
 
@@ -33,10 +36,10 @@ Not all concurrent users execute PHP simultaneously:
 
 For 100 concurrent users:
 - Peak PHP processes: ~50
-- Average memory per process: ~150 MB (mixed workload)
-- Worst case (all doing exports): 50 × 512 MB = 25 GB
-- Realistic peak: 45 × 150 MB + 5 × 400 MB = 8.75 GB
-- **Recommended container memory: 8 GB**
+- Average memory per process: ~100 MB (mixed workload)
+- Worst case (all doing XLSX exports): 50 × 512 MB = 25 GB (unrealistic)
+- Realistic peak: 45 × 100 MB + 5 × 512 MB = 7.1 GB
+- **Recommended container memory: 8 GB** (allows a few concurrent XLSX exports)
 
 ## Configuration Files
 
@@ -45,7 +48,7 @@ For 100 concurrent users:
 File: `docker/php.ini`
 
 ```ini
-; 512M needed for XLSX export of 28k+ submissions
+; 512M needed for XLSX exports of 25K+ records
 memory_limit = 512M
 max_execution_time = 300
 ```
