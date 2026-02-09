@@ -243,7 +243,9 @@ return [
         |
         */
         'batch'     => [
-            'memory_limit' => 60000,
+            // 10MB before flushing to disk (default 60KB causes too many flushes)
+            // This balances memory usage (~150MB peak) vs export speed
+            'memory_limit' => 10000000,
         ],
 
         /*

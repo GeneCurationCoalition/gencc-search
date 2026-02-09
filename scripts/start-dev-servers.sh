@@ -305,10 +305,15 @@ docker_run() {
     fi
 
     # Set DB_HOST for container networking
+    # Always use container networking address unless explicitly set to a remote host
     if [ "$CONTAINER_CMD" = "podman" ]; then
-        DB_HOST="${DB_HOST:-host.containers.internal}"
+        CONTAINER_DB_HOST="host.containers.internal"
     else
-        DB_HOST="${DB_HOST:-host.docker.internal}"
+        CONTAINER_DB_HOST="host.docker.internal"
+    fi
+    # Only use custom DB_HOST if it's not localhost/127.0.0.1 (which won't work in container)
+    if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ -z "$DB_HOST" ]; then
+        DB_HOST="$CONTAINER_DB_HOST"
     fi
 
     APP_URL="http://localhost:${LOCAL_PORT}"
