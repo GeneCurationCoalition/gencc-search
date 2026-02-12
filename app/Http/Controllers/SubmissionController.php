@@ -260,6 +260,13 @@ class SubmissionController extends Controller
         // Look up submission by display ID
         $submission = Submission::byDisplayId($id)->with('gene', 'disease', 'submitter')->firstOrFail();
 
+        // SECURITY: Block access to unreleased submissions
+        // A submission is considered released only if it has status='published'
+        // Unreleased/unpublished submissions should return 404 as if they don't exist
+        if ($submission->status !== Submission::STATUS_PUBLISHED) {
+            abort(404);
+        }
+
         // Redirect non-versioned URLs to versioned URL
         if (!preg_match('/\.\d+$/', $id)) {
             return redirect()->route('submission-show', ['id' => $submission->display_id]);
