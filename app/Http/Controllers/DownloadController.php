@@ -22,21 +22,29 @@ class DownloadController extends Controller
 
     public function export_XLSX()
     {
-        return Excel::download(new SubmissionExport, 'gencc-submissions.xlsx');
+        // Legacy format is default; new format requires ?format=new
+        $useLegacy = request()->query('format') !== 'new';
+        return Excel::download(new SubmissionExport($useLegacy), 'gencc-submissions.xlsx');
     }
 
     public function export_CSV()
     {
-        return Excel::download(new SubmissionExport, 'gencc-submissions.csv', \Maatwebsite\Excel\Excel::CSV);
+        // Legacy format is default; new format requires ?format=new
+        $useLegacy = request()->query('format') !== 'new';
+        return Excel::download(new SubmissionExport($useLegacy), 'gencc-submissions.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 
     public function export_TSV()
     {
-        return Excel::download(new SubmissionTSVExport, 'gencc-submissions.tsv', \Maatwebsite\Excel\Excel::TSV);
+        // Legacy format is default; new format requires ?format=new
+        $useLegacy = request()->query('format') !== 'new';
+        return Excel::download(new SubmissionTSVExport($useLegacy), 'gencc-submissions.tsv', \Maatwebsite\Excel\Excel::TSV);
     }
 
     public function export_XLS()
     {
-        return Excel::download(new SubmissionExport, 'gencc-submissions.xls', \Maatwebsite\Excel\Excel::XLS);
+        // Legacy format is default; new format requires ?format=new
+        $useLegacy = request()->query('format') !== 'new';
+        return Excel::download(new SubmissionExport($useLegacy), 'gencc-submissions.xls', \Maatwebsite\Excel\Excel::XLS);
     }
 }
