@@ -5,6 +5,7 @@
  *
  * Tests both normal and empty User-Agent headers to ensure the download
  * endpoint is accessible to all users including automated tools.
+ * Tests both legacy format (default) and new format (?format=new).
  *
  * Usage:
  *   php scripts/test-external-download.php [base_url]
@@ -16,14 +17,13 @@
  */
 
 $baseUrl = $argv[1] ?? 'https://search.thegencc.org';
-$endpoint = '/download/action/submissions-export-csv';
-$url = rtrim($baseUrl, '/') . $endpoint;
 
 echo "Testing external download access\n";
-echo "================================\n";
-echo "URL: {$url}\n\n";
+echo "================================\n\n";
 
 $results = [];
+$totalPassed = 0;
+$totalTests = 0;
 
 // Test cases: different User-Agent scenarios
 $testCases = [
@@ -34,41 +34,65 @@ $testCases = [
     'curl' => 'curl/7.88.0',
 ];
 
-foreach ($testCases as $name => $userAgent) {
-    echo "Test: {$name}\n";
-    echo "  User-Agent: " . ($userAgent === '' ? '(empty)' : "'{$userAgent}'") . "\n";
+// Endpoints to test: legacy format is default (no parameter), new format requires ?format=new
+$endpoints = [
+    'legacy' => [
+        'path' => '/download/action/submissions-export-csv',
+        'expected_header' => 'uuid',
+    ],
+    'new' => [
+        'path' => '/download/action/submissions-export-csv?format=new',
+        'expected_header' => 'sgc_id',
+    ],
+];
 
-    $result = testDownload($url, $userAgent);
-    $results[$name] = $result;
+foreach ($endpoints as $formatName => $endpoint) {
+    $url = rtrim($baseUrl, '/') . $endpoint['path'];
+    $expectedHeader = $endpoint['expected_header'];
 
-    if ($result['success']) {
-        echo "  Status: ✓ PASS\n";
-        echo "  HTTP Code: {$result['http_code']}\n";
-        echo "  Content-Type: {$result['content_type']}\n";
-        echo "  Content-Length: " . formatBytes($result['content_length']) . "\n";
-        echo "  First line: " . truncate($result['first_line'], 80) . "\n";
-    } else {
-        echo "  Status: ✗ FAIL\n";
-        echo "  HTTP Code: {$result['http_code']}\n";
-        echo "  Error: {$result['error']}\n";
+    echo "Testing {$formatName} format\n";
+    echo "URL: {$url}\n";
+    echo "Expected first column: {$expectedHeader}\n";
+    echo "----------------------------------------\n\n";
+
+    foreach ($testCases as $name => $userAgent) {
+        echo "Test: {$name}\n";
+        echo "  User-Agent: " . ($userAgent === '' ? '(empty)' : "'{$userAgent}'") . "\n";
+
+        $result = testDownload($url, $userAgent, $expectedHeader);
+        $results["{$formatName}:{$name}"] = $result;
+        $totalTests++;
+
+        if ($result['success']) {
+            echo "  Status: PASS\n";
+            echo "  HTTP Code: {$result['http_code']}\n";
+            echo "  Content-Type: {$result['content_type']}\n";
+            echo "  Content-Length: " . formatBytes($result['content_length']) . "\n";
+            echo "  First line: " . truncate($result['first_line'], 80) . "\n";
+            $totalPassed++;
+        } else {
+            echo "  Status: FAIL\n";
+            echo "  HTTP Code: {$result['http_code']}\n";
+            echo "  Error: {$result['error']}\n";
+        }
+        echo "\n";
     }
+
     echo "\n";
 }
 
 // Summary
 echo "Summary\n";
 echo "-------\n";
-$passed = count(array_filter($results, fn($r) => $r['success']));
-$total = count($results);
-echo "Passed: {$passed}/{$total}\n\n";
+echo "Passed: {$totalPassed}/{$totalTests}\n\n";
 
 // Exit with error code if any test failed
-exit($passed === $total ? 0 : 1);
+exit($totalPassed === $totalTests ? 0 : 1);
 
 /**
  * Test download with specified User-Agent
  */
-function testDownload(string $url, string $userAgent): array
+function testDownload(string $url, string $userAgent, string $expectedHeader): array
 {
     $result = [
         'success' => false,
@@ -138,11 +162,10 @@ function testDownload(string $url, string $userAgent): array
         $lines = explode("\n", $content, 2);
         $result['first_line'] = trim($lines[0] ?? '');
 
-        // Validate it looks like CSV
-        if (strpos($result['first_line'], 'uuid') === false &&
-            strpos($result['first_line'], 'gene') === false) {
+        // Validate it contains the expected header
+        if (strpos($result['first_line'], $expectedHeader) === false) {
             $result['success'] = false;
-            $result['error'] = 'Response does not appear to be CSV data';
+            $result['error'] = "Response does not contain expected header: {$expectedHeader}";
         }
     } else {
         $result['error'] = "HTTP {$result['http_code']} response";

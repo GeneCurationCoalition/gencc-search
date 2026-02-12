@@ -17,6 +17,33 @@ class SubmissionTSVExport implements FromQuery, WithHeadings, WithMapping, WithC
 {
     use Exportable;
 
+    private bool $useLegacyFormat;
+
+    public function __construct(bool $useLegacyFormat = false)
+    {
+        $this->useLegacyFormat = $useLegacyFormat;
+    }
+
+    /**
+     * Build the legacy UUID string for a submission.
+     * Format: {SUBMITTER}-{GENE_HGNC}-{DISEASE}-{MOI}-{CLASSIFICATION}
+     * Colons are replaced with underscores.
+     */
+    private function buildLegacyUuid($submission): string
+    {
+        $diseaseCurie = $submission->disease_original->curie
+            ?? $submission->disease->curie
+            ?? '';
+
+        return sprintf('%s-%s-%s-%s-%s',
+            str_replace(':', '_', $submission->submitter->curie),
+            str_replace(':', '_', $submission->gene->hgnc_id),
+            str_replace(':', '_', $diseaseCurie),
+            str_replace(':', '_', $submission->inheritance->curie),
+            str_replace(':', '_', $submission->classification->curie)
+        );
+    }
+
     /**
      * Return a query builder for chunked processing.
      * Eager loads relationships to prevent N+1 queries.
@@ -38,21 +65,20 @@ class SubmissionTSVExport implements FromQuery, WithHeadings, WithMapping, WithC
      */
     public function map($submission): array
     {
-        return [
-            $submission->sid,
-            $submission->version_number,
-            $submission->gene_curie                 = $submission->gene->curie,
-            $submission->gene_symbol                = $submission->gene->title,
-            $submission->disease_curie              = $submission->disease->curie ?? '',
-            $submission->disease_title              = $submission->disease->title ?? '',
-            $submission->disease_original_curie     = $submission->disease_original->curie ?? '',
-            $submission->disease_original_title     = $submission->disease_original->title ?? '',
-            $submission->classification_curie       = $submission->classification->curie,
-            $submission->classification_title       = $submission->classification->title,
-            $submission->moi_curie                  = $submission->inheritance->curie,
-            $submission->moi_title                  = $submission->inheritance->title,
-            $submission->submitter_curie            = $submission->submitter->curie,
-            $submission->submitter_title            = $submission->submitter->title,
+        // Common fields after the ID column(s)
+        $commonFields = [
+            $submission->gene->curie,
+            $submission->gene->title,
+            $submission->disease->curie ?? '',
+            $submission->disease->title ?? '',
+            $submission->disease_original->curie ?? '',
+            $submission->disease_original->title ?? '',
+            $submission->classification->curie,
+            $submission->classification->title,
+            $submission->inheritance->curie,
+            $submission->inheritance->title,
+            $submission->submitter->curie,
+            $submission->submitter->title,
             $submission->submitted_as_hgnc_id,
             $submission->submitted_as_hgnc_symbol,
             $submission->submitted_as_disease_id,
@@ -63,23 +89,27 @@ class SubmissionTSVExport implements FromQuery, WithHeadings, WithMapping, WithC
             $submission->submitted_as_submitter_name,
             $submission->submitted_as_classification_id,
             $submission->submitted_as_classification_name,
-            $submission->submitted_as_date,
+            $submission->evaluated,
             $submission->submitted_as_public_report_url,
             $submission->submitted_as_notes,
             $submission->submitted_as_pmids,
             $submission->submitted_as_assertion_criteria_url,
             $submission->submitted_as_submission_id,
-            $submission->submitted_run_date,
+            $submission->released_at,
         ];
+
+        if ($this->useLegacyFormat) {
+            return array_merge([$this->buildLegacyUuid($submission)], $commonFields);
+        }
+
+        return array_merge([$submission->sid, $submission->version_number], $commonFields);
     }
 
 
 
     public function headings(): array
     {
-        return [
-            'sgc_id',
-            'version_number',
+        $commonHeadings = [
             'gene_curie',
             'gene_symbol',
             'disease_curie',
@@ -110,6 +140,12 @@ class SubmissionTSVExport implements FromQuery, WithHeadings, WithMapping, WithC
             'submitted_as_submission_id',
             'submitted_run_date',
         ];
+
+        if ($this->useLegacyFormat) {
+            return array_merge(['uuid'], $commonHeadings);
+        }
+
+        return array_merge(['sgc_id', 'version_number'], $commonHeadings);
     }
 
 
