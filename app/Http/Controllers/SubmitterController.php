@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classification;
 use App\Submitter;
+use Illuminate\Support\Facades\Cache;
 
 class SubmitterController extends Controller
 {
@@ -30,8 +31,10 @@ class SubmitterController extends Controller
      */
     public function show($id)
     {
-        $classifications = Classification::all();
-        $submitter = Submitter::ident($id)->with('submissions')->firstOrFail();
+        $classifications = Cache::remember('classifications_all', 3600, function () {
+            return Classification::all();
+        });
+        $submitter = Submitter::ident($id)->firstOrFail();
         $page_meta['seo']['title'] = $submitter->title . " submitter information and submissions";
         return view('submitters.show', ['classifications' => $classifications, 'submitter' => $submitter, 'page' => 'submitter', 'page_meta' => $page_meta]);
     }

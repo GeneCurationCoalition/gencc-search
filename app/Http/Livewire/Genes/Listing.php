@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Genes;
 
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Gene;
@@ -48,7 +49,9 @@ class Listing extends Component
 
     public function mount()
     {
-        $this->submitters = Submitter::has('submissions')->orderBy('name')->get();
+        $this->submitters = Cache::remember('submitters_with_submissions', 3600, function () {
+            return Submitter::has('submissions')->orderBy('name')->get();
+        });
 
         $this->title                        = request('title');
         $this->hasDisease                   = request('hasDisease');
@@ -75,7 +78,9 @@ class Listing extends Component
     public function render()
     {
 
-        $this->submitters     = Submitter::has('submissions')->orderBy('name')->get();
+        $this->submitters     = Cache::remember('submitters_with_submissions', 3600, function () {
+            return Submitter::has('submissions')->orderBy('name')->get();
+        });
         if(empty($this->curations_from_submitters)){
             $curations_from_submitters = $this->submitters->pluck(['uuid']);
             $this->curations_from_submitters = $curations_from_submitters->toArray();
@@ -134,7 +139,9 @@ class Listing extends Component
             //'count_unique_diseases'         => $this->count_unique_diseases,
         ];
         //dd($query);
-        $totalGenesCount = Gene::has('submissions')->count();
+        $totalGenesCount = Cache::remember('genes_with_submissions_count', 3600, function () {
+            return Gene::has('submissions')->count();
+        });
         $submitterIds = $this->curations_from_submitters
             ? Submitter::whereIn('ident', $this->curations_from_submitters)->pluck('id')->toArray()
             : [];
