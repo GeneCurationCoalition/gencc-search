@@ -21,6 +21,7 @@
         "laravel/tinker": "^2.0",
         "laravel/ui": "^3.0",
         "livewire/livewire": "^2.2",
+        "google/cloud-storage": "^1.30",
         "maatwebsite/excel": "^3.1",
         "webpatser/laravel-uuid": "^4.0"
     },
