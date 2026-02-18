@@ -64,14 +64,15 @@ return [
             'url' => env('AWS_URL'),
         ],
 
-        // Google Cloud Storage configuration for pre-generated export files
-        // Used by DownloadController to serve files from GCS bucket
-        // path_prefix should match what gencc-sub uses (default: 'releases')
+        // Google Cloud Storage for pre-generated export files
+        // Only 'bucket' is required; authentication uses Application Default
+        // Credentials (GCE metadata server, gcloud CLI, or GOOGLE_APPLICATION_CREDENTIALS)
+        // Optional: project_id and key_file override ADC when set
         'gcs' => [
-            'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
-            'key_file' => env('GOOGLE_CLOUD_KEY_FILE'),
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', 'releases'),
+            'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+            'key_file' => env('GOOGLE_CLOUD_KEY_FILE'),
         ],
 
     ],
