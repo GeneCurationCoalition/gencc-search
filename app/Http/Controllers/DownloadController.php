@@ -39,19 +39,24 @@ class DownloadController extends Controller
      */
     private function getGcsClient(): ?StorageClient
     {
-        $projectId = config('filesystems.disks.gcs.project_id');
-        $keyFile = config('filesystems.disks.gcs.key_file');
         $bucket = config('filesystems.disks.gcs.bucket');
 
-        // Require at least project_id and bucket to be configured
-        if (empty($projectId) || empty($bucket)) {
+        if (empty($bucket)) {
             return null;
         }
 
-        $config = ['projectId' => $projectId];
+        // Uses Application Default Credentials by default:
+        // - GCE metadata server in production
+        // - gcloud auth application-default login for local dev
+        $config = ['suppressKeyFileNotice' => true];
 
-        // Add key file if configured (for local development)
-        // In production, uses default service account credentials
+        // Optional overrides (not needed when ADC is available)
+        $projectId = config('filesystems.disks.gcs.project_id');
+        if (!empty($projectId)) {
+            $config['projectId'] = $projectId;
+        }
+
+        $keyFile = config('filesystems.disks.gcs.key_file');
         if (!empty($keyFile) && file_exists($keyFile)) {
             $config['keyFilePath'] = $keyFile;
         }
