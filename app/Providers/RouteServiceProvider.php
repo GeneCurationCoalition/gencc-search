@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
@@ -30,9 +32,20 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->configureRateLimiting();
 
         parent::boot();
+    }
+
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('web', function ($request) {
+            $limit = config('app.rate_limit', 60);
+
+            return $limit > 0
+                ? Limit::perMinute($limit)->by($request->ip())
+                : Limit::none();
+        });
     }
 
     /**
