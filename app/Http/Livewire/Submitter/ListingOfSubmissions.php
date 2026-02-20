@@ -12,8 +12,9 @@ use Livewire\WithPagination;
 
 class ListingOfSubmissions extends Component
 {
-
     use WithPagination;
+
+    protected $paginationTheme = 'default';
 
     public $count = 0;
     public $submitter_id;
