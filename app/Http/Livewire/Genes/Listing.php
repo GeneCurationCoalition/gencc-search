@@ -11,8 +11,6 @@ class Listing extends Component
 {
     use WithPagination;
 
-    protected $paginationTheme = 'default';
-
     public $title                           = '';
     public $hasDisease                      = '';
     public $curations_definitive            = '';
