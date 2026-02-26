@@ -183,7 +183,7 @@
               @foreach($records as $item)
                   @include('partials.genes.submission-row-common')
               @endforeach
-      {{ $records->links() }}
+      {{ $records->links('vendor.pagination.default') }}
     </div>
     @endif
 </div>

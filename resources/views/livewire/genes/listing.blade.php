@@ -282,6 +282,6 @@
     </div>
 
     {{-- @if(empty($genes)) --}}
-        {{ $genes->links() }}
+        {{ $genes->links('vendor.pagination.default') }}
     {{-- @endif --}}
 </div>

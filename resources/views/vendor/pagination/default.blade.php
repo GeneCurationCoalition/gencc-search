@@ -1,10 +1,15 @@
 @if ($paginator->hasPages())
     <nav class="mt-10" role="navigation" aria-label="Pagination Navigation">
-        <ul class="flex justify-center text-sm">
+        {{-- Results summary --}}
+        <div class="text-center text-gray-600 mb-4">
+            Showing {{ $paginator->firstItem() }} to {{ $paginator->lastItem() }} of {{ $paginator->total() }} results
+        </div>
+
+        <ul class="flex justify-center flex-wrap text-sm">
             {{-- Previous Page Link --}}
             @if ($paginator->onFirstPage())
                 <li aria-label="@lang('pagination.previous')">
-                    <span class="px-4 py-3 text-gray-500 block border border-r-0 border-gray-300 rounded-l" aria-hidden="true">&larr;</span>
+                    <span class="px-4 py-3 text-gray-400 block border border-r-0 border-gray-300 rounded-l bg-gray-100" aria-hidden="true">&laquo; Previous</span>
                 </li>
             @else
                 <li>
@@ -13,7 +18,7 @@
                        class="px-4 py-3 block text-blue-900 border border-r-0 border-gray-300 rounded-l hover:text-white hover:bg-blue-900 focus:outline-none focus:shadow-outline"
                        aria-label="@lang('pagination.previous')"
                     >
-                        &larr;
+                        &laquo; Previous
                     </a>
                 </li>
             @endif
@@ -56,12 +61,12 @@
                        class="px-4 py-3 block text-blue-900 border border-gray-300 rounded-r hover:text-white hover:bg-blue-900 focus:outline-none focus:shadow-outline"
                        aria-label="@lang('pagination.next')"
                     >
-                        &rarr;
+                        Next &raquo;
                     </a>
                 </li>
             @else
                 <li aria-disabled="true" aria-label="@lang('pagination.next')">
-                    <span class="px-4 py-3 block text-gray-500 border border-gray-300 rounded-r" aria-hidden="true">&rarr;</span>
+                    <span class="px-4 py-3 block text-gray-400 border border-gray-300 rounded-r bg-gray-100" aria-hidden="true">Next &raquo;</span>
                 </li>
             @endif
         </ul>
