@@ -51,10 +51,28 @@ Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');
 Route::get('/download', 'DownloadController@index')->name('download');
-Route::get('/download/action/submissions-export-xlsx', 'DownloadController@export_XLSX')->name('submissions-export-xlsx');
-Route::get('/download/action/submissions-export-xls', 'DownloadController@export_XLS')->name('submissions-export-xls');
-Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')->name('submissions-export-tsv');
-Route::get('/download/action/submissions-export-csv', 'DownloadController@export_CSV')->name('submissions-export-csv');
+// Download action routes — stateless file downloads, no session/cookie/CSRF needed.
+$downloadMiddlewareExclusions = [
+    \App\Http\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    'throttle:60,1',
+];
+
+Route::get('/download/action/submissions-export-xlsx', 'DownloadController@export_XLSX')
+    ->name('submissions-export-xlsx')
+    ->withoutMiddleware($downloadMiddlewareExclusions);
+Route::get('/download/action/submissions-export-xls', 'DownloadController@export_XLS')
+    ->name('submissions-export-xls')
+    ->withoutMiddleware($downloadMiddlewareExclusions);
+Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')
+    ->name('submissions-export-tsv')
+    ->withoutMiddleware($downloadMiddlewareExclusions);
+Route::get('/download/action/submissions-export-csv', 'DownloadController@export_CSV')
+    ->name('submissions-export-csv')
+    ->withoutMiddleware($downloadMiddlewareExclusions);
 
 // Logo serving from database
 Route::get('/brand/submitters/{identifier}', 'LogoController@show')->name('submitter-logo');

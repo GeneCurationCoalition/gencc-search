@@ -73,6 +73,8 @@ return [
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', 'releases'),
             'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
             'key_file' => env('GOOGLE_CLOUD_KEY_FILE'),
+            'cache_ttl' => (int) env('RELEASE_CACHE_TTL_SECONDS', 3600),
+            'daily_quota' => (int) env('RELEASE_DOWNLOAD_DAILY_QUOTA', 20),
         ],
 
     ],
