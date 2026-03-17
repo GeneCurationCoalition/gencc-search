@@ -77,6 +77,29 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
+    public function download_page_shows_unavailable_banner_when_gcs_not_configured()
+    {
+        // GCS is already disabled in setUp
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertSee('Downloads Temporarily Unavailable');
+        $response->assertSee('pointer-events-none');
+    }
+
+    /** @test */
+    public function download_page_shows_download_links_when_gcs_configured()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('pointer-events-none');
+    }
+
+    /** @test */
     public function download_csv_returns_file()
     {
         $this->seedCacheFixture('csv');
@@ -130,12 +153,12 @@ class DownloadFeatureTest extends TestCase
     // ─── 404 when no cache and no GCS ────────────────────────────────
 
     /** @test */
-    public function download_returns_404_when_no_cache_and_no_gcs()
+    public function download_returns_503_when_no_cache_and_no_gcs()
     {
         // No fixture seeded, GCS disabled in setUp
         $response = $this->get('/download/action/submissions-export-csv');
 
-        $response->assertStatus(404);
+        $response->assertStatus(503);
     }
 
     // ─── Conditional request tests ───────────────────────────────────

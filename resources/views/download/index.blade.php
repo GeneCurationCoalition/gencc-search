@@ -13,6 +13,22 @@
 
 @section('content')
 <div class="mt-10">
+  @if(!$downloads_available)
+  <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <i class="fas fa-exclamation-circle text-red-500"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-red-700">
+          <strong>Downloads Temporarily Unavailable:</strong>
+          Release archives are currently unavailable. Please check back later.
+        </p>
+      </div>
+    </div>
+  </div>
+  @endif
+
   <div class="mb-6">
     <p class="mb-3">Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Member groups have submitted data and will continue to add to the data set over time. Due to licensing restrictions, a GenCC download does not include OMIM data. OMIM data can be accessed and downloaded through <a id='click-exit-omim' href="https://www.omim.org/" class="underline" target="_blank">https://www.omim.org/</a></p>
   </div>
@@ -32,12 +48,21 @@
         <code class="text-xs bg-green-100 px-2 py-1 rounded">sgc_id, version_number, gene_curie, ...</code>
         <p class="text-xs text-green-700 mt-2">Example: <code>SGC-107616, 2, HGNC:10896, ...</code></p>
       </div>
+      @if($downloads_available)
       <div class="grid grid-cols-2 gap-4 mb-6">
         <a id="download-submissions-export-xlsx-new" href="{{ route('submissions-export-xlsx') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (xlsx)</a>
         <a id="download-submissions-export-xls-new" href="{{ route('submissions-export-xls') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (xls)</a>
         <a id="download-submissions-export-tsv-new" href="{{ route('submissions-export-tsv') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (tsv)</a>
         <a id="download-submissions-export-csv-new" href="{{ route('submissions-export-csv') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (csv)</a>
       </div>
+      @else
+      <div class="grid grid-cols-2 gap-4 mb-6 opacity-50 pointer-events-none">
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xlsx)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xls)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (tsv)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (csv)</span>
+      </div>
+      @endif
     </div>
 
     {{-- Legacy Format Section --}}
@@ -67,12 +92,21 @@
         <code class="text-xs bg-gray-100 px-2 py-1 rounded">uuid, gene_curie, ...</code>
         <p class="text-xs text-gray-700 mt-2">Example: <code>GENCC_000101-HGNC_10896-OMIM_182212-HP_0000006-GENCC_100001, ...</code></p>
       </div>
+      @if($downloads_available)
       <div class="grid grid-cols-2 gap-4 mb-6">
         <a id="download-submissions-export-xlsx" href="{{ route('submissions-export-xlsx') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (xlsx)</a>
         <a id="download-submissions-export-xls" href="{{ route('submissions-export-xls') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (xls)</a>
         <a id="download-submissions-export-tsv" href="{{ route('submissions-export-tsv') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (tsv)</a>
         <a id="download-submissions-export-csv" href="{{ route('submissions-export-csv') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (csv)</a>
       </div>
+      @else
+      <div class="grid grid-cols-2 gap-4 mb-6 opacity-50 pointer-events-none">
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xlsx)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xls)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (tsv)</span>
+        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (csv)</span>
+      </div>
+      @endif
     </div>
   </div>
 

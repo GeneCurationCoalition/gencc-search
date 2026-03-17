@@ -28,7 +28,12 @@ class DownloadController extends Controller
     public function index()
     {
         $page_meta['seo']['title'] = "Download GenCC Data";
-        return view('download.index', ['page_meta' => $page_meta]);
+        $downloadsAvailable = !empty(config('filesystems.disks.gcs.bucket'));
+
+        return view('download.index', [
+            'page_meta' => $page_meta,
+            'downloads_available' => $downloadsAvailable,
+        ]);
     }
 
     // ─── Public export endpoints ─────────────────────────────────────
@@ -59,7 +64,7 @@ class DownloadController extends Controller
         // 3. Resolve the file (local cache or GCS)
         $filePath = $this->resolveCachedFile($format, $folder);
         if ($filePath === null) {
-            abort(404, 'Release file not available. Please try again later.');
+            abort(503, 'Release files are temporarily unavailable. Please try again later.');
         }
 
         // 4. Build BinaryFileResponse with ETag/Last-Modified headers
