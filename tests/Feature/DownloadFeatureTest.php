@@ -29,6 +29,28 @@ class DownloadFeatureTest extends TestCase
         ]), LOCK_EX);
     }
 
+    /**
+     * Seed a fixture with an expired checked_at so the cache appears stale.
+     */
+    private function seedStaleCacheFixture(string $format = 'csv', string $folder = 'legacy'): void
+    {
+        $dir = storage_path("app/release-cache/{$folder}/{$format}");
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $content = "header1,header2\nvalue1,value2\n";
+        file_put_contents("{$dir}/gencc-submissions.{$format}", $content);
+        file_put_contents("{$dir}/.meta.json", json_encode([
+            'md5_hash' => null,
+            'etag' => '"' . md5($content) . '"',
+            'last_modified' => gmdate('D, d M Y H:i:s', strtotime('-2 days')) . ' GMT',
+            'checked_at' => time() - 7200, // 2 hours ago — exceeds default 3600s TTL
+            'source' => 'fixture',
+            'size' => strlen($content),
+        ]), LOCK_EX);
+    }
+
     private function cleanupReleaseCache(): void
     {
         $cacheDir = storage_path('app/release-cache');
@@ -243,7 +265,7 @@ class DownloadFeatureTest extends TestCase
         $cookieNames = array_map(function ($c) { return $c->getName(); }, $cookies);
 
         $this->assertNotContains('XSRF-TOKEN', $cookieNames);
-        $this->assertNotContains('gencc_search_session', $cookieNames);
+        $this->assertNotContains(config('session.cookie'), $cookieNames);
     }
 
     // ─── Daily quota tests ───────────────────────────────────────────
@@ -288,6 +310,44 @@ class DownloadFeatureTest extends TestCase
 
         // 4th full download should hit quota
         $this->get('/download/action/submissions-export-csv')->assertStatus(429);
+    }
+
+    // ─── Stale cache warning tests ───────────────────────────────────
+
+    /** @test */
+    public function download_page_shows_stale_warning_when_cache_exists_but_ttl_expired_and_no_gcs()
+    {
+        $this->seedStaleCacheFixture('csv', 'legacy');
+        config(['filesystems.disks.gcs.cache_ttl' => 3600]);
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertSee('Downloads May Be Out of Date');
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+    }
+
+    /** @test */
+    public function download_page_does_not_show_stale_warning_when_cache_is_fresh()
+    {
+        $this->seedCacheFixture('csv', 'legacy');
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Downloads May Be Out of Date');
+    }
+
+    /** @test */
+    public function download_page_does_not_show_stale_warning_when_gcs_is_configured()
+    {
+        $this->seedStaleCacheFixture('csv', 'legacy');
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Downloads May Be Out of Date');
     }
 
     // ─── Helper ──────────────────────────────────────────────────────

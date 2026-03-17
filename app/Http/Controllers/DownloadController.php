@@ -28,11 +28,23 @@ class DownloadController extends Controller
     public function index()
     {
         $page_meta['seo']['title'] = "Download GenCC Data";
-        $downloadsAvailable = !empty(config('filesystems.disks.gcs.bucket'));
+
+        $ttl = config('filesystems.disks.gcs.cache_ttl', 3600);
+        $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
+
+        $cachedFileExists = file_exists($this->cachePath('csv', 'legacy'))
+            || file_exists($this->cachePath('csv', 'current'));
+
+        $meta = $this->readMeta('csv', 'legacy') ?? $this->readMeta('csv', 'current');
+        $cacheIsStale = $meta && (time() - ($meta['checked_at'] ?? 0)) >= $ttl;
+
+        $downloadsAvailable = $gcsConfigured || $cachedFileExists;
+        $downloadsStale = !$gcsConfigured && $cachedFileExists && $cacheIsStale;
 
         return view('download.index', [
             'page_meta' => $page_meta,
             'downloads_available' => $downloadsAvailable,
+            'downloads_stale' => $downloadsStale,
         ]);
     }
 
@@ -102,7 +114,7 @@ class DownloadController extends Controller
         if ($ifNoneMatch && isset($meta['etag'])) {
             $clientEtags = array_map('trim', explode(',', $ifNoneMatch));
             foreach ($clientEtags as $clientEtag) {
-                if ($clientEtag === $meta['etag'] || $clientEtag === '"*"') {
+                if ($clientEtag === $meta['etag'] || $clientEtag === '*') {
                     return $this->notModifiedResponse($meta);
                 }
             }
@@ -123,19 +135,24 @@ class DownloadController extends Controller
 
     private function notModifiedResponse(array $meta): Response
     {
-        return response('', 304, [
-            'ETag' => $meta['etag'],
-            'Last-Modified' => $meta['last_modified'] ?? '',
-            'Cache-Control' => 'public, no-cache',
-        ]);
+        $headers = ['ETag' => $meta['etag'], 'Cache-Control' => 'public, no-cache'];
+        if (!empty($meta['last_modified'])) {
+            $headers['Last-Modified'] = $meta['last_modified'];
+        }
+        return response('', 304, $headers);
     }
 
     // ─── Daily per-IP download quota ─────────────────────────────────
 
+    private function downloadQuotaKey(): string
+    {
+        return 'download-quota:' . request()->ip() . ':' . date('Y-m-d');
+    }
+
     private function enforceDownloadQuota(): ?Response
     {
         $dailyQuota = config('filesystems.disks.gcs.daily_quota', 20);
-        $key = 'download-quota:' . request()->ip() . ':' . date('Y-m-d');
+        $key = $this->downloadQuotaKey();
         $count = Cache::get($key, 0);
 
         if ($count >= $dailyQuota) {
@@ -156,7 +173,7 @@ class DownloadController extends Controller
 
     private function incrementDownloadQuota(): void
     {
-        $key = 'download-quota:' . request()->ip() . ':' . date('Y-m-d');
+        $key = $this->downloadQuotaKey();
 
         if (Cache::add($key, 1, now()->endOfDay())) {
             return; // Key was new, add() set it to 1
