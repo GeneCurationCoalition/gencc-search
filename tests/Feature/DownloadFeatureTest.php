@@ -274,7 +274,7 @@ class DownloadFeatureTest extends TestCase
     public function download_enforces_daily_quota()
     {
         $this->seedCacheFixture('csv');
-        config(['filesystems.disks.gcs.daily_quota' => 3]);
+        config(['downloads.daily_quota' => 3]);
 
         for ($i = 0; $i < 3; $i++) {
             $this->get('/download/action/submissions-export-csv')->assertStatus(200);
@@ -290,7 +290,7 @@ class DownloadFeatureTest extends TestCase
     public function download_304_does_not_count_against_quota()
     {
         $this->seedCacheFixture('csv');
-        config(['filesystems.disks.gcs.daily_quota' => 3]);
+        config(['downloads.daily_quota' => 3]);
 
         // First request — get ETag
         $response = $this->get('/download/action/submissions-export-csv');
@@ -318,7 +318,7 @@ class DownloadFeatureTest extends TestCase
     public function download_page_shows_stale_warning_when_cache_exists_but_ttl_expired_and_no_gcs()
     {
         $this->seedStaleCacheFixture('csv', 'legacy');
-        config(['filesystems.disks.gcs.cache_ttl' => 3600]);
+        config(['downloads.cache_ttl' => 3600]);
 
         $response = $this->get('/download');
 
@@ -348,6 +348,46 @@ class DownloadFeatureTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertDontSee('Downloads May Be Out of Date');
+    }
+
+    // ─── HEAD request tests ──────────────────────────────────────────
+
+    /** @test */
+    public function head_request_returns_200_with_etag_headers()
+    {
+        $this->seedCacheFixture('csv');
+
+        $response = $this->call('HEAD', '/download/action/submissions-export-csv');
+
+        $response->assertStatus(200);
+        $response->assertHeader('etag');
+        $response->assertHeader('last-modified');
+        $this->assertEmpty($response->getContent());
+    }
+
+    /** @test */
+    public function head_request_returns_503_when_no_cache_and_no_gcs()
+    {
+        // No fixture seeded, GCS disabled in setUp
+        $response = $this->call('HEAD', '/download/action/submissions-export-csv');
+
+        $response->assertStatus(503);
+    }
+
+    /** @test */
+    public function head_request_does_not_count_against_quota()
+    {
+        $this->seedCacheFixture('csv');
+        config(['downloads.daily_quota' => 2]);
+
+        // Exhaust the quota with GET requests
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(429);
+
+        // HEAD should still succeed despite exhausted quota
+        $response = $this->call('HEAD', '/download/action/submissions-export-csv');
+        $response->assertStatus(200);
     }
 
     // ─── Helper ──────────────────────────────────────────────────────

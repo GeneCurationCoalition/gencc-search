@@ -29,7 +29,7 @@ class DownloadController extends Controller
     {
         $page_meta['seo']['title'] = "Download GenCC Data";
 
-        $ttl = config('filesystems.disks.gcs.cache_ttl', 3600);
+        $ttl = config('downloads.cache_ttl');
         $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
 
         $cachedFileExists = file_exists($this->cachePath('csv', 'legacy'))
@@ -60,6 +60,7 @@ class DownloadController extends Controller
     private function handleExport(string $format): Response
     {
         $folder = request()->query('format') === 'new' ? 'current' : 'legacy';
+        $isHead = request()->isMethod('HEAD');
 
         // 1. Fast 304 check against cached metadata (no GCS call, no quota impact)
         $notModified = $this->checkNotModified($format, $folder);
@@ -67,10 +68,12 @@ class DownloadController extends Controller
             return $notModified;
         }
 
-        // 2. Enforce daily per-IP quota (only full downloads count)
-        $quotaResponse = $this->enforceDownloadQuota();
-        if ($quotaResponse) {
-            return $quotaResponse;
+        // 2. Enforce daily per-IP quota (HEAD requests are exempt — lightweight polling)
+        if (!$isHead) {
+            $quotaResponse = $this->enforceDownloadQuota();
+            if ($quotaResponse) {
+                return $quotaResponse;
+            }
         }
 
         // 3. Resolve the file (local cache or GCS)
@@ -80,6 +83,7 @@ class DownloadController extends Controller
         }
 
         // 4. Build BinaryFileResponse with ETag/Last-Modified headers
+        //    Symfony automatically strips the body for HEAD requests
         $response = $this->buildFileResponse($format, $folder);
 
         // 5. Let Symfony check if response is actually 304
@@ -88,8 +92,10 @@ class DownloadController extends Controller
             return $response;
         }
 
-        // 6. Full download — count against quota
-        $this->incrementDownloadQuota();
+        // 6. Full download — count against quota (HEAD exempt)
+        if (!$isHead) {
+            $this->incrementDownloadQuota();
+        }
 
         return $response;
     }
@@ -151,7 +157,7 @@ class DownloadController extends Controller
 
     private function enforceDownloadQuota(): ?Response
     {
-        $dailyQuota = config('filesystems.disks.gcs.daily_quota', 20);
+        $dailyQuota = config('downloads.daily_quota');
         $key = $this->downloadQuotaKey();
         $count = Cache::get($key, 0);
 
@@ -188,7 +194,7 @@ class DownloadController extends Controller
     {
         $filePath = $this->cachePath($format, $folder);
         $meta = $this->readMeta($format, $folder);
-        $ttl = config('filesystems.disks.gcs.cache_ttl', 3600);
+        $ttl = config('downloads.cache_ttl');
 
         // Cache exists and TTL not expired — serve from disk
         if ($meta && file_exists($filePath) && (time() - ($meta['checked_at'] ?? 0)) < $ttl) {
@@ -271,6 +277,10 @@ class DownloadController extends Controller
         } catch (\Exception $e) {
             Log::error("GCS cache refresh failed for {$folder}/{$format}: {$e->getMessage()}");
 
+            if (isset($tempPath) && file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+
             // Serve stale cache if available
             if (file_exists($filePath)) {
                 Log::warning("Serving stale cached file for {$folder}/{$format} after GCS error");
@@ -290,11 +300,11 @@ class DownloadController extends Controller
         $mimeType = self::MIME_TYPES[$format] ?? 'application/octet-stream';
         $lastModified = $meta['last_modified'] ?? '';
 
-        $response = response()->download($filePath, "gencc-submissions.{$format}", [
-            'Content-Type' => $mimeType,
-            'ETag' => $meta['etag'] ?? '',
-            'Cache-Control' => 'public, no-cache',
-        ]);
+        $headers = ['Content-Type' => $mimeType, 'Cache-Control' => 'public, no-cache'];
+        if (!empty($meta['etag'])) {
+            $headers['ETag'] = $meta['etag'];
+        }
+        $response = response()->download($filePath, "gencc-submissions.{$format}", $headers);
 
         // Set Last-Modified after BinaryFileResponse construction, because
         // setFile() auto-sets it to the file's mtime on disk, overriding
