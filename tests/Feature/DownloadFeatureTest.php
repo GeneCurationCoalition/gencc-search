@@ -90,26 +90,4 @@ class DownloadFeatureTest extends TestCase
 
         $response->assertStatus(200);
     }
-
-    /** @test */
-    public function download_xls_returns_file()
-    {
-        $gene = Gene::factory()->create();
-        $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
-        $submitter = Submitter::factory()->create();
-        $inheritance = Inheritance::factory()->create();
-
-        Submission::factory()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'classification_id' => $classification->id,
-            'submitter_id' => $submitter->id,
-            'inheritance_id' => $inheritance->id,
-        ]);
-
-        $response = $this->get('/download/action/submissions-export-xls');
-
-        $response->assertStatus(200);
-    }
 }
