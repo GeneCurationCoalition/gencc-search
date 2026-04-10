@@ -127,6 +127,113 @@
     </div>
   </div>
 
+  {{-- Programmatic Access Section --}}
+  <div class="mb-6">
+    <h2>Programmatic Access</h2>
+    <p class="mb-4 text-sm text-gray-700">
+      Downloads are served with <code class="text-xs bg-gray-100 px-2 py-1 rounded">ETag</code>
+      and <code class="text-xs bg-gray-100 px-2 py-1 rounded">Last-Modified</code> headers and
+      support conditional requests to avoid re-downloading unchanged files. Downloads count
+      against a per-IP daily quota of
+      <strong>{{ config('downloads.daily_quota') }} per day</strong>;
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">304 Not Modified</code> responses do not
+      count, and <code class="text-xs bg-gray-100 px-2 py-1 rounded">HEAD</code>
+      requests are fully exempt.
+    </p>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <p class="text-sm font-semibold text-blue-800 mb-3">
+        <i class="fas fa-exchange-alt mr-1"></i> Response Headers &amp; Conditional Request Headers
+      </p>
+      <ul class="space-y-3 text-sm text-blue-900">
+        <li>
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">ETag</code>
+          <span class="mx-1 text-blue-600">&rarr;</span>
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">If-None-Match</code>
+          &mdash; The server returns an MD5 hash of the file in the
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">ETag</code> header on every response.
+          Send it back in an <code class="text-xs bg-blue-100 px-2 py-1 rounded">If-None-Match</code>
+          header on subsequent requests; if the file hasn&#8217;t changed, the server responds with
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">304 Not Modified</code>.
+        </li>
+        <li>
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">Last-Modified</code>
+          <span class="mx-1 text-blue-600">&rarr;</span>
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">If-Modified-Since</code>
+          &mdash; The server returns the file&#8217;s release timestamp in the
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">Last-Modified</code> header on every response.
+          Send it back in an <code class="text-xs bg-blue-100 px-2 py-1 rounded">If-Modified-Since</code>
+          header on subsequent requests; if the file hasn&#8217;t changed, the server responds with
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">304 Not Modified</code>.
+        </li>
+        <li>
+          <i class="fas fa-info-circle text-blue-600 mr-1"></i>
+          <strong>HEAD requests are quota-exempt.</strong>
+          A <code class="text-xs bg-blue-100 px-2 py-1 rounded">HEAD</code> request returns all
+          response headers &mdash; including <code class="text-xs bg-blue-100 px-2 py-1 rounded">ETag</code> and
+          <code class="text-xs bg-blue-100 px-2 py-1 rounded">Last-Modified</code> &mdash; without
+          downloading the file, and does not count against the daily limit.
+        </li>
+      </ul>
+    </div>
+
+    <details class="border border-gray-200 rounded-lg">
+      <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg select-none">
+        <i class="fas fa-terminal mr-2 text-gray-500"></i>curl / wget examples
+      </summary>
+      <div class="px-4 pb-4 pt-2 space-y-4">
+
+        <div>
+          <p class="text-xs text-gray-600 mb-1 font-medium">Step 1 &mdash; fetch the file and capture headers (new CSV format):</p>
+          <pre class="bg-gray-900 text-green-300 text-xs rounded p-3 overflow-x-auto" style="color: #68d391">curl -D headers.txt \
+  -o gencc-submissions.csv \
+  "{{ route('submissions-export-csv') }}?format=new"</pre>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-600 mb-1 font-medium">Step 2a &mdash; on subsequent runs, use ETag to skip unchanged files:</p>
+          <pre class="bg-gray-900 text-green-300 text-xs rounded p-3 overflow-x-auto" style="color: #68d391">ETAG=$(grep -i '^ETag:' headers.txt | sed 's/ETag: //i' | tr -d '"\r\n')
+
+curl -D headers.txt \
+  -H "If-None-Match: \"$ETAG\"" \
+  --write-out "%{http_code}\n" \
+  -o gencc-submissions.csv \
+  "{{ route('submissions-export-csv') }}?format=new"
+# HTTP 304 = no change, file not re-downloaded; HTTP 200 = new file saved</pre>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-600 mb-1 font-medium">Step 2b &mdash; alternatively, use Last-Modified:</p>
+          <pre class="bg-gray-900 text-green-300 text-xs rounded p-3 overflow-x-auto" style="color: #68d391">LAST_MODIFIED=$(grep -i '^Last-Modified:' headers.txt | sed 's/Last-Modified: //i' | tr -d '\r\n')
+
+curl -D headers.txt \
+  -H "If-Modified-Since: $LAST_MODIFIED" \
+  --write-out "%{http_code}\n" \
+  -o gencc-submissions.csv \
+  "{{ route('submissions-export-csv') }}?format=new"</pre>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-600 mb-1 font-medium">Lightweight poll with HEAD (quota-exempt):</p>
+          <pre class="bg-gray-900 text-green-300 text-xs rounded p-3 overflow-x-auto" style="color: #68d391">curl -I "{{ route('submissions-export-csv') }}?format=new"</pre>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-600 mb-1 font-medium">wget (--timestamping handles If-Modified-Since automatically):</p>
+          <pre class="bg-gray-900 text-green-300 text-xs rounded p-3 overflow-x-auto" style="color: #68d391">wget --timestamping \
+  "{{ route('submissions-export-csv') }}?format=new"</pre>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-2">
+          <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+          Data is updated weekly &mdash; polling more than once per day provides no benefit.
+          ETag matching is more reliable than timestamp matching and is preferred.
+        </p>
+
+      </div>
+    </details>
+  </div>
+
   {{-- API Access Section --}}
   <div class="grid lg:grid-cols-2 gap-4 lg:gap-20 xl:gap-40 mb-6">
     <div>
