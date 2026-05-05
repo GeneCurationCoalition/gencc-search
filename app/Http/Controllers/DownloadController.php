@@ -165,7 +165,10 @@ class DownloadController extends Controller
 
     private function notModifiedResponse(array $meta): Response
     {
-        $headers = ['ETag' => $meta['etag'], 'Cache-Control' => 'public, no-cache'];
+        $headers = ['Cache-Control' => 'public, no-cache'];
+        if (isset($meta['etag']) && $meta['etag'] !== '') {
+            $headers['ETag'] = $meta['etag'];
+        }
         if (!empty($meta['last_modified'])) {
             $headers['Last-Modified'] = $meta['last_modified'];
         }
