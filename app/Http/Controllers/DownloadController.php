@@ -126,6 +126,13 @@ class DownloadController extends Controller
             return null;
         }
 
+        // Ensure the corresponding cached file actually exists before
+        // serving a 304 based solely on metadata.
+        $cacheFile = $this->cachePath($format, $folder);
+        if (!is_string($cacheFile) || $cacheFile === '' || !file_exists($cacheFile)) {
+            return null;
+        }
+
         $ifNoneMatch = request()->header('If-None-Match');
         $ifModifiedSince = request()->header('If-Modified-Since');
 
@@ -134,7 +141,7 @@ class DownloadController extends Controller
         }
 
         // ETag match
-        if ($ifNoneMatch && isset($meta['etag'])) {
+        if ($ifNoneMatch && isset($meta['etag']) && $meta['etag'] !== '') {
             $clientEtags = array_map('trim', explode(',', $ifNoneMatch));
             foreach ($clientEtags as $clientEtag) {
                 if ($clientEtag === $meta['etag'] || $clientEtag === '*') {
@@ -145,7 +152,7 @@ class DownloadController extends Controller
         }
 
         // Last-Modified match
-        if ($ifModifiedSince && isset($meta['last_modified'])) {
+        if ($ifModifiedSince && !empty($meta['last_modified'])) {
             $clientTime = strtotime($ifModifiedSince);
             $serverTime = strtotime($meta['last_modified']);
             if ($clientTime !== false && $serverTime !== false && $serverTime <= $clientTime) {
