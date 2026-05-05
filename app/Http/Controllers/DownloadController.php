@@ -32,14 +32,31 @@ class DownloadController extends Controller
         $ttl = config('downloads.cache_ttl');
         $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
 
-        $cachedFileExists = file_exists($this->cachePath('csv', 'legacy'))
-            || file_exists($this->cachePath('csv', 'current'));
+        // Determine cache presence and staleness across all formats and versions.
+        $formats = array_keys(self::MIME_TYPES);
+        $versions = ['legacy', 'current'];
 
-        $meta = $this->readMeta('csv', 'legacy') ?? $this->readMeta('csv', 'current');
-        $cacheIsStale = $meta && (time() - ($meta['checked_at'] ?? 0)) >= $ttl;
+        $cachedFileExists = false;
+        $cacheIsStale = false;
+
+        foreach ($formats as $format) {
+            foreach ($versions as $version) {
+                $path = $this->cachePath($format, $version);
+                if (!file_exists($path)) {
+                    continue;
+                }
+
+                $cachedFileExists = true;
+
+                $meta = $this->readMeta($format, $version);
+                if ($meta && (time() - ($meta['checked_at'] ?? 0)) >= $ttl) {
+                    $cacheIsStale = true;
+                }
+            }
+        }
 
         $downloadsAvailable = $gcsConfigured || $cachedFileExists;
-        $downloadsStale = !$gcsConfigured && $cachedFileExists && $cacheIsStale;
+        $downloadsStale = !$gcsConfigured && $cacheIsStale;
 
         return view('download.index', [
             'page_meta' => $page_meta,
