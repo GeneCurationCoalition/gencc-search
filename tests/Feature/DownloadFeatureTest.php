@@ -172,7 +172,7 @@ class DownloadFeatureTest extends TestCase
         $response->assertHeader('last-modified');
     }
 
-    // ─── 404 when no cache and no GCS ────────────────────────────────
+    // ─── 503 when no cache and no GCS ────────────────────────────────
 
     /** @test */
     public function download_returns_503_when_no_cache_and_no_gcs()
