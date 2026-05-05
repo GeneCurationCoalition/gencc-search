@@ -291,9 +291,16 @@ class DownloadController extends Controller
                 ? (new \DateTime($info['updated']))->format('D, d M Y H:i:s') . ' GMT'
                 : gmdate('D, d M Y H:i:s') . ' GMT';
 
-            $etag = $remoteMd5
-                ? '"' . bin2hex(base64_decode($remoteMd5)) . '"'
-                : '"' . md5_file($filePath) . '"';
+            $etag = null;
+            if ($remoteMd5) {
+                $decodedMd5 = base64_decode($remoteMd5, true);
+                if ($decodedMd5 !== false) {
+                    $etag = '"' . bin2hex($decodedMd5) . '"';
+                }
+            }
+            if ($etag === null) {
+                $etag = '"' . md5_file($filePath) . '"';
+            }
 
             $this->writeMeta($format, $folder, [
                 'md5_hash' => $remoteMd5,
