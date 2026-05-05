@@ -257,6 +257,13 @@ class DownloadController extends Controller
         try {
             if (!$object->exists()) {
                 Log::warning("GCS file not found: {$path}");
+
+                // Serve stale cache if available even when the GCS object is missing
+                if (file_exists($filePath)) {
+                    Log::warning("Serving stale cached file for {$folder}/{$format} because GCS object is missing");
+                    return $filePath;
+                }
+
                 return null;
             }
 
