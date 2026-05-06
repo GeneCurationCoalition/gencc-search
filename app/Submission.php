@@ -274,14 +274,14 @@ class Submission extends Model
     }
 
     /**
-     * Get submitted_run_date from publish_date (DATE only, no time)
+     * Get submitted_run_date from submitted_at (DATE only, no time)
      */
     public function getSubmittedRunDateAttribute()
     {
-        $publishDate = $this->attributes['publish_date'] ?? null;
-        if ($publishDate) {
+        $submittedAt = $this->attributes['submitted_at'] ?? null;
+        if ($submittedAt) {
             // Return just the date portion (YYYY-MM-DD)
-            return substr($publishDate, 0, 10);
+            return substr($submittedAt, 0, 10);
         }
         return null;
     }

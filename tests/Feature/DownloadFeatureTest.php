@@ -205,15 +205,11 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
-    public function download_xls_returns_file()
+    public function download_xls_route_is_removed()
     {
-        $this->seedCacheFixture('xls');
-
         $response = $this->get('/download/action/submissions-export-xls');
 
-        $response->assertStatus(200);
-        $response->assertHeader('etag');
-        $response->assertHeader('last-modified');
+        $response->assertStatus(404);
     }
 
     // ─── 503 when no cache and no GCS ────────────────────────────────

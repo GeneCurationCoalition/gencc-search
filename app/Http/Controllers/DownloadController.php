@@ -15,7 +15,6 @@ class DownloadController extends Controller
      */
     private const MIME_TYPES = [
         'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'xls' => 'application/vnd.ms-excel',
         'csv' => 'text/csv',
         'tsv' => 'text/tab-separated-values',
     ];
@@ -73,12 +72,15 @@ class DownloadController extends Controller
     public function export_XLSX() { return $this->handleExport('xlsx'); }
     public function export_CSV()  { return $this->handleExport('csv'); }
     public function export_TSV()  { return $this->handleExport('tsv'); }
-    public function export_XLS()  { return $this->handleExport('xls'); }
 
     // ─── Main orchestration ──────────────────────────────────────────
 
     private function handleExport(string $format): Response
     {
+        if (!isset(self::MIME_TYPES[$format])) {
+            abort(404);
+        }
+
         $folder = request()->query('format') === 'new' ? 'current' : 'legacy';
         $isHead = request()->isMethod('HEAD');
 

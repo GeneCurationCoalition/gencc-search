@@ -68,14 +68,12 @@
       @if($downloads_available)
       <div class="grid grid-cols-2 gap-4 mb-6">
         <a id="download-submissions-export-xlsx-new" href="{{ route('submissions-export-xlsx') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (xlsx)</a>
-        <a id="download-submissions-export-xls-new" href="{{ route('submissions-export-xls') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (xls)</a>
         <a id="download-submissions-export-tsv-new" href="{{ route('submissions-export-tsv') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (tsv)</a>
         <a id="download-submissions-export-csv-new" href="{{ route('submissions-export-csv') }}?format=new" class="no-underline block text-center hover:underline text-green-800 bg-green-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-green-800"><i class="fas fa-file-download"></i> Submissions (csv)</a>
       </div>
       @else
       <div class="grid grid-cols-2 gap-4 mb-6 opacity-50 pointer-events-none">
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xlsx)</span>
-        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xls)</span>
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (tsv)</span>
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (csv)</span>
       </div>
@@ -112,14 +110,12 @@
       @if($downloads_available)
       <div class="grid grid-cols-2 gap-4 mb-6">
         <a id="download-submissions-export-xlsx" href="{{ route('submissions-export-xlsx') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (xlsx)</a>
-        <a id="download-submissions-export-xls" href="{{ route('submissions-export-xls') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (xls)</a>
         <a id="download-submissions-export-tsv" href="{{ route('submissions-export-tsv') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (tsv)</a>
         <a id="download-submissions-export-csv" href="{{ route('submissions-export-csv') }}" class="no-underline block text-center hover:underline text-gray-700 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-400"><i class="fas fa-file-download"></i> Submissions (csv)</a>
       </div>
       @else
       <div class="grid grid-cols-2 gap-4 mb-6 opacity-50 pointer-events-none">
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xlsx)</span>
-        <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (xls)</span>
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (tsv)</span>
         <span class="block text-center text-gray-400 bg-gray-100 rounded-full text-lg py-2 px-4 leading-tight border-2 border-gray-300"><i class="fas fa-file-download"></i> Submissions (csv)</span>
       </div>

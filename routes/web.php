@@ -63,9 +63,6 @@ $downloadMiddlewareExclusions = [
 Route::get('/download/action/submissions-export-xlsx', 'DownloadController@export_XLSX')
     ->name('submissions-export-xlsx')
     ->withoutMiddleware($downloadMiddlewareExclusions);
-Route::get('/download/action/submissions-export-xls', 'DownloadController@export_XLS')
-    ->name('submissions-export-xls')
-    ->withoutMiddleware($downloadMiddlewareExclusions);
 Route::get('/download/action/submissions-export-tsv', 'DownloadController@export_TSV')
     ->name('submissions-export-tsv')
     ->withoutMiddleware($downloadMiddlewareExclusions);
