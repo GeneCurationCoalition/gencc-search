@@ -34,7 +34,7 @@ class DownloadController extends Controller
         ]);
     }
 
-    // Page-level health: derived purely from local meta files, no GCS calls.
+    // Page-level health: derived purely from local cache state, no GCS calls.
     // Available iff at least one (format, version) has a fresh cache (proof
     // that GCS worked within TTL) AND no combo has an active failure marker.
     private function downloadsAvailable(int $ttl): bool
@@ -43,16 +43,13 @@ class DownloadController extends Controller
 
         foreach (array_keys(self::MIME_TYPES) as $format) {
             foreach (['legacy', 'current'] as $version) {
-                $meta = $this->readMeta($format, $version);
-                if (!$meta) {
-                    continue;
-                }
-
-                if ($this->refreshBackoffActive($meta, $ttl)) {
+                if ($this->refreshBackoffActive($format, $version, $ttl)) {
                     return false;
                 }
 
-                if (file_exists($this->cachePath($format, $version))
+                $meta = $this->readMeta($format, $version);
+                if ($meta
+                    && file_exists($this->cachePath($format, $version))
                     && (time() - ($meta['checked_at'] ?? 0)) < $ttl
                 ) {
                     $anyFreshCache = true;
@@ -239,7 +236,7 @@ class DownloadController extends Controller
 
         // A recent refresh attempt failed — fail closed to avoid hammering GCS
         // and to avoid silently serving stale data.
-        if ($meta && $this->refreshBackoffActive($meta, $ttl)) {
+        if ($this->refreshBackoffActive($format, $folder, $ttl)) {
             Log::warning("Refusing to serve stale {$folder}/{$format} during GCS refresh backoff");
             return null;
         }
@@ -269,9 +266,7 @@ class DownloadController extends Controller
         try {
             if (!$object->exists()) {
                 Log::warning("GCS file not found: {$path}");
-                if ($meta) {
-                    $this->writeMeta($format, $folder, $this->markRefreshFailed($meta));
-                }
+                $this->markRefreshFailed($format, $folder);
                 return null;
             }
 
@@ -287,6 +282,7 @@ class DownloadController extends Controller
                     $sourceLastModified,
                     time()
                 ));
+                $this->clearRefreshFailure($format, $folder);
                 return $filePath;
             }
 
@@ -310,8 +306,11 @@ class DownloadController extends Controller
                 throw new \RuntimeException("Downloaded file CRC32C did not match GCS metadata for {$path}");
             }
 
-            rename($tempPath, $filePath);
+            if (!rename($tempPath, $filePath)) {
+                throw new \RuntimeException("Failed to move {$tempPath} into place at {$filePath}");
+            }
             $this->writeMeta($format, $folder, $downloadedMeta);
+            $this->clearRefreshFailure($format, $folder);
 
             return $filePath;
         } catch (\Exception $e) {
@@ -321,9 +320,7 @@ class DownloadController extends Controller
                 @unlink($tempPath);
             }
 
-            if ($meta) {
-                $this->writeMeta($format, $folder, $this->markRefreshFailed($meta));
-            }
+            $this->markRefreshFailed($format, $folder);
 
             return null;
         }
@@ -426,7 +423,6 @@ class DownloadController extends Controller
         ?string $sourceLastModified,
         ?int $checkedAt = null
     ): array {
-        $meta = $this->clearRefreshFailure($meta);
         $meta['source_etag'] = $sourceEtag;
         if ($sourceLastModified) {
             $meta['source_last_modified'] = $sourceLastModified;
@@ -444,25 +440,45 @@ class DownloadController extends Controller
         return $this->httpDateFromDateTime($info['updated']);
     }
 
-    private function refreshBackoffActive(array $meta, int $ttl): bool
+    // Backoff state lives in a sidecar file (.refresh-failed) rather than
+    // .meta.json so it can be set even when no usable meta exists yet
+    // (e.g. cold-start failure where GCS is unreachable on the first request).
+    private function failureMarkerPath(string $format, string $folder): string
     {
-        if (empty($meta['refresh_failed_at']) || !is_numeric($meta['refresh_failed_at'])) {
+        return storage_path("app/release-cache/{$folder}/{$format}/.refresh-failed");
+    }
+
+    private function refreshBackoffActive(string $format, string $folder, int $ttl): bool
+    {
+        $path = $this->failureMarkerPath($format, $folder);
+        if (!file_exists($path)) {
             return false;
         }
 
-        return (time() - (int) $meta['refresh_failed_at']) < $ttl;
+        $failedAt = (int) trim((string) @file_get_contents($path));
+        if ($failedAt <= 0) {
+            return false;
+        }
+
+        return (time() - $failedAt) < $ttl;
     }
 
-    private function markRefreshFailed(array $meta, ?int $failedAt = null): array
+    private function markRefreshFailed(string $format, string $folder, ?int $failedAt = null): void
     {
-        $meta['refresh_failed_at'] = $failedAt ?? time();
-        return $meta;
+        $path = $this->failureMarkerPath($format, $folder);
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        file_put_contents($path, (string) ($failedAt ?? time()), LOCK_EX);
     }
 
-    private function clearRefreshFailure(array $meta): array
+    private function clearRefreshFailure(string $format, string $folder): void
     {
-        unset($meta['refresh_failed_at']);
-        return $meta;
+        $path = $this->failureMarkerPath($format, $folder);
+        if (file_exists($path)) {
+            @unlink($path);
+        }
     }
 
     // Convert a source timestamp to the UTC HTTP-date format used in response headers.
@@ -497,8 +513,7 @@ class DownloadController extends Controller
             && array_key_exists('checked_at', $meta)
             && is_numeric($meta['checked_at'])
             && array_key_exists('size', $meta)
-            && is_numeric($meta['size'])
-            && (!array_key_exists('refresh_failed_at', $meta) || is_numeric($meta['refresh_failed_at']));
+            && is_numeric($meta['size']);
     }
 
     private function writeMeta(string $format, string $folder, array $meta): void

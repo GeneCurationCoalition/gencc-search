@@ -38,12 +38,21 @@ class DownloadFeatureTest extends TestCase
             'source' => 'fixture',
             'size' => strlen($content),
         ];
-        if ($refreshFailedAt !== null) {
-            $meta['refresh_failed_at'] = $refreshFailedAt;
-        }
         file_put_contents("{$dir}/.meta.json", json_encode($meta), LOCK_EX);
+        if ($refreshFailedAt !== null) {
+            file_put_contents("{$dir}/.refresh-failed", (string) $refreshFailedAt, LOCK_EX);
+        }
 
         return $content;
+    }
+
+    private function refreshFailedMarker(string $format, string $folder): ?int
+    {
+        $path = storage_path("app/release-cache/{$folder}/{$format}/.refresh-failed");
+        if (!file_exists($path)) {
+            return null;
+        }
+        return (int) trim(file_get_contents($path));
     }
 
     /**
@@ -493,8 +502,7 @@ class DownloadFeatureTest extends TestCase
 
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
 
-        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
-        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+        $this->assertGreaterThan(time() - 60, $this->refreshFailedMarker('csv', 'legacy'));
     }
 
     /** @test */
@@ -510,8 +518,7 @@ class DownloadFeatureTest extends TestCase
         $this->bindMockGcsObject($object);
 
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
-        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
-        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+        $this->assertGreaterThan(time() - 60, $this->refreshFailedMarker('csv', 'legacy'));
 
         // Second request must not hit GCS — `exists` was set to once() above.
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
@@ -538,7 +545,7 @@ class DownloadFeatureTest extends TestCase
         $this->get('/download/action/submissions-export-csv')->assertStatus(200);
 
         $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
-        $this->assertArrayNotHasKey('refresh_failed_at', $meta);
+        $this->assertNull($this->refreshFailedMarker('csv', 'legacy'));
         $this->assertGreaterThan(time() - 60, $meta['checked_at']);
     }
 
@@ -553,8 +560,7 @@ class DownloadFeatureTest extends TestCase
 
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
 
-        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
-        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+        $this->assertGreaterThan(time() - 60, $this->refreshFailedMarker('csv', 'legacy'));
     }
 
     /** @test */
@@ -577,8 +583,7 @@ class DownloadFeatureTest extends TestCase
 
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
         $this->assertSame($originalContent, file_get_contents(storage_path('app/release-cache/legacy/csv/gencc-submissions.csv')));
-        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
-        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+        $this->assertGreaterThan(time() - 60, $this->refreshFailedMarker('csv', 'legacy'));
     }
 
     /** @test */
@@ -590,6 +595,26 @@ class DownloadFeatureTest extends TestCase
         $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
         $this->bindMockGcsObject($object);
 
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+    }
+
+    /** @test */
+    public function failed_gcs_with_no_meta_writes_backoff_marker_so_subsequent_requests_skip_gcs()
+    {
+        // Cold-start case: no .meta.json on disk and GCS is broken.
+        // Without a sidecar marker the controller would re-hit GCS forever.
+        config([
+            'downloads.cache_ttl' => 3600,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+        $this->assertGreaterThan(time() - 60, $this->refreshFailedMarker('csv', 'legacy'));
+
+        // Second request must not hit GCS — `exists` was set to once() above.
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
     }
 
