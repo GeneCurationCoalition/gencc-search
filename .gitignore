@@ -24,3 +24,4 @@ CLAUDE.md
 DATA/en_product1.xml
 DATA/mimTitles.txt
 DATA/mondo-with-equivalents.json
+.claude/settings.json

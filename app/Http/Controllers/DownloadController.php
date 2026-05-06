@@ -16,7 +16,6 @@ class DownloadController extends Controller
      */
     private const MIME_TYPES = [
         'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'xls' => 'application/vnd.ms-excel',
         'csv' => 'text/csv',
         'tsv' => 'text/tab-separated-values',
     ];
@@ -68,7 +67,7 @@ class DownloadController extends Controller
      * Attempt to download a pre-generated file from GCS.
      * Falls back to on-the-fly generation if GCS is not configured or file not found.
      *
-     * @param string $format The export format (xlsx, xls, csv, tsv)
+     * @param string $format The export format (xlsx, csv, tsv)
      * @param bool $useLegacy Whether to use legacy UUID format
      * @param callable $fallbackGenerator Function to generate the file on-the-fly
      * @return \Symfony\Component\HttpFoundation\Response
@@ -138,15 +137,6 @@ class DownloadController extends Controller
 
         return $this->downloadFromGcsOrFallback('tsv', $useLegacy, function () use ($useLegacy) {
             return Excel::download(new SubmissionTSVExport($useLegacy), 'gencc-submissions.tsv', \Maatwebsite\Excel\Excel::TSV);
-        });
-    }
-
-    public function export_XLS()
-    {
-        $useLegacy = request()->query('format') !== 'new';
-
-        return $this->downloadFromGcsOrFallback('xls', $useLegacy, function () use ($useLegacy) {
-            return Excel::download(new SubmissionExport($useLegacy), 'gencc-submissions.xls', \Maatwebsite\Excel\Excel::XLS);
         });
     }
 }
