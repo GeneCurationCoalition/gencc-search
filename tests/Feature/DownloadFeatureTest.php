@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\DownloadController;
+use Google\Cloud\Storage\StorageClient;
 use Illuminate\Support\Facades\Cache;
+use Mockery;
 use Tests\TestCase;
 
 class DownloadFeatureTest extends TestCase
@@ -10,7 +13,67 @@ class DownloadFeatureTest extends TestCase
     /**
      * Seed a fixture file + .meta.json into the release cache directory.
      */
-    private function seedCacheFixture(string $format = 'csv', string $folder = 'legacy'): void
+    private function seedCacheFixture(
+        string $format = 'csv',
+        string $folder = 'legacy',
+        ?int $checkedAt = null,
+        ?string $sourceEtag = null,
+        ?int $refreshFailedAt = null
+    ): string
+    {
+        $dir = storage_path("app/release-cache/{$folder}/{$format}");
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $content = "header1,header2\nvalue1,value2\n";
+        file_put_contents("{$dir}/gencc-submissions.{$format}", $content);
+        $meta = [
+            'content_crc32c' => $this->crc32c($content),
+            'content_md5' => base64_encode(hex2bin(md5($content))),
+            'http_etag' => '"' . md5($content) . '"',
+            'source_etag' => $sourceEtag ?? '"fixture-source-etag"',
+            'source_last_modified' => gmdate('D, d M Y H:i:s') . ' GMT',
+            'checked_at' => $checkedAt ?? time(),
+            'source' => 'fixture',
+            'size' => strlen($content),
+        ];
+        if ($refreshFailedAt !== null) {
+            $meta['refresh_failed_at'] = $refreshFailedAt;
+        }
+        file_put_contents("{$dir}/.meta.json", json_encode($meta), LOCK_EX);
+
+        return $content;
+    }
+
+    /**
+     * Seed a fixture with an expired checked_at so the cache appears stale.
+     */
+    private function seedStaleCacheFixture(string $format = 'csv', string $folder = 'legacy'): string
+    {
+        return $this->seedCacheFixture($format, $folder, time() - 7200);
+    }
+
+    /**
+     * Seed only the cached release file, without .meta.json.
+     */
+    private function seedCacheFileWithoutMeta(string $format = 'csv', string $folder = 'legacy'): string
+    {
+        $dir = storage_path("app/release-cache/{$folder}/{$format}");
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $content = "header1,header2\nvalue1,value2\n";
+        file_put_contents("{$dir}/gencc-submissions.{$format}", $content);
+
+        return $content;
+    }
+
+    /**
+     * Seed a cached release file with the pre-content-hash metadata shape.
+     */
+    private function seedLegacyMetaCacheFixture(string $format = 'csv', string $folder = 'legacy'): string
     {
         $dir = storage_path("app/release-cache/{$folder}/{$format}");
         if (!is_dir($dir)) {
@@ -23,32 +86,12 @@ class DownloadFeatureTest extends TestCase
             'md5_hash' => null,
             'etag' => '"' . md5($content) . '"',
             'last_modified' => gmdate('D, d M Y H:i:s') . ' GMT',
-            'checked_at' => time(),
+            'checked_at' => time() - 7200,
             'source' => 'fixture',
             'size' => strlen($content),
         ]), LOCK_EX);
-    }
 
-    /**
-     * Seed a fixture with an expired checked_at so the cache appears stale.
-     */
-    private function seedStaleCacheFixture(string $format = 'csv', string $folder = 'legacy'): void
-    {
-        $dir = storage_path("app/release-cache/{$folder}/{$format}");
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $content = "header1,header2\nvalue1,value2\n";
-        file_put_contents("{$dir}/gencc-submissions.{$format}", $content);
-        file_put_contents("{$dir}/.meta.json", json_encode([
-            'md5_hash' => null,
-            'etag' => '"' . md5($content) . '"',
-            'last_modified' => gmdate('D, d M Y H:i:s', strtotime('-2 days')) . ' GMT',
-            'checked_at' => time() - 7200, // 2 hours ago — exceeds default 3600s TTL
-            'source' => 'fixture',
-            'size' => strlen($content),
-        ]), LOCK_EX);
+        return $content;
     }
 
     private function cleanupReleaseCache(): void
@@ -84,6 +127,7 @@ class DownloadFeatureTest extends TestCase
     protected function tearDown(): void
     {
         $this->cleanupReleaseCache();
+        Mockery::close();
         parent::tearDown();
     }
 
@@ -251,6 +295,302 @@ class DownloadFeatureTest extends TestCase
         $this->assertEquals($etag1, $etag2);
     }
 
+    /** @test */
+    public function fresh_cache_is_served_without_gcs_check()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFixture('csv');
+
+        $client = Mockery::mock(StorageClient::class);
+        $client->shouldNotReceive('bucket');
+        app()->instance(DownloadController::class, new class($client) extends DownloadController {
+            private $client;
+
+            public function __construct(StorageClient $client)
+            {
+                $this->client = $client;
+            }
+
+            protected function getGcsClient(): ?StorageClient
+            {
+                return $this->client;
+            }
+        });
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+    }
+
+    /** @test */
+    public function cached_file_without_meta_returns_503_when_no_gcs_is_available()
+    {
+        $this->seedCacheFileWithoutMeta('csv');
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+    }
+
+    /** @test */
+    public function cached_file_without_meta_redownloads_from_gcs_and_writes_meta()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFileWithoutMeta('csv');
+        $downloadedContent = "new-header\nnew-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($downloadedContent),
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $response = $this->get('/download/action/submissions-export-csv');
+
+        $response->assertStatus(200);
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame($this->crc32c($downloadedContent), $meta['content_crc32c']);
+        $this->assertSame(base64_encode(hex2bin(md5($downloadedContent))), $meta['content_md5']);
+        $this->assertSame('"' . md5($downloadedContent) . '"', $meta['http_etag']);
+        $this->assertSame('"remote-v2"', $meta['source_etag']);
+        $this->assertSame('Fri, 01 May 2026 12:00:00 GMT', $meta['source_last_modified']);
+    }
+
+    /** @test */
+    public function legacy_meta_redownloads_from_gcs_and_writes_current_meta()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedLegacyMetaCacheFixture('csv');
+        $downloadedContent = "new-header\nnew-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($downloadedContent),
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $this->assertSame($downloadedContent, file_get_contents(storage_path('app/release-cache/legacy/csv/gencc-submissions.csv')));
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame($this->crc32c($downloadedContent), $meta['content_crc32c']);
+        $this->assertSame('"' . md5($downloadedContent) . '"', $meta['http_etag']);
+        $this->assertArrayNotHasKey('etag', $meta);
+        $this->assertArrayNotHasKey('last_modified', $meta);
+    }
+
+    /** @test */
+    public function gcs_updated_timestamp_is_stored_and_returned_as_utc_http_date()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFileWithoutMeta('csv');
+        $downloadedContent = "new-header\nnew-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($downloadedContent),
+            'updated' => '2026-05-01T08:00:00-04:00',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $response = $this->get('/download/action/submissions-export-csv');
+
+        $response->assertStatus(200);
+        $this->assertSame('Fri, 01 May 2026 12:00:00 GMT', $response->headers->get('Last-Modified'));
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame('Fri, 01 May 2026 12:00:00 GMT', $meta['source_last_modified']);
+    }
+
+    /** @test */
+    public function expired_cache_with_matching_source_etag_bumps_ttl_without_download()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $before = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v1"',
+            'crc32c' => 'different-but-ignored-because-etag-matches',
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldNotReceive('downloadToFile');
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $after = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame($before['content_crc32c'], $after['content_crc32c']);
+        $this->assertGreaterThan($before['checked_at'], $after['checked_at']);
+        $this->assertSame('Fri, 01 May 2026 12:00:00 GMT', $after['source_last_modified']);
+    }
+
+    /** @test */
+    public function expired_cache_with_matching_crc32c_bumps_ttl_without_download()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $content = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($content),
+            'updated' => '2026-05-02T12:00:00.000Z',
+        ]);
+        $object->shouldNotReceive('downloadToFile');
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame('"remote-v2"', $meta['source_etag']);
+        $this->assertSame('Sat, 02 May 2026 12:00:00 GMT', $meta['source_last_modified']);
+        $this->assertGreaterThan(time() - 60, $meta['checked_at']);
+    }
+
+    /** @test */
+    public function expired_cache_with_changed_validators_downloads_and_replaces_cache()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $downloadedContent = "changed-header\nchanged-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($downloadedContent),
+            'updated' => '2026-05-03T12:00:00.000Z',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $this->assertSame($downloadedContent, file_get_contents(storage_path('app/release-cache/legacy/csv/gencc-submissions.csv')));
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertSame($this->crc32c($downloadedContent), $meta['content_crc32c']);
+        $this->assertSame('"remote-v2"', $meta['source_etag']);
+    }
+
+    /** @test */
+    public function failed_gcs_check_with_usable_stale_meta_serves_stale_cache()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+    }
+
+    /** @test */
+    public function failed_gcs_refresh_sets_backoff_and_next_request_skips_gcs()
+    {
+        config([
+            'downloads.cache_ttl' => 3600,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+    }
+
+    /** @test */
+    public function expired_refresh_backoff_retries_gcs_and_clears_failure_marker_on_success()
+    {
+        config([
+            'downloads.cache_ttl' => 3600,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $content = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"', time() - 7200);
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v1"',
+            'crc32c' => $this->crc32c($content),
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldNotReceive('downloadToFile');
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertArrayNotHasKey('refresh_failed_at', $meta);
+        $this->assertGreaterThan(time() - 60, $meta['checked_at']);
+    }
+
+    /** @test */
+    public function missing_gcs_object_sets_refresh_failure_marker_when_serving_stale_cache()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(false);
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+    }
+
+    /** @test */
+    public function downloaded_crc32c_mismatch_keeps_usable_stale_cache()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $originalContent = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $downloadedContent = "changed-header\nchanged-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => 'not-the-downloaded-crc32c',
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->assertSame($originalContent, file_get_contents(storage_path('app/release-cache/legacy/csv/gencc-submissions.csv')));
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
+    }
+
+    /** @test */
+    public function failed_gcs_check_with_missing_meta_returns_503()
+    {
+        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
+        $this->seedCacheFileWithoutMeta('csv');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+    }
+
     // ─── No session cookies test ─────────────────────────────────────
 
     /** @test */
@@ -310,6 +650,55 @@ class DownloadFeatureTest extends TestCase
 
         // 4th full download should hit quota
         $this->get('/download/action/submissions-export-csv')->assertStatus(429);
+    }
+
+    /** @test */
+    public function over_quota_conditional_request_can_refresh_expired_cache_and_return_304()
+    {
+        config([
+            'downloads.daily_quota' => 0,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $content = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v1"',
+            'crc32c' => $this->crc32c($content),
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldNotReceive('downloadToFile');
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv', [
+            'If-None-Match' => '"' . md5($content) . '"',
+        ])->assertStatus(304);
+    }
+
+    /** @test */
+    public function over_quota_conditional_request_returns_429_when_remote_file_changed()
+    {
+        config([
+            'downloads.daily_quota' => 0,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $content = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
+        $downloadedContent = "changed-header\nchanged-value\n";
+        $object = Mockery::mock();
+        $object->shouldReceive('exists')->once()->andReturn(true);
+        $object->shouldReceive('info')->once()->andReturn([
+            'etag' => '"remote-v2"',
+            'crc32c' => $this->crc32c($downloadedContent),
+            'updated' => '2026-05-01T12:00:00.000Z',
+        ]);
+        $object->shouldReceive('downloadToFile')->once()->with(Mockery::type('string'))->andReturnUsing(function ($path) use ($downloadedContent) {
+            file_put_contents($path, $downloadedContent);
+        });
+        $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv', [
+            'If-None-Match' => '"' . md5($content) . '"',
+        ])->assertStatus(429);
     }
 
     // ─── Stale cache warning tests ───────────────────────────────────
@@ -391,6 +780,37 @@ class DownloadFeatureTest extends TestCase
     }
 
     // ─── Helper ──────────────────────────────────────────────────────
+
+    private function crc32c(string $content): string
+    {
+        return base64_encode(hex2bin(hash('crc32c', $content)));
+    }
+
+    private function bindMockGcsObject(
+        $object,
+        string $bucketName = 'test-bucket',
+        string $path = 'releases/legacy/csv/gencc-submissions.csv'
+    ): void {
+        $client = Mockery::mock(StorageClient::class);
+        $bucket = Mockery::mock();
+
+        $client->shouldReceive('bucket')->with($bucketName)->andReturn($bucket);
+        $bucket->shouldReceive('object')->with($path)->andReturn($object);
+
+        app()->instance(DownloadController::class, new class($client) extends DownloadController {
+            private $client;
+
+            public function __construct(StorageClient $client)
+            {
+                $this->client = $client;
+            }
+
+            protected function getGcsClient(): ?StorageClient
+            {
+                return $this->client;
+            }
+        });
+    }
 
     private function assertStringContains(string $needle, string $haystack): void
     {
