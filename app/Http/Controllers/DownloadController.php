@@ -31,40 +31,37 @@ class DownloadController extends Controller
         $ttl = config('downloads.cache_ttl');
         $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
 
-        // Determine cache presence and staleness across all formats and versions.
-        $formats = array_keys(self::MIME_TYPES);
-        $versions = ['legacy', 'current'];
-
-        $cachedFileExists = false;
-        $cacheIsStale = false;
-
-        foreach ($formats as $format) {
-            foreach ($versions as $version) {
-                $path = $this->cachePath($format, $version);
-                if (!file_exists($path)) {
-                    continue;
-                }
-
-                $meta = $this->readMeta($format, $version);
-                if (!$meta) {
-                    continue;
-                }
-
-                $cachedFileExists = true;
-                if ($meta && (time() - ($meta['checked_at'] ?? 0)) >= $ttl) {
-                    $cacheIsStale = true;
+        $allHealthy = true;
+        foreach (array_keys(self::MIME_TYPES) as $format) {
+            foreach (['legacy', 'current'] as $version) {
+                if (!$this->isHealthyForServing($format, $version, $ttl, $gcsConfigured)) {
+                    $allHealthy = false;
+                    break 2;
                 }
             }
         }
 
-        $downloadsAvailable = $gcsConfigured || $cachedFileExists;
-        $downloadsStale = !$gcsConfigured && $cacheIsStale;
-
         return view('download.index', [
             'page_meta' => $page_meta,
-            'downloads_available' => $downloadsAvailable,
-            'downloads_stale' => $downloadsStale,
+            'downloads_available' => $allHealthy,
         ]);
+    }
+
+    private function isHealthyForServing(string $format, string $folder, int $ttl, bool $gcsConfigured): bool
+    {
+        $meta = $this->readMeta($format, $folder);
+        $hasFile = file_exists($this->cachePath($format, $folder));
+
+        if (!$meta || !$hasFile) {
+            return $gcsConfigured && !$this->refreshBackoffActive($meta ?? [], $ttl);
+        }
+
+        $isFresh = (time() - ($meta['checked_at'] ?? 0)) < $ttl;
+        if ($isFresh) {
+            return true;
+        }
+
+        return $gcsConfigured && !$this->refreshBackoffActive($meta, $ttl);
     }
 
     // ─── Public export endpoints ─────────────────────────────────────
@@ -241,25 +238,19 @@ class DownloadController extends Controller
             return $filePath;
         }
 
-        // Cache refresh failed recently — serve stale cache and avoid hammering GCS.
-        if ($meta && file_exists($filePath) && $this->refreshBackoffActive($meta, $ttl)) {
-            Log::warning("Serving stale cached file for {$folder}/{$format} during GCS refresh backoff");
-            return $filePath;
+        // A recent refresh attempt failed — fail closed to avoid hammering GCS
+        // and to avoid silently serving stale data.
+        if ($meta && $this->refreshBackoffActive($meta, $ttl)) {
+            Log::warning("Refusing to serve stale {$folder}/{$format} during GCS refresh backoff");
+            return null;
         }
 
-        // GCS configured — check for changes, re-download if needed
         $client = $this->getGcsClient();
         if ($client) {
             return $this->resolveFromGcs($client, $format, $folder, $filePath, $meta);
         }
 
-        // No GCS, but a stale cache with usable metadata exists — serve it.
-        if ($meta && file_exists($filePath)) {
-            Log::warning("GCS not configured, serving stale cached file for {$folder}/{$format}");
-            return $filePath;
-        }
-
-        Log::error("Download unavailable: GOOGLE_CLOUD_STORAGE_BUCKET is not configured and no cached file exists for {$folder}/{$format}");
+        Log::error("Download unavailable: GCS not configured and cache for {$folder}/{$format} is missing or stale");
         return null;
     }
 
@@ -279,14 +270,9 @@ class DownloadController extends Controller
         try {
             if (!$object->exists()) {
                 Log::warning("GCS file not found: {$path}");
-
-                // Serve stale cache if available even when the GCS object is missing
-                if ($meta && file_exists($filePath)) {
+                if ($meta) {
                     $this->writeMeta($format, $folder, $this->markRefreshFailed($meta));
-                    Log::warning("Serving stale cached file for {$folder}/{$format} because GCS object is missing");
-                    return $filePath;
                 }
-
                 return null;
             }
 
@@ -336,11 +322,8 @@ class DownloadController extends Controller
                 @unlink($tempPath);
             }
 
-            // Serve stale cache if available
-            if ($meta && file_exists($filePath)) {
+            if ($meta) {
                 $this->writeMeta($format, $folder, $this->markRefreshFailed($meta));
-                Log::warning("Serving stale cached file for {$folder}/{$format} after GCS error");
-                return $filePath;
             }
 
             return null;

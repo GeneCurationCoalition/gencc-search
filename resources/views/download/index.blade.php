@@ -29,23 +29,6 @@
   </div>
   @endif
 
-  @if($downloads_stale)
-  <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
-    <div class="flex">
-      <div class="flex-shrink-0">
-        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
-      </div>
-      <div class="ml-3">
-        <p class="text-sm text-yellow-700">
-          <strong>Downloads May Be Out of Date:</strong>
-          Release archives are being served from a local cache that hasn't been refreshed recently.
-          The data may not reflect the latest submissions.
-        </p>
-      </div>
-    </div>
-  </div>
-  @endif
-
   <div class="mb-6">
     <p class="mb-3">Member groups submit assertions about gene-disease relationships. Each entry will be an assertion for a gene, disease, and a mode of inheritance with a link to evidence supporting that assertion. Member groups have submitted data and will continue to add to the data set over time. Due to licensing restrictions, a GenCC download does not include OMIM data. OMIM data can be accessed and downloaded through <a id='click-exit-omim' href="https://www.omim.org/" class="underline" target="_blank">https://www.omim.org/</a></p>
   </div>

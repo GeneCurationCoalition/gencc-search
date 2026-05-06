@@ -481,7 +481,7 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
-    public function failed_gcs_check_with_usable_stale_meta_serves_stale_cache()
+    public function failed_gcs_check_with_usable_stale_meta_returns_503_and_writes_marker()
     {
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
         $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
@@ -489,11 +489,14 @@ class DownloadFeatureTest extends TestCase
         $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
         $this->bindMockGcsObject($object);
 
-        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+
+        $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
+        $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
     }
 
     /** @test */
-    public function failed_gcs_refresh_sets_backoff_and_next_request_skips_gcs()
+    public function failed_gcs_refresh_sets_backoff_and_subsequent_requests_skip_gcs_and_return_503()
     {
         config([
             'downloads.cache_ttl' => 3600,
@@ -504,11 +507,12 @@ class DownloadFeatureTest extends TestCase
         $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
         $this->bindMockGcsObject($object);
 
-        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
         $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
         $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
 
-        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        // Second request must not hit GCS — `exists` was set to once() above.
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
     }
 
     /** @test */
@@ -537,7 +541,7 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
-    public function missing_gcs_object_sets_refresh_failure_marker_when_serving_stale_cache()
+    public function missing_gcs_object_returns_503_and_writes_marker()
     {
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
         $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
@@ -545,14 +549,14 @@ class DownloadFeatureTest extends TestCase
         $object->shouldReceive('exists')->once()->andReturn(false);
         $this->bindMockGcsObject($object);
 
-        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
 
         $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
         $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
     }
 
     /** @test */
-    public function downloaded_crc32c_mismatch_keeps_usable_stale_cache()
+    public function downloaded_crc32c_mismatch_returns_503_without_replacing_cache()
     {
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
         $originalContent = $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"');
@@ -569,7 +573,7 @@ class DownloadFeatureTest extends TestCase
         });
         $this->bindMockGcsObject($object);
 
-        $this->get('/download/action/submissions-export-csv')->assertStatus(200);
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
         $this->assertSame($originalContent, file_get_contents(storage_path('app/release-cache/legacy/csv/gencc-submissions.csv')));
         $meta = json_decode(file_get_contents(storage_path('app/release-cache/legacy/csv/.meta.json')), true);
         $this->assertGreaterThan(time() - 60, $meta['refresh_failed_at']);
@@ -583,6 +587,33 @@ class DownloadFeatureTest extends TestCase
         $object = Mockery::mock();
         $object->shouldReceive('exists')->once()->andThrow(new \RuntimeException('GCS unavailable'));
         $this->bindMockGcsObject($object);
+
+        $this->get('/download/action/submissions-export-csv')->assertStatus(503);
+    }
+
+    /** @test */
+    public function backoff_active_returns_503_without_calling_gcs()
+    {
+        config([
+            'downloads.cache_ttl' => 3600,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        $this->seedCacheFixture('csv', 'legacy', time() - 7200, '"remote-v1"', time() - 60);
+        $client = Mockery::mock(StorageClient::class);
+        $client->shouldNotReceive('bucket');
+        app()->instance(DownloadController::class, new class($client) extends DownloadController {
+            private $client;
+
+            public function __construct(StorageClient $client)
+            {
+                $this->client = $client;
+            }
+
+            protected function getGcsClient(): ?StorageClient
+            {
+                return $this->client;
+            }
+        });
 
         $this->get('/download/action/submissions-export-csv')->assertStatus(503);
     }
@@ -697,34 +728,66 @@ class DownloadFeatureTest extends TestCase
         ])->assertStatus(429);
     }
 
-    // ─── Stale cache warning tests ───────────────────────────────────
+    // ─── Page health tests ───────────────────────────────────────────
 
     /** @test */
-    public function download_page_shows_stale_warning_when_cache_exists_but_ttl_expired_and_no_gcs()
+    public function download_page_disables_links_when_cache_stale_and_no_gcs()
     {
-        $this->seedStaleCacheFixture('csv', 'legacy');
+        // Need every (format, version) cached but stale, so the only failing
+        // health check is "stale and cannot refresh".
         config(['downloads.cache_ttl' => 3600]);
+        foreach (['xlsx', 'csv', 'tsv'] as $format) {
+            foreach (['legacy', 'current'] as $version) {
+                $this->seedCacheFixture($format, $version, time() - 7200);
+            }
+        }
 
         $response = $this->get('/download');
 
         $response->assertStatus(200);
-        $response->assertSee('Downloads May Be Out of Date');
-        $response->assertDontSee('Downloads Temporarily Unavailable');
-    }
-
-    /** @test */
-    public function download_page_does_not_show_stale_warning_when_cache_is_fresh()
-    {
-        $this->seedCacheFixture('csv', 'legacy');
-
-        $response = $this->get('/download');
-
-        $response->assertStatus(200);
+        $response->assertSee('Downloads Temporarily Unavailable');
+        $response->assertSee('pointer-events-none');
         $response->assertDontSee('Downloads May Be Out of Date');
     }
 
     /** @test */
-    public function download_page_does_not_show_stale_warning_when_gcs_is_configured()
+    public function download_page_disables_links_when_backoff_active_even_with_gcs_configured()
+    {
+        config([
+            'downloads.cache_ttl' => 3600,
+            'filesystems.disks.gcs.bucket' => 'test-bucket',
+        ]);
+        // Every (format, version) is stale AND in backoff — health check fails everywhere.
+        foreach (['xlsx', 'csv', 'tsv'] as $format) {
+            foreach (['legacy', 'current'] as $version) {
+                $this->seedCacheFixture($format, $version, time() - 7200, '"remote-v1"', time() - 60);
+            }
+        }
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertSee('Downloads Temporarily Unavailable');
+    }
+
+    /** @test */
+    public function download_page_enables_links_when_every_format_has_fresh_cache()
+    {
+        foreach (['xlsx', 'csv', 'tsv'] as $format) {
+            foreach (['legacy', 'current'] as $version) {
+                $this->seedCacheFixture($format, $version);
+            }
+        }
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('pointer-events-none');
+    }
+
+    /** @test */
+    public function download_page_enables_links_when_gcs_configured_even_if_cache_stale()
     {
         $this->seedStaleCacheFixture('csv', 'legacy');
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
@@ -732,7 +795,7 @@ class DownloadFeatureTest extends TestCase
         $response = $this->get('/download');
 
         $response->assertStatus(200);
-        $response->assertDontSee('Downloads May Be Out of Date');
+        $response->assertDontSee('Downloads Temporarily Unavailable');
     }
 
     // ─── HEAD request tests ──────────────────────────────────────────
