@@ -28,40 +28,39 @@ class DownloadController extends Controller
     {
         $page_meta['seo']['title'] = "Download GenCC Data";
 
-        $ttl = config('downloads.cache_ttl');
-        $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
+        return view('download.index', [
+            'page_meta' => $page_meta,
+            'downloads_available' => $this->downloadsAvailable(config('downloads.cache_ttl')),
+        ]);
+    }
 
-        $allHealthy = true;
+    // Page-level health: derived purely from local meta files, no GCS calls.
+    // Available iff at least one (format, version) has a fresh cache (proof
+    // that GCS worked within TTL) AND no combo has an active failure marker.
+    private function downloadsAvailable(int $ttl): bool
+    {
+        $anyFreshCache = false;
+
         foreach (array_keys(self::MIME_TYPES) as $format) {
             foreach (['legacy', 'current'] as $version) {
-                if (!$this->isHealthyForServing($format, $version, $ttl, $gcsConfigured)) {
-                    $allHealthy = false;
-                    break 2;
+                $meta = $this->readMeta($format, $version);
+                if (!$meta) {
+                    continue;
+                }
+
+                if ($this->refreshBackoffActive($meta, $ttl)) {
+                    return false;
+                }
+
+                if (file_exists($this->cachePath($format, $version))
+                    && (time() - ($meta['checked_at'] ?? 0)) < $ttl
+                ) {
+                    $anyFreshCache = true;
                 }
             }
         }
 
-        return view('download.index', [
-            'page_meta' => $page_meta,
-            'downloads_available' => $allHealthy,
-        ]);
-    }
-
-    private function isHealthyForServing(string $format, string $folder, int $ttl, bool $gcsConfigured): bool
-    {
-        $meta = $this->readMeta($format, $folder);
-        $hasFile = file_exists($this->cachePath($format, $folder));
-
-        if (!$meta || !$hasFile) {
-            return $gcsConfigured && !$this->refreshBackoffActive($meta ?? [], $ttl);
-        }
-
-        $isFresh = (time() - ($meta['checked_at'] ?? 0)) < $ttl;
-        if ($isFresh) {
-            return true;
-        }
-
-        return $gcsConfigured && !$this->refreshBackoffActive($meta, $ttl);
+        return $anyFreshCache;
     }
 
     // ─── Public export endpoints ─────────────────────────────────────
