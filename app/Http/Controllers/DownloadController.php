@@ -43,11 +43,11 @@ class DownloadController extends Controller
 
         foreach (array_keys(self::MIME_TYPES) as $format) {
             foreach (['legacy', 'current'] as $version) {
-                if ($this->refreshBackoffActive($format, $version, $ttl)) {
+                $meta = $this->readMeta($format, $version);
+                if ($this->refreshBackoffActive($format, $version, $ttl, $meta)) {
                     return false;
                 }
 
-                $meta = $this->readMeta($format, $version);
                 if ($meta
                     && file_exists($this->cachePath($format, $version))
                     && (time() - ($meta['checked_at'] ?? 0)) < $ttl
@@ -236,7 +236,7 @@ class DownloadController extends Controller
 
         // A recent refresh attempt failed — fail closed to avoid hammering GCS
         // and to avoid silently serving stale data.
-        if ($this->refreshBackoffActive($format, $folder, $ttl)) {
+        if ($this->refreshBackoffActive($format, $folder, $ttl, $meta)) {
             Log::warning("Refusing to serve stale {$folder}/{$format} during GCS refresh backoff");
             return null;
         }
@@ -262,11 +262,14 @@ class DownloadController extends Controller
         $prefix = config('filesystems.disks.gcs.path_prefix', 'releases');
         $path = "{$prefix}/{$folder}/{$format}/gencc-submissions.{$format}";
         $object = $bucket->object($path);
+        // Store failure as attempt-start time so a slower failed request cannot
+        // supersede a newer successful checked_at written by another request.
+        $attemptStartedAt = time();
 
         try {
             if (!$object->exists()) {
                 Log::warning("GCS file not found: {$path}");
-                $this->markRefreshFailed($format, $folder);
+                $this->markRefreshFailed($format, $folder, $attemptStartedAt);
                 return null;
             }
 
@@ -320,7 +323,7 @@ class DownloadController extends Controller
                 @unlink($tempPath);
             }
 
-            $this->markRefreshFailed($format, $folder);
+            $this->markRefreshFailed($format, $folder, $attemptStartedAt);
 
             return null;
         }
@@ -448,7 +451,7 @@ class DownloadController extends Controller
         return storage_path("app/release-cache/{$folder}/{$format}/.refresh-failed");
     }
 
-    private function refreshBackoffActive(string $format, string $folder, int $ttl): bool
+    private function refreshBackoffActive(string $format, string $folder, int $ttl, ?array $meta = null): bool
     {
         $path = $this->failureMarkerPath($format, $folder);
         if (!file_exists($path)) {
@@ -457,6 +460,11 @@ class DownloadController extends Controller
 
         $failedAt = (int) trim((string) @file_get_contents($path));
         if ($failedAt <= 0) {
+            return false;
+        }
+
+        if ($meta && (int) ($meta['checked_at'] ?? 0) >= $failedAt) {
+            $this->clearRefreshFailure($format, $folder);
             return false;
         }
 

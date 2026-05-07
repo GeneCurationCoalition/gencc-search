@@ -842,6 +842,20 @@ class DownloadFeatureTest extends TestCase
         $response->assertDontSee('pointer-events-none');
     }
 
+    /** @test */
+    public function download_page_ignores_and_clears_failure_marker_older_than_fresh_cache()
+    {
+        config(['downloads.cache_ttl' => 3600]);
+        $this->seedCacheFixture('csv', 'legacy', time(), '"remote-v1"', time() - 60);
+
+        $response = $this->get('/download');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('pointer-events-none');
+        $this->assertNull($this->refreshFailedMarker('csv', 'legacy'));
+    }
+
     // ─── HEAD request tests ──────────────────────────────────────────
 
     /** @test */
