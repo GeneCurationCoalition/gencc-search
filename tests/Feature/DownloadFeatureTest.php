@@ -163,17 +163,17 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
-    public function download_page_disables_links_with_no_cache_even_if_gcs_configured()
+    public function download_page_shows_links_with_no_cache_when_gcs_configured()
     {
-        // Fail-closed: GCS being configured is not evidence GCS works. The
-        // page only shows available when local meta proves a recent success.
+        // The action routes warm the release cache on demand. The page only
+        // disables links when a recent refresh failure is known.
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
 
         $response = $this->get('/download');
 
         $response->assertStatus(200);
-        $response->assertSee('Downloads Temporarily Unavailable');
-        $response->assertSee('pointer-events-none');
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('pointer-events-none');
     }
 
     /** @test */
@@ -814,26 +814,24 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
-    public function download_page_disables_links_when_all_caches_stale_even_if_gcs_configured()
+    public function download_page_shows_links_when_all_caches_stale_if_gcs_configured()
     {
-        // No fresh cache anywhere = no recent evidence GCS worked.
+        // Stale cache entries are refreshed by the action routes.
         $this->seedStaleCacheFixture('csv', 'legacy');
         config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
 
         $response = $this->get('/download');
 
         $response->assertStatus(200);
-        $response->assertSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('Downloads Temporarily Unavailable');
+        $response->assertDontSee('pointer-events-none');
     }
 
     /** @test */
-    public function download_page_enables_links_when_at_least_one_combo_has_fresh_cache()
+    public function download_page_enables_links_when_at_least_one_combo_has_fresh_cache_without_gcs()
     {
-        // Cross-combo evidence: one fresh cache proves GCS worked within TTL,
-        // so we trust other combos will refresh fine on click.
         $this->seedCacheFixture('csv', 'legacy');
         $this->seedStaleCacheFixture('xlsx', 'current');
-        config(['filesystems.disks.gcs.bucket' => 'test-bucket']);
 
         $response = $this->get('/download');
 

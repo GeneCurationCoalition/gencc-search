@@ -34,12 +34,14 @@ class DownloadController extends Controller
         ]);
     }
 
-    // Page-level health: derived purely from local cache state, no GCS calls.
-    // Available iff at least one (format, version) has a fresh cache (proof
-    // that GCS worked within TTL) AND no combo has an active failure marker.
+    // Page-level health is not a cache freshness check. Direct download routes
+    // refresh stale files from GCS; the page only disables links when a recent
+    // refresh failure says downloads are unhealthy, or when neither GCS nor a
+    // fresh local cache is available.
     private function downloadsAvailable(int $ttl): bool
     {
         $anyFreshCache = false;
+        $gcsConfigured = !empty(config('filesystems.disks.gcs.bucket'));
 
         foreach (array_keys(self::MIME_TYPES) as $format) {
             foreach (['legacy', 'current'] as $version) {
@@ -57,7 +59,7 @@ class DownloadController extends Controller
             }
         }
 
-        return $anyFreshCache;
+        return $gcsConfigured || $anyFreshCache;
     }
 
     // ─── Public export endpoints ─────────────────────────────────────
