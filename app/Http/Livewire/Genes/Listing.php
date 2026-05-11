@@ -29,6 +29,22 @@ class Listing extends Component
     public $sort                            = '';
     public $page                            = 1;
     protected $submitters;
+    protected $filtersThatResetPage = [
+        'title',
+        'hasDisease',
+        'curations_definitive',
+        'curations_strong',
+        'curations_moderate',
+        'curations_limited',
+        'curations_disputed',
+        'curations_refuted',
+        'curations_animal',
+        'curations_noknown',
+        'curations_supportive',
+        'curations_from_submitters',
+        'count_submissions',
+        'count_unique_diseases',
+    ];
 
     protected $rules = [
         'curations_definitive' => 'numeric',
@@ -57,10 +73,20 @@ class Listing extends Component
         $this->count_unique_diseases        = request('count_unique_diseases');
     }
 
+    public function updating($name, $value)
+    {
+        $property = explode('.', $name)[0];
+
+        if (in_array($property, $this->filtersThatResetPage, true)) {
+            $this->resetPage();
+        }
+    }
+
     public function curationsFromSubmitters($value)
     {
         // This sets a flag to show a message on the front end that the curations counts in the pulls don't tally correctly yet
         $this->filtering_by_submitter = true;
+        $this->resetPage();
         $array = $this->curations_from_submitters;
         if (in_array($value[0], $array)) {
             $result = array_diff($array, $value);
