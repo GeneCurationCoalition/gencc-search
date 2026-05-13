@@ -24,6 +24,11 @@ class ListingOfSubmissions extends Component
     public $filter_enabled = false;
     public $filter_set = [];
     protected $records;
+    protected $filtersThatResetPage = [
+        'query_disease',
+        'query_gene',
+        'filter_set',
+    ];
 
     public function mount($submitter)
     {
@@ -46,8 +51,18 @@ class ListingOfSubmissions extends Component
         $this->count++;
     }
 
+    public function updating($name, $value)
+    {
+        $property = explode('.', $name)[0];
+
+        if (in_array($property, $this->filtersThatResetPage, true)) {
+            $this->resetPage();
+        }
+    }
+
     public function filterByClassifications($value)
     {
+        $this->resetPage();
         //dd($value);
         //dd($this->filter_set);
         //$array = [];
@@ -68,6 +83,7 @@ class ListingOfSubmissions extends Component
 
     public function filterByGenes($value)
     {
+        $this->resetPage();
         $array = [];
         if (isset($this->filter_set['genes'])) {
             $array = $this->filter_set['genes'];
@@ -83,6 +99,7 @@ class ListingOfSubmissions extends Component
 
     public function filterByDiseases($value)
     {
+        $this->resetPage();
         $array = [];
         if (isset($this->filter_set['diseases'])) {
             $array = $this->filter_set['diseases'];
@@ -98,6 +115,7 @@ class ListingOfSubmissions extends Component
 
     public function filterByInheritances($value)
     {
+        $this->resetPage();
 
         $array = [];
         if (isset($this->filter_set['inheritances'])) {
@@ -114,6 +132,7 @@ class ListingOfSubmissions extends Component
 
     public function filterBySubmitters($value)
     {
+        $this->resetPage();
 
         $array = [];
         if (isset($this->filter_set['submitters'])) {

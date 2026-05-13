@@ -136,6 +136,38 @@ class GenesListingTest extends TestCase
     }
 
     /** @test */
+    public function genes_listing_text_filters_reset_pagination_to_first_page()
+    {
+        $component = new Listing();
+
+        $component->setPage(6);
+        $this->assertSame(6, $component->page);
+
+        $component->updating('title', 'A');
+        $this->assertSame(1, $component->page);
+
+        $component->setPage(6);
+        $this->assertSame(6, $component->page);
+
+        $component->updating('hasDisease', 'deaf');
+        $this->assertSame(1, $component->page);
+    }
+
+    /** @test */
+    public function genes_listing_submitter_filter_resets_pagination_to_first_page()
+    {
+        $component = new Listing();
+        $component->curations_from_submitters = ['GENCC_SUBMITTER_1', 'GENCC_SUBMITTER_2'];
+
+        $component->setPage(6);
+        $this->assertSame(6, $component->page);
+
+        $component->curationsFromSubmitters(['GENCC_SUBMITTER_1']);
+
+        $this->assertSame(1, $component->page);
+    }
+
+    /** @test */
     public function genes_listing_initializes_submitters()
     {
         // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)

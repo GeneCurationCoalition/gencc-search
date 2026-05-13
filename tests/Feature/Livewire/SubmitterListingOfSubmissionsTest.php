@@ -101,10 +101,44 @@ class SubmitterListingOfSubmissionsTest extends TestCase
         ]);
 
         $component = Livewire::test(ListingOfSubmissions::class, ['submitter' => $submitter]);
-        $component->call('filterByClassifications', [$classification->id]);
+        $component
+            ->call('gotoPage', 6)
+            ->assertSet('page', 6)
+            ->call('filterByClassifications', [$classification->id])
+            ->assertSet('page', 1);
 
         $filterSet = $component->get('filter_set');
         $this->assertContains($classification->id, $filterSet['classifications']);
+    }
+
+    /** @test */
+    public function listing_of_submissions_query_gene_resets_pagination_to_first_page()
+    {
+        $gene = Gene::factory()->create([
+            'symbol' => 'RESETGENE',
+            'title' => 'RESETGENE',
+        ]);
+        $disease = Disease::factory()->create();
+        $classification = Classification::factory()->definitive()->create();
+        $submitter = Submitter::factory()->create();
+        $inheritance = Inheritance::factory()->autosomalDominant()->create();
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        Livewire::test(ListingOfSubmissions::class, ['submitter' => $submitter])
+            ->call('gotoPage', 6)
+            ->assertSet('page', 6)
+            ->set('query_gene', $gene->symbol)
+            ->assertSet('page', 1)
+            ->assertSee($gene->symbol);
     }
 
     /** @test */

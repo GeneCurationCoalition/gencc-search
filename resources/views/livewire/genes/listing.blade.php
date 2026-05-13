@@ -282,6 +282,6 @@
     </div>
 
     {{-- @if(empty($genes)) --}}
-        {{ $genes->links('vendor.pagination.default') }}
+        {{ $genes->links('vendor.livewire.gencc-pagination') }}
     {{-- @endif --}}
 </div>

@@ -183,7 +183,7 @@
               @foreach($records as $item)
                   @include('partials.genes.submission-row-common')
               @endforeach
-      {{ $records->links('vendor.pagination.default') }}
+      {{ $records->links('vendor.livewire.gencc-pagination') }}
     </div>
     @endif
 </div>
