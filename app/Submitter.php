@@ -54,6 +54,17 @@ class Submitter extends Model
             ->orderBy('report_date');
     }
 
+    public function livePublishedSubmissionCountsByClassification()
+    {
+        return $this->submissions()
+            ->withOnly([])
+            ->reorder()
+            ->select('classification_id')
+            ->selectRaw('count(*) as aggregate')
+            ->groupBy('classification_id')
+            ->pluck('aggregate', 'classification_id');
+    }
+
     /**
      * Get all users associated with this submitter.
      */

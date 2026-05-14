@@ -73,6 +73,78 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
+    public function member_show_uses_live_published_aggregate_counts_without_eager_loading_submissions()
+    {
+        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-counts']);
+        $otherSubmitter = Submitter::factory()->create();
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $inheritance = Inheritance::factory()->create();
+        $definitive = Classification::factory()->definitive()->create();
+        $strong = Classification::factory()->strong()->create();
+
+        Submission::factory()->count(2)->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'original_disease_id' => $disease->id,
+            'inheritance_id' => $inheritance->id,
+            'submitter_id' => $submitter->id,
+            'classification_id' => $definitive->id,
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'original_disease_id' => $disease->id,
+            'inheritance_id' => $inheritance->id,
+            'submitter_id' => $submitter->id,
+            'classification_id' => $strong->id,
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'original_disease_id' => $disease->id,
+            'inheritance_id' => $inheritance->id,
+            'submitter_id' => $otherSubmitter->id,
+            'classification_id' => $definitive->id,
+            'is_live' => true,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        Submission::factory()->notLive()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'original_disease_id' => $disease->id,
+            'inheritance_id' => $inheritance->id,
+            'submitter_id' => $submitter->id,
+            'classification_id' => $definitive->id,
+            'status' => Submission::STATUS_PUBLISHED,
+        ]);
+
+        Submission::factory()->unpublished()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'original_disease_id' => $disease->id,
+            'inheritance_id' => $inheritance->id,
+            'submitter_id' => $submitter->id,
+            'classification_id' => $strong->id,
+        ]);
+
+        $response = $this->get('/members/test-submitter-counts');
+
+        $response->assertStatus(200);
+        $this->assertFalse($response->viewData('submitter')->relationLoaded('submissions'));
+        $this->assertSame(3, $response->viewData('submitterSubmissionsCount'));
+        $this->assertSame(2, (int) $response->viewData('classificationCounts')->get($definitive->id));
+        $this->assertSame(1, (int) $response->viewData('classificationCounts')->get($strong->id));
+    }
+
+    /** @test */
     public function members_index_is_paginated()
     {
         // Create more than 25 submitters to test pagination

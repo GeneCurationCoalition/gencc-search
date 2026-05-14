@@ -41,7 +41,7 @@
       @endif
 
     </div>
-    @if($submitter->count_submissions != 0)
+    @if($submitterSubmissionsCount != 0)
     <div class="col-span-12 xl:col-span-1 bg-gray-200 p-3">
 
       <h4 class="mb-1">Classifications Visualized</h4>
@@ -50,6 +50,12 @@
 
     @foreach ($classifications as $item)
     @if($item->curie != "GENCC:000000")
+      @php
+        $classificationCount = (int) $classificationCounts->get($item->id, 0);
+        $classificationPercent = $submitterSubmissionsCount > 0
+            ? ($classificationCount / $submitterSubmissionsCount) * 100
+            : 0;
+      @endphp
       <div class="col-span-3 border-r-2 border-gray-300 py-1 px-2">
         <div class="rounded-full py-1 px-1 text-right  leading-tight">
           <a href="{{ route('genes') }}?{{ $item->href }}=1">
@@ -58,16 +64,16 @@
         </div>
       </div>
       <div class="col-span-9 py-1 px-2">
-        @if( $item->displayStatChartBarPercentSubmitter($submitter, $item->href) != 0)
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-1 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercentSubmitter($submitter, $item->href) }}%">
+        @if($classificationCount != 0)
+        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-1 text-white {{ $item->css_class }}" style="width:{{ $classificationPercent }}%">
           &nbsp;
         </a>
         <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{ $item->displayStatChartBarPercentSubmitter($submitter, $item->href, 'count') }}</span> Submissions
+            <span class="font-bold">{{ $classificationCount }}</span> Submissions
           </a>
         @else
         <a class="pt-1 inline-block" href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
-            <span class="font-bold">{{ $item->displayStatChartBarPercentSubmitter($submitter, $item->href, 'count') }} </span> Submissions
+            <span class="font-bold">{{ $classificationCount }} </span> Submissions
           </a>
         @endif
       </div>
@@ -99,7 +105,7 @@
 </div>
 <div class="grid grid-cols-12 mt-10 gap-0">
     <div class="col-span-12">
-        @if($submitter->count_submissions != 0)
+        @if($submitterSubmissionsCount != 0)
             @livewire('submitter.listing-of-submissions', ['submitter' => $submitter])
 
           @endif
