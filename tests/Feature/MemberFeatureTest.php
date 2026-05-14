@@ -76,7 +76,12 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
-        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-counts']);
+        $submitter = Submitter::factory()->create([
+            'ident' => 'test-submitter-counts',
+            'counts' => [
+                'total' => 2,
+            ],
+        ]);
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
         $inheritance = Inheritance::factory()->create();
@@ -93,9 +98,15 @@ class MemberFeatureTest extends TestCase
             'status' => Submission::STATUS_PUBLISHED,
         ]);
 
+        DB::flushQueryLog();
         DB::enableQueryLog();
-        $response = $this->get('/members/test-submitter-counts');
-        $queries = DB::getQueryLog();
+
+        try {
+            $response = $this->get('/members/test-submitter-counts');
+            $queries = DB::getQueryLog();
+        } finally {
+            DB::disableQueryLog();
+        }
 
         $response->assertStatus(200);
         $response->assertSee('Submission counts unavailable');
@@ -212,7 +223,12 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function members_index_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
-        $submitter = Submitter::factory()->create(['status' => 1, 'counts' => null]);
+        $submitter = Submitter::factory()->create([
+            'status' => 1,
+            'counts' => [
+                'total' => 2,
+            ],
+        ]);
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
         $inheritance = Inheritance::factory()->create();
@@ -229,9 +245,15 @@ class MemberFeatureTest extends TestCase
             'status' => Submission::STATUS_PUBLISHED,
         ]);
 
+        DB::flushQueryLog();
         DB::enableQueryLog();
-        $response = $this->get('/members');
-        $queries = DB::getQueryLog();
+
+        try {
+            $response = $this->get('/members');
+            $queries = DB::getQueryLog();
+        } finally {
+            DB::disableQueryLog();
+        }
 
         $response->assertStatus(200);
         $response->assertSee('Submission counts unavailable');

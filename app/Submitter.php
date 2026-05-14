@@ -18,39 +18,39 @@ class Submitter extends Model
     protected static $classificationCountFields = [
         1 => [
             'field' => 'curations_definitive',
-            'names' => ['Definitive'],
+            'type' => 'definitive',
         ],
         2 => [
             'field' => 'curations_strong',
-            'names' => ['Strong'],
+            'type' => 'strong',
         ],
         3 => [
             'field' => 'curations_moderate',
-            'names' => ['Moderate'],
+            'type' => 'moderate',
         ],
         4 => [
             'field' => 'curations_supportive',
-            'names' => ['Supportive'],
+            'type' => 'supportive',
         ],
         5 => [
             'field' => 'curations_limited',
-            'names' => ['Limited'],
+            'type' => 'limited',
         ],
         6 => [
             'field' => 'curations_disputed',
-            'names' => ['Disputed Evidence', 'Disputed'],
+            'type' => 'disputed',
         ],
         7 => [
             'field' => 'curations_refuted',
-            'names' => ['Refuted Evidence', 'Refuted'],
+            'type' => 'refuted',
         ],
         8 => [
             'field' => 'curations_animal',
-            'names' => ['Animal Model Only', 'Animal Model'],
+            'type' => 'animal',
         ],
         9 => [
             'field' => 'curations_noknown',
-            'names' => ['No Known Disease Relationship', 'No Known'],
+            'type' => 'noknown',
         ],
     ];
 
@@ -122,6 +122,8 @@ class Submitter extends Model
     {
         $counts = $this->counts;
 
+        // This accepts only the precomputed release summary shape:
+        // ['total' => int, 'by_classification' => [...]].
         if (!is_array($counts)) {
             return null;
         }
@@ -150,8 +152,12 @@ class Submitter extends Model
         foreach (static::$classificationCountFields as $classificationId => $metadata) {
             $count = 0;
 
-            foreach ($metadata['names'] as $name) {
+            foreach (static::curationClassificationNamesFor($metadata['type']) as $name) {
                 if (isset($byClassification[$name]['count'])) {
+                    if (!is_numeric($byClassification[$name]['count'])) {
+                        return null;
+                    }
+
                     $count = (int) $byClassification[$name]['count'];
                     break;
                 }

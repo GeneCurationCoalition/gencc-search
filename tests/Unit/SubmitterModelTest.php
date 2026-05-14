@@ -218,7 +218,12 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_release_count_summary_returns_null_for_missing_or_malformed_counts()
     {
-        $missingCounts = Submitter::factory()->create(['counts' => null]);
+        $nonNumericTotal = Submitter::factory()->create([
+            'counts' => [
+                'total' => 'many',
+                'by_classification' => [],
+            ],
+        ]);
         $missingTotal = Submitter::factory()->create([
             'counts' => [
                 'by_classification' => [],
@@ -235,10 +240,29 @@ class SubmitterModelTest extends TestCase
                 'by_classification' => [],
             ],
         ]);
+        $nonArrayClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => 'Definitive',
+            ],
+        ]);
+        $nonNumericClassificationCount = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [
+                    'Definitive' => [
+                        'count' => 'several',
+                        'abbreviation' => 'DEF',
+                    ],
+                ],
+            ],
+        ]);
 
-        $this->assertNull($missingCounts->releaseSubmissionCountSummary());
+        $this->assertNull($nonNumericTotal->releaseSubmissionCountSummary());
         $this->assertNull($missingTotal->releaseSubmissionCountSummary());
         $this->assertNull($missingClassifications->releaseSubmissionCountSummary());
         $this->assertNull($positiveTotalWithoutClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($nonArrayClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($nonNumericClassificationCount->releaseSubmissionCountSummary());
     }
 }

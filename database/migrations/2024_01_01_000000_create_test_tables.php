@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -199,7 +200,7 @@ return new class extends Migration
             $table->integer('curations_noknown')->default(0);
             $table->integer('curations_supportive')->default(0);
             $table->integer('curations_nul')->default(0);
-            $table->json('counts')->nullable();
+            $table->json('counts')->default(new Expression('(json_array())'));
             $table->timestamps();
             $table->softDeletes();
         });

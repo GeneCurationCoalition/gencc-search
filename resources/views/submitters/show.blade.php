@@ -41,7 +41,19 @@
       @endif
 
     </div>
-    @if($countSummary === null)
+    @if(!$submitter->allow_submissions)
+            {{-- No submissions and allow_submissions=false --}}
+    <div class="col-span-12 xl:col-span-1">
+      <div class="flex flex-col items-center justify-center">
+        @if($submitter->has_logo)
+        <img class="h-32 max-w-md object-contain mb-4" src="{{ $submitter->logo }}" alt="{{ $submitter->title }}">
+        @endif
+        <p class="text-sm leading-5 text-center font-medium text-gray-500">
+            Member
+        </p>
+      </div>
+    </div>
+    @elseif($countSummary === null)
     <div class="col-span-12 xl:col-span-1">
       <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
           Submission counts unavailable
@@ -87,23 +99,11 @@
     @endforeach
     </div>
     </div>
-    @elseif($submitter->allow_submissions)
+    @else
             {{-- No submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 No submissions
             </p>
-    @else
-            {{-- No submissions and allow_submissions=false --}}
-    <div class="col-span-12 xl:col-span-1">
-      <div class="flex flex-col items-center justify-center">
-        @if($submitter->has_logo)
-        <img class="h-32 max-w-md object-contain mb-4" src="{{ $submitter->logo }}" alt="{{ $submitter->title }}">
-        @endif
-        <p class="text-sm leading-5 text-center font-medium text-gray-500">
-            Member
-        </p>
-      </div>
-    </div>
     @endif
 
 

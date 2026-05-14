@@ -31,7 +31,12 @@
             </a>
           </div>
         </div>
-        @if(!$hasCountSummary)
+        @if(!$submitter->allow_submissions)
+            {{-- No submissions and allow_submissions=false --}}
+            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+                Member
+            </p>
+        @elseif(!$hasCountSummary)
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 Submission counts unavailable
             </p>
@@ -73,15 +78,10 @@
                 </div>
           </div>
         </div>
-        @elseif($submitter->allow_submissions)
+        @else
             {{-- No submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
                 No submissions
-            </p>
-        @else
-            {{-- No submissions and allow_submissions=false --}}
-            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
-                Member
             </p>
         @endif
       </div>
