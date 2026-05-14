@@ -202,7 +202,7 @@ class SubmitterModelTest extends TestCase
     }
 
     /** @test */
-    public function submitter_release_count_summary_treats_empty_release_counts_as_no_submissions()
+    public function submitter_release_count_summary_treats_empty_release_counts_as_zero_submissions()
     {
         $submitter = Submitter::factory()->create([
             'counts' => [],

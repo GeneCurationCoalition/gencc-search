@@ -154,7 +154,7 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
-    public function member_show_with_zero_release_counts_shows_no_submissions()
+    public function member_show_with_zero_release_counts_shows_submission_data_coming_soon()
     {
         $submitter = Submitter::factory()->create([
             'ident' => 'test-submitter-zero-counts',
@@ -167,7 +167,23 @@ class MemberFeatureTest extends TestCase
         $response = $this->get('/members/test-submitter-zero-counts');
 
         $response->assertStatus(200);
-        $response->assertSee('No submissions');
+        $response->assertSee('Submission Data Coming Soon');
+        $this->assertSame(0, $response->viewData('submitterSubmissionsCount'));
+        $this->assertNotNull($response->viewData('countSummary'));
+    }
+
+    /** @test */
+    public function member_show_with_empty_release_counts_shows_submission_data_coming_soon()
+    {
+        $submitter = Submitter::factory()->create([
+            'ident' => 'test-submitter-empty-counts',
+            'counts' => [],
+        ]);
+
+        $response = $this->get('/members/test-submitter-empty-counts');
+
+        $response->assertStatus(200);
+        $response->assertSee('Submission Data Coming Soon');
         $this->assertSame(0, $response->viewData('submitterSubmissionsCount'));
         $this->assertNotNull($response->viewData('countSummary'));
     }
@@ -202,7 +218,7 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
-    public function members_index_with_zero_release_counts_shows_no_submissions()
+    public function members_index_with_zero_release_counts_shows_submission_data_coming_soon()
     {
         $submitter = Submitter::factory()->create([
             'status' => 1,
@@ -215,7 +231,23 @@ class MemberFeatureTest extends TestCase
         $response = $this->get('/members');
 
         $response->assertStatus(200);
-        $response->assertSee('No submissions');
+        $response->assertSee('Submission Data Coming Soon');
+        $summary = $response->viewData('submitterCountSummaries')->get($submitter->id);
+        $this->assertSame(0, $summary['total']);
+    }
+
+    /** @test */
+    public function members_index_with_empty_release_counts_shows_submission_data_coming_soon()
+    {
+        $submitter = Submitter::factory()->create([
+            'status' => 1,
+            'counts' => [],
+        ]);
+
+        $response = $this->get('/members');
+
+        $response->assertStatus(200);
+        $response->assertSee('Submission Data Coming Soon');
         $summary = $response->viewData('submitterCountSummaries')->get($submitter->id);
         $this->assertSame(0, $summary['total']);
     }

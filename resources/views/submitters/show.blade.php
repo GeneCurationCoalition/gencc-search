@@ -100,9 +100,9 @@
     </div>
     </div>
     @else
-            {{-- No submissions, but allow_submissions=true --}}
+            {{-- No live submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
-                No submissions
+                Submission Data Coming Soon
             </p>
     @endif
 
