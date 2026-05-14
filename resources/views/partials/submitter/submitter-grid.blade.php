@@ -1,9 +1,10 @@
 <div class="mt-2 grid gap-5 max-w-lg mx-auto lg:grid-cols-2 xl:grid-cols-3 lg:max-w-none">
     @forelse ($submitters as $submitter)
       @php
-        $countSummary = $submitterCountSummaries->get($submitter->id, \App\Submitter::emptySubmissionCountSummary());
-        $displayCounts = $countSummary['displayCounts'];
-        $submitterSubmissionsCount = $countSummary['total'];
+        $countSummary = $submitterCountSummaries->get($submitter->id);
+        $hasCountSummary = $countSummary !== null;
+        $displayCounts = $countSummary['displayCounts'] ?? [];
+        $submitterSubmissionsCount = $countSummary['total'] ?? null;
       @endphp
       <div class="flex flex-col rounded-lg shadow-lg border border-gray-400 overflow-hidden">
         <div class="flex-shrink-0">
@@ -21,7 +22,7 @@
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium praesentium eius, ut atque fuga culpa, similique sequi cum eos quis dolorum.
               </p> --}}
               <a href="{{ route('member-show', $submitter->uuid) }}" class=" text-blue-700 text-xs hover:underline">
-                @if($submitterSubmissionsCount != 0)
+                @if($hasCountSummary && $submitterSubmissionsCount > 0)
                   View data submissions and learn more
                 @else
                   Learn more
@@ -30,7 +31,11 @@
             </a>
           </div>
         </div>
-        @if($submitterSubmissionsCount != 0)
+        @if(!$hasCountSummary)
+            <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+                Submission counts unavailable
+            </p>
+        @elseif($submitterSubmissionsCount > 0)
         {{-- Submitters with live submissions always show stats --}}
         <div class="flex-1 bg-white pb-3 px-6 flex flex-col justify-between  border-t">
 
@@ -71,7 +76,7 @@
         @elseif($submitter->allow_submissions)
             {{-- No submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
-                Submission Data Coming Soon
+                No submissions
             </p>
         @else
             {{-- No submissions and allow_submissions=false --}}

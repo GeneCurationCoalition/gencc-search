@@ -74,15 +74,13 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
-    public function member_show_uses_live_published_aggregate_counts_without_eager_loading_submissions()
+    public function member_show_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
         $submitter = Submitter::factory()->create(['ident' => 'test-submitter-counts']);
-        $otherSubmitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
         $inheritance = Inheritance::factory()->create();
         $definitive = Classification::factory()->definitive()->create();
-        $strong = Classification::factory()->strong()->create();
 
         Submission::factory()->count(2)->create([
             'gene_id' => $gene->id,
@@ -95,54 +93,22 @@ class MemberFeatureTest extends TestCase
             'status' => Submission::STATUS_PUBLISHED,
         ]);
 
-        Submission::factory()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $submitter->id,
-            'classification_id' => $strong->id,
-            'is_live' => true,
-            'status' => Submission::STATUS_PUBLISHED,
-        ]);
-
-        Submission::factory()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $otherSubmitter->id,
-            'classification_id' => $definitive->id,
-            'is_live' => true,
-            'status' => Submission::STATUS_PUBLISHED,
-        ]);
-
-        Submission::factory()->notLive()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $submitter->id,
-            'classification_id' => $definitive->id,
-            'status' => Submission::STATUS_PUBLISHED,
-        ]);
-
-        Submission::factory()->unpublished()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $submitter->id,
-            'classification_id' => $strong->id,
-        ]);
-
+        DB::enableQueryLog();
         $response = $this->get('/members/test-submitter-counts');
+        $queries = DB::getQueryLog();
 
         $response->assertStatus(200);
+        $response->assertSee('Submission counts unavailable');
         $this->assertFalse($response->viewData('submitter')->relationLoaded('submissions'));
-        $this->assertSame(3, $response->viewData('submitterSubmissionsCount'));
-        $this->assertSame(2, (int) $response->viewData('classificationCounts')->get($definitive->id));
-        $this->assertSame(1, (int) $response->viewData('classificationCounts')->get($strong->id));
+        $this->assertNull($response->viewData('countSummary'));
+        $this->assertNull($response->viewData('submitterSubmissionsCount'));
+
+        $aggregateQueries = collect($queries)->filter(function ($query) {
+            return strpos($query['query'], 'classification_id') !== false
+                && strpos(strtolower($query['query']), 'group by') !== false;
+        });
+
+        $this->assertCount(0, $aggregateQueries);
     }
 
     /** @test */
@@ -177,6 +143,25 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
+    public function member_show_with_zero_release_counts_shows_no_submissions()
+    {
+        $submitter = Submitter::factory()->create([
+            'ident' => 'test-submitter-zero-counts',
+            'counts' => [
+                'total' => 0,
+                'by_classification' => [],
+            ],
+        ]);
+
+        $response = $this->get('/members/test-submitter-zero-counts');
+
+        $response->assertStatus(200);
+        $response->assertSee('No submissions');
+        $this->assertSame(0, $response->viewData('submitterSubmissionsCount'));
+        $this->assertNotNull($response->viewData('countSummary'));
+    }
+
+    /** @test */
     public function members_index_uses_precomputed_release_json_counts_when_available()
     {
         $submitter = Submitter::factory()->create([
@@ -200,22 +185,38 @@ class MemberFeatureTest extends TestCase
 
         $response->assertStatus(200);
         $summary = $response->viewData('submitterCountSummaries')->get($submitter->id);
-        $this->assertSame('precomputed', $summary['source']);
         $this->assertSame(12, $summary['total']);
         $this->assertSame(8, $summary['displayCounts']['curations_definitive']);
         $this->assertSame(4, $summary['displayCounts']['curations_strong']);
     }
 
     /** @test */
-    public function members_index_falls_back_to_one_live_published_aggregate_for_submitters_without_json_counts()
+    public function members_index_with_zero_release_counts_shows_no_submissions()
+    {
+        $submitter = Submitter::factory()->create([
+            'status' => 1,
+            'counts' => [
+                'total' => 0,
+                'by_classification' => [],
+            ],
+        ]);
+
+        $response = $this->get('/members');
+
+        $response->assertStatus(200);
+        $response->assertSee('No submissions');
+        $summary = $response->viewData('submitterCountSummaries')->get($submitter->id);
+        $this->assertSame(0, $summary['total']);
+    }
+
+    /** @test */
+    public function members_index_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
         $submitter = Submitter::factory()->create(['status' => 1, 'counts' => null]);
-        $otherSubmitter = Submitter::factory()->create(['status' => 1, 'counts' => null]);
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
         $inheritance = Inheritance::factory()->create();
         $definitive = Classification::factory()->definitive()->create();
-        $strong = Classification::factory()->strong()->create();
 
         Submission::factory()->count(2)->create([
             'gene_id' => $gene->id,
@@ -228,49 +229,13 @@ class MemberFeatureTest extends TestCase
             'status' => Submission::STATUS_PUBLISHED,
         ]);
 
-        Submission::factory()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $otherSubmitter->id,
-            'classification_id' => $strong->id,
-            'is_live' => true,
-            'status' => Submission::STATUS_PUBLISHED,
-        ]);
-
-        Submission::factory()->notLive()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $submitter->id,
-            'classification_id' => $strong->id,
-            'status' => Submission::STATUS_PUBLISHED,
-        ]);
-
-        Submission::factory()->unpublished()->create([
-            'gene_id' => $gene->id,
-            'disease_id' => $disease->id,
-            'original_disease_id' => $disease->id,
-            'inheritance_id' => $inheritance->id,
-            'submitter_id' => $submitter->id,
-            'classification_id' => $strong->id,
-        ]);
-
         DB::enableQueryLog();
         $response = $this->get('/members');
         $queries = DB::getQueryLog();
 
         $response->assertStatus(200);
-        $summaries = $response->viewData('submitterCountSummaries');
-        $submitterSummary = $summaries->get($submitter->id);
-        $otherSubmitterSummary = $summaries->get($otherSubmitter->id);
-        $this->assertSame('aggregate', $submitterSummary['source']);
-        $this->assertSame(2, $submitterSummary['total']);
-        $this->assertSame(2, $submitterSummary['displayCounts']['curations_definitive']);
-        $this->assertSame(1, $otherSubmitterSummary['total']);
-        $this->assertSame(1, $otherSubmitterSummary['displayCounts']['curations_strong']);
+        $response->assertSee('Submission counts unavailable');
+        $this->assertNull($response->viewData('submitterCountSummaries')->get($submitter->id));
 
         $aggregateQueries = collect($queries)->filter(function ($query) {
             return strpos($query['query'], 'classification_id') !== false
@@ -278,7 +243,7 @@ class MemberFeatureTest extends TestCase
                 && strpos(strtolower($query['query']), 'group by') !== false;
         });
 
-        $this->assertCount(1, $aggregateQueries);
+        $this->assertCount(0, $aggregateQueries);
     }
 
     /** @test */

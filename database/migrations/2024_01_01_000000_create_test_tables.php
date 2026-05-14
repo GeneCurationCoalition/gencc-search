@@ -182,6 +182,7 @@ return new class extends Migration
             $table->text('text_disclaimer')->nullable();
             $table->string('path_logo')->nullable();
             $table->integer('status')->default(1);
+            $table->boolean('allow_submissions')->default(true);
             $table->boolean('downloadable')->default(true);
             $table->boolean('member')->default(true);
             // Individual count columns (not JSON)

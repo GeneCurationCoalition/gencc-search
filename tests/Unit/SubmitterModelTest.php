@@ -174,7 +174,7 @@ class SubmitterModelTest extends TestCase
     }
 
     /** @test */
-    public function submitter_count_accessors_read_release_json_counts()
+    public function submitter_release_count_summary_reads_release_json_counts()
     {
         $submitter = Submitter::factory()->create([
             'counts' => [
@@ -192,24 +192,53 @@ class SubmitterModelTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(12, $submitter->count_submissions);
-        $this->assertSame(8, $submitter->curations_definitive);
-        $this->assertSame(4, $submitter->curations_strong);
+        $summary = $submitter->releaseSubmissionCountSummary();
+
+        $this->assertSame(12, $summary['total']);
+        $this->assertSame(8, (int) $summary['classificationCounts']->get(1));
+        $this->assertSame(4, (int) $summary['classificationCounts']->get(2));
+        $this->assertSame(8, $summary['displayCounts']['curations_definitive']);
+        $this->assertSame(4, $summary['displayCounts']['curations_strong']);
     }
 
     /** @test */
-    public function submitter_count_accessors_read_legacy_flat_json_counts()
+    public function submitter_release_count_summary_treats_empty_release_counts_as_no_submissions()
     {
         $submitter = Submitter::factory()->create([
+            'counts' => [],
+        ]);
+
+        $summary = $submitter->releaseSubmissionCountSummary();
+
+        $this->assertSame(0, $summary['total']);
+        $this->assertSame(0, (int) $summary['classificationCounts']->get(1));
+        $this->assertSame(0, $summary['displayCounts']['curations_definitive']);
+    }
+
+    /** @test */
+    public function submitter_release_count_summary_returns_null_for_missing_or_malformed_counts()
+    {
+        $missingCounts = Submitter::factory()->create(['counts' => null]);
+        $missingTotal = Submitter::factory()->create([
             'counts' => [
-                'count_submissions' => 9,
-                'curations_definitive' => 6,
-                'curations_strong' => 3,
+                'by_classification' => [],
+            ],
+        ]);
+        $missingClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+            ],
+        ]);
+        $positiveTotalWithoutClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [],
             ],
         ]);
 
-        $this->assertSame(9, $submitter->count_submissions);
-        $this->assertSame(6, $submitter->curations_definitive);
-        $this->assertSame(3, $submitter->curations_strong);
+        $this->assertNull($missingCounts->releaseSubmissionCountSummary());
+        $this->assertNull($missingTotal->releaseSubmissionCountSummary());
+        $this->assertNull($missingClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($positiveTotalWithoutClassifications->releaseSubmissionCountSummary());
     }
 }

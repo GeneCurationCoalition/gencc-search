@@ -93,61 +93,17 @@ class Submitter extends Model
             ->orderBy('report_date');
     }
 
-    public function livePublishedSubmissionCountsByClassification()
-    {
-        return $this->submissions()
-            ->withOnly([])
-            ->reorder()
-            ->select('classification_id')
-            ->selectRaw('count(*) as aggregate')
-            ->groupBy('classification_id')
-            ->pluck('aggregate', 'classification_id');
-    }
-
     public function submissionCountSummary()
     {
-        return $this->precomputedSubmissionCountSummary()
-            ?? static::submissionCountSummaryFromClassificationCounts($this->livePublishedSubmissionCountsByClassification());
+        return $this->releaseSubmissionCountSummary();
     }
 
     public static function submissionCountSummariesFor($submitters)
     {
         $summaries = collect();
-        $missingIds = [];
 
         foreach ($submitters as $submitter) {
-            $summary = $submitter->precomputedSubmissionCountSummary();
-
-            if ($summary) {
-                $summaries->put($submitter->id, $summary);
-                continue;
-            }
-
-            $missingIds[] = $submitter->id;
-            $summaries->put($submitter->id, static::emptySubmissionCountSummary());
-        }
-
-        if (empty($missingIds)) {
-            return $summaries;
-        }
-
-        $rows = Submission::query()
-            ->withOnly([])
-            ->reorder()
-            ->select('submitter_id', 'classification_id')
-            ->selectRaw('count(*) as aggregate')
-            ->whereIn('submitter_id', $missingIds)
-            ->where('is_live', '=', true)
-            ->where('status', '=', Submission::STATUS_PUBLISHED)
-            ->groupBy('submitter_id', 'classification_id')
-            ->get()
-            ->groupBy('submitter_id');
-
-        foreach ($missingIds as $submitterId) {
-            $classificationCounts = ($rows->get($submitterId) ?? collect())
-                ->pluck('aggregate', 'classification_id');
-
-            $summaries->put($submitterId, static::submissionCountSummaryFromClassificationCounts($classificationCounts));
+            $summaries->put($submitter->id, $submitter->releaseSubmissionCountSummary());
         }
 
         return $summaries;
@@ -155,33 +111,41 @@ class Submitter extends Model
 
     public static function emptySubmissionCountSummary()
     {
-        return static::submissionCountSummaryFromClassificationCounts(collect());
+        return [
+            'total' => 0,
+            'classificationCounts' => static::emptyClassificationCounts(),
+            'displayCounts' => static::emptyDisplayCounts(),
+        ];
     }
 
-    protected function precomputedSubmissionCountSummary()
+    public function releaseSubmissionCountSummary()
     {
         $counts = $this->counts;
 
-        if (!is_array($counts) || empty($counts)) {
+        if (!is_array($counts)) {
             return null;
         }
 
-        if (array_key_exists('total', $counts) || !empty($counts['by_classification'])) {
-            return static::submissionCountSummaryFromReleaseCounts($counts);
+        if (empty($counts)) {
+            return static::emptySubmissionCountSummary();
         }
 
-        if (array_key_exists('count_submissions', $counts) || static::hasFlatClassificationCounts($counts)) {
-            return static::submissionCountSummaryFromFlatCounts($counts);
+        if (!array_key_exists('total', $counts) || !is_numeric($counts['total'])) {
+            return null;
         }
 
-        return null;
-    }
+        if (!array_key_exists('by_classification', $counts) || !is_array($counts['by_classification'])) {
+            return null;
+        }
 
-    protected static function submissionCountSummaryFromReleaseCounts(array $counts)
-    {
         $classificationCounts = collect();
         $displayCounts = static::emptyDisplayCounts();
-        $byClassification = $counts['by_classification'] ?? [];
+        $byClassification = $counts['by_classification'];
+        $total = (int) $counts['total'];
+
+        if ($total > 0 && empty($byClassification)) {
+            return null;
+        }
 
         foreach (static::$classificationCountFields as $classificationId => $metadata) {
             $count = 0;
@@ -198,52 +162,9 @@ class Submitter extends Model
         }
 
         return [
-            'total' => (int) ($counts['total'] ?? $classificationCounts->sum()),
+            'total' => $total,
             'classificationCounts' => $classificationCounts,
             'displayCounts' => $displayCounts,
-            'source' => 'precomputed',
-        ];
-    }
-
-    protected static function submissionCountSummaryFromFlatCounts(array $counts)
-    {
-        $classificationCounts = collect();
-        $displayCounts = static::emptyDisplayCounts();
-
-        foreach (static::$classificationCountFields as $classificationId => $metadata) {
-            $count = (int) ($counts[$metadata['field']] ?? 0);
-            $classificationCounts->put($classificationId, $count);
-            $displayCounts[$metadata['field']] = $count;
-        }
-
-        return [
-            'total' => (int) ($counts['count_submissions'] ?? $classificationCounts->sum()),
-            'classificationCounts' => $classificationCounts,
-            'displayCounts' => $displayCounts,
-            'source' => 'precomputed',
-        ];
-    }
-
-    protected static function submissionCountSummaryFromClassificationCounts($classificationCounts)
-    {
-        $classificationCounts = collect($classificationCounts)
-            ->mapWithKeys(function ($count, $classificationId) {
-                return [(int) $classificationId => (int) $count];
-            });
-
-        $displayCounts = static::emptyDisplayCounts();
-
-        foreach (static::$classificationCountFields as $classificationId => $metadata) {
-            $count = (int) $classificationCounts->get($classificationId, 0);
-            $classificationCounts->put($classificationId, $count);
-            $displayCounts[$metadata['field']] = $count;
-        }
-
-        return [
-            'total' => $classificationCounts->sum(),
-            'classificationCounts' => $classificationCounts,
-            'displayCounts' => $displayCounts,
-            'source' => 'aggregate',
         ];
     }
 
@@ -257,15 +178,12 @@ class Submitter extends Model
             ->all();
     }
 
-    protected static function hasFlatClassificationCounts(array $counts)
+    protected static function emptyClassificationCounts()
     {
-        foreach (static::$classificationCountFields as $metadata) {
-            if (array_key_exists($metadata['field'], $counts)) {
-                return true;
-            }
-        }
-
-        return false;
+        return collect(static::$classificationCountFields)
+            ->mapWithKeys(function ($metadata, $classificationId) {
+                return [$classificationId => 0];
+            });
     }
 
     /**
@@ -481,6 +399,7 @@ class Submitter extends Model
         'text_contact',
         'text_disclaimer',
         'status',
+        'allow_submissions',
         'downloadable',
         'member',
         'counts',

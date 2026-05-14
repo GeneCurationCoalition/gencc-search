@@ -38,12 +38,13 @@ class SubmitterController extends Controller
         $classifications = Classification::all();
         $submitter = Submitter::ident($id)->firstOrFail();
         $countSummary = $submitter->submissionCountSummary();
-        $classificationCounts = $countSummary['classificationCounts'];
-        $submitterSubmissionsCount = $countSummary['total'];
+        $classificationCounts = $countSummary['classificationCounts'] ?? collect();
+        $submitterSubmissionsCount = $countSummary['total'] ?? null;
         $page_meta['seo']['title'] = $submitter->title . " submitter information and submissions";
         return view('submitters.show', [
             'classifications' => $classifications,
             'submitter' => $submitter,
+            'countSummary' => $countSummary,
             'classificationCounts' => $classificationCounts,
             'submitterSubmissionsCount' => $submitterSubmissionsCount,
             'page' => 'submitter',

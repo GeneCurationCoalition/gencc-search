@@ -41,7 +41,13 @@
       @endif
 
     </div>
-    @if($submitterSubmissionsCount != 0)
+    @if($countSummary === null)
+    <div class="col-span-12 xl:col-span-1">
+      <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
+          Submission counts unavailable
+      </p>
+    </div>
+    @elseif($submitterSubmissionsCount > 0)
     <div class="col-span-12 xl:col-span-1 bg-gray-200 p-3">
 
       <h4 class="mb-1">Classifications Visualized</h4>
@@ -84,7 +90,7 @@
     @elseif($submitter->allow_submissions)
             {{-- No submissions, but allow_submissions=true --}}
             <p class="mb-8 text-sm leading-5 text-center font-medium text-gray-500">
-                Submission Data Coming Soon
+                No submissions
             </p>
     @else
             {{-- No submissions and allow_submissions=false --}}
@@ -105,7 +111,7 @@
 </div>
 <div class="grid grid-cols-12 mt-10 gap-0">
     <div class="col-span-12">
-        @if($submitterSubmissionsCount != 0)
+        @if($countSummary !== null && $submitterSubmissionsCount > 0)
             @livewire('submitter.listing-of-submissions', ['submitter' => $submitter])
 
           @endif
