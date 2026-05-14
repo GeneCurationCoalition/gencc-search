@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -182,6 +183,7 @@ return new class extends Migration
             $table->text('text_disclaimer')->nullable();
             $table->string('path_logo')->nullable();
             $table->integer('status')->default(1);
+            $table->boolean('allow_submissions')->default(true);
             $table->boolean('downloadable')->default(true);
             $table->boolean('member')->default(true);
             // Individual count columns (not JSON)
@@ -198,6 +200,7 @@ return new class extends Migration
             $table->integer('curations_noknown')->default(0);
             $table->integer('curations_supportive')->default(0);
             $table->integer('curations_nul')->default(0);
+            $table->json('counts')->default(new Expression('(json_array())'));
             $table->timestamps();
             $table->softDeletes();
         });

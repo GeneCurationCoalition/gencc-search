@@ -26,6 +26,7 @@ class SubmitterFactory extends Factory
             'text_assertions' => $this->faker->sentence(),
             'text_contact' => $this->faker->email,
             'status' => 1,
+            'allow_submissions' => true,
             'downloadable' => true,
             'member' => true,
             // Individual count columns

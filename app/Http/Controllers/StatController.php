@@ -26,8 +26,18 @@ class StatController extends Controller
         $classifications = Classification::withCount('submissions')->get();
         // Show all active submitters - the view will handle displaying stats vs "Member" vs "Coming Soon"
         $submitters = Submitter::where('status', 1)->paginate(25);
+        $submitterCountSummaries = Submitter::submissionCountSummariesFor($submitters->getCollection());
         $page_meta['seo']['title'] = "GenCC Submission Statistics";
 
-        return view('statistics.index', ['genesCount' => $genesCount, 'diseasesCount' => $diseasesCount, 'submissionsCount' => $submissionsCount, 'classifications' => $classifications, 'page_meta' => $page_meta, 'submitters_with_submissions' => $submitters_with_submissions, 'submitters' => $submitters]);
+        return view('statistics.index', [
+            'genesCount' => $genesCount,
+            'diseasesCount' => $diseasesCount,
+            'submissionsCount' => $submissionsCount,
+            'classifications' => $classifications,
+            'page_meta' => $page_meta,
+            'submitters_with_submissions' => $submitters_with_submissions,
+            'submitters' => $submitters,
+            'submitterCountSummaries' => $submitterCountSummaries,
+        ]);
     }
 }

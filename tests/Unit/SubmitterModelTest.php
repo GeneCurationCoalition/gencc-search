@@ -172,4 +172,97 @@ class SubmitterModelTest extends TestCase
         $this->assertTrue($downloadable->downloadable);
         $this->assertFalse($notDownloadable->downloadable);
     }
+
+    /** @test */
+    public function submitter_release_count_summary_reads_release_json_counts()
+    {
+        $submitter = Submitter::factory()->create([
+            'counts' => [
+                'total' => 12,
+                'by_classification' => [
+                    'Definitive' => [
+                        'count' => 8,
+                        'abbreviation' => 'DEF',
+                    ],
+                    'Strong' => [
+                        'count' => 4,
+                        'abbreviation' => 'STR',
+                    ],
+                ],
+            ],
+        ]);
+
+        $summary = $submitter->releaseSubmissionCountSummary();
+
+        $this->assertSame(12, $summary['total']);
+        $this->assertSame(8, (int) $summary['classificationCounts']->get(1));
+        $this->assertSame(4, (int) $summary['classificationCounts']->get(2));
+        $this->assertSame(8, $summary['displayCounts']['definitive']);
+        $this->assertSame(4, $summary['displayCounts']['strong']);
+    }
+
+    /** @test */
+    public function submitter_release_count_summary_treats_empty_release_counts_as_zero_submissions()
+    {
+        $submitter = Submitter::factory()->create([
+            'counts' => [],
+        ]);
+
+        $summary = $submitter->releaseSubmissionCountSummary();
+
+        $this->assertSame(0, $summary['total']);
+        $this->assertSame(0, (int) $summary['classificationCounts']->get(1));
+        $this->assertSame(0, $summary['displayCounts']['definitive']);
+    }
+
+    /** @test */
+    public function submitter_release_count_summary_returns_null_for_missing_or_malformed_counts()
+    {
+        $nonNumericTotal = Submitter::factory()->create([
+            'counts' => [
+                'total' => 'many',
+                'by_classification' => [],
+            ],
+        ]);
+        $missingTotal = Submitter::factory()->create([
+            'counts' => [
+                'by_classification' => [],
+            ],
+        ]);
+        $missingClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+            ],
+        ]);
+        $positiveTotalWithoutClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [],
+            ],
+        ]);
+        $nonArrayClassifications = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => 'Definitive',
+            ],
+        ]);
+        $nonNumericClassificationCount = Submitter::factory()->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [
+                    'Definitive' => [
+                        'count' => 'several',
+                        'abbreviation' => 'DEF',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertNull($nonNumericTotal->releaseSubmissionCountSummary());
+        $this->assertNull($missingTotal->releaseSubmissionCountSummary());
+        $this->assertNull($missingClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($positiveTotalWithoutClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($nonArrayClassifications->releaseSubmissionCountSummary());
+        $this->assertNull($nonNumericClassificationCount->releaseSubmissionCountSummary());
+    }
 }

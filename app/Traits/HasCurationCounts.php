@@ -25,13 +25,36 @@ trait HasCurationCounts
         'noknown' => 9,
     ];
 
+    protected static function curationClassificationMap(): array
+    {
+        return static::$curationClassificationMap;
+    }
+
+    protected static array $curationClassificationNames = [
+        'definitive' => ['Definitive'],
+        'strong' => ['Strong'],
+        'moderate' => ['Moderate'],
+        'supportive' => ['Supportive'],
+        'limited' => ['Limited'],
+        'disputed' => ['Disputed Evidence', 'Disputed'],
+        'refuted' => ['Refuted Evidence', 'Refuted'],
+        'animal' => ['Animal Model Only', 'Animal Model'],
+        'noknown' => ['No Known Disease Relationship', 'No Known'],
+    ];
+
+    protected static function curationClassificationNamesFor(string $type): array
+    {
+        return static::$curationClassificationNames[$type] ?? [];
+    }
+
     /**
      * Get a curation count by type.
      *
      * Checks in order:
-     * 1. Individual column (curations_{type})
-     * 2. JSON counts array
-     * 3. Computed from submissions relationship
+     * 1. Release JSON counts.by_classification entries
+     * 2. Legacy JSON count keys
+     * 3. Individual curations_{type} attribute
+     * 4. Loaded or queryable submissions relationship
      *
      * @param string $type The curation type (e.g., 'definitive', 'strong')
      * @return int
@@ -40,14 +63,24 @@ trait HasCurationCounts
     {
         $column = 'curations_' . $type;
 
-        // Check individual column first
-        if (isset($this->attributes[$column])) {
-            return (int) $this->attributes[$column];
+        if (isset($this->counts['by_classification'])) {
+            foreach (static::curationClassificationNamesFor($type) as $classificationName) {
+                if (isset($this->counts['by_classification'][$classificationName]['count'])) {
+                    return (int) $this->counts['by_classification'][$classificationName]['count'];
+                }
+            }
         }
 
-        // Check JSON counts array
+        if (array_key_exists($column, $this->counts ?? [])) {
+            return (int) $this->counts[$column];
+        }
+
         if (!empty($this->counts[$type])) {
-            return $this->counts[$type];
+            return (int) $this->counts[$type];
+        }
+
+        if (isset($this->attributes[$column])) {
+            return (int) $this->attributes[$column];
         }
 
         // Compute from relationship if available

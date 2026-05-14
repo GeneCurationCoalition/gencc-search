@@ -54,6 +54,104 @@ class Submitter extends Model
             ->orderBy('report_date');
     }
 
+    public function submissionCountSummary()
+    {
+        return $this->releaseSubmissionCountSummary();
+    }
+
+    public static function submissionCountSummariesFor($submitters)
+    {
+        $summaries = collect();
+
+        foreach ($submitters as $submitter) {
+            $summaries->put($submitter->id, $submitter->releaseSubmissionCountSummary());
+        }
+
+        return $summaries;
+    }
+
+    public static function emptySubmissionCountSummary()
+    {
+        return [
+            'total' => 0,
+            'classificationCounts' => static::emptyClassificationCounts(),
+            'displayCounts' => static::emptyDisplayCounts(),
+        ];
+    }
+
+    public function releaseSubmissionCountSummary()
+    {
+        $counts = $this->counts;
+
+        // This accepts only the precomputed release summary shape:
+        // ['total' => int, 'by_classification' => [...]].
+        if (!is_array($counts)) {
+            return null;
+        }
+
+        if (empty($counts)) {
+            return static::emptySubmissionCountSummary();
+        }
+
+        if (!array_key_exists('total', $counts) || !is_numeric($counts['total'])) {
+            return null;
+        }
+
+        if (!array_key_exists('by_classification', $counts) || !is_array($counts['by_classification'])) {
+            return null;
+        }
+
+        $classificationCounts = collect();
+        $displayCounts = static::emptyDisplayCounts();
+        $byClassification = $counts['by_classification'];
+        $total = (int) $counts['total'];
+
+        if ($total > 0 && empty($byClassification)) {
+            return null;
+        }
+
+        foreach (static::curationClassificationMap() as $type => $classificationId) {
+            $count = 0;
+
+            foreach (static::curationClassificationNamesFor($type) as $name) {
+                if (isset($byClassification[$name]['count'])) {
+                    if (!is_numeric($byClassification[$name]['count'])) {
+                        return null;
+                    }
+
+                    $count = (int) $byClassification[$name]['count'];
+                    break;
+                }
+            }
+
+            $classificationCounts->put($classificationId, $count);
+            $displayCounts[$type] = $count;
+        }
+
+        return [
+            'total' => $total,
+            'classificationCounts' => $classificationCounts,
+            'displayCounts' => $displayCounts,
+        ];
+    }
+
+    protected static function emptyDisplayCounts()
+    {
+        return collect(static::curationClassificationMap())
+            ->mapWithKeys(function ($classificationId, $type) {
+                return [$type => 0];
+            })
+            ->all();
+    }
+
+    protected static function emptyClassificationCounts()
+    {
+        return collect(static::curationClassificationMap())
+            ->mapWithKeys(function ($classificationId) {
+                return [$classificationId => 0];
+            });
+    }
+
     /**
      * Get all users associated with this submitter.
      */
@@ -213,8 +311,17 @@ class Submitter extends Model
      */
     public function getCountSubmissionsAttribute()
     {
+        if (isset($this->counts['total'])) {
+            return (int) $this->counts['total'];
+        }
+        if (isset($this->counts['count_submissions'])) {
+            return (int) $this->counts['count_submissions'];
+        }
         if (!empty($this->counts['submissions'])) {
-            return $this->counts['submissions'];
+            return (int) $this->counts['submissions'];
+        }
+        if (isset($this->attributes['count_submissions'])) {
+            return (int) $this->attributes['count_submissions'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->count()
@@ -258,8 +365,10 @@ class Submitter extends Model
         'text_contact',
         'text_disclaimer',
         'status',
+        'allow_submissions',
         'downloadable',
         'member',
+        'counts',
         'count_submissions',
         'count_unique_genes',
         'count_unique_diseases',
