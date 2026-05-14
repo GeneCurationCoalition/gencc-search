@@ -172,4 +172,44 @@ class SubmitterModelTest extends TestCase
         $this->assertTrue($downloadable->downloadable);
         $this->assertFalse($notDownloadable->downloadable);
     }
+
+    /** @test */
+    public function submitter_count_accessors_read_release_json_counts()
+    {
+        $submitter = Submitter::factory()->create([
+            'counts' => [
+                'total' => 12,
+                'by_classification' => [
+                    'Definitive' => [
+                        'count' => 8,
+                        'abbreviation' => 'DEF',
+                    ],
+                    'Strong' => [
+                        'count' => 4,
+                        'abbreviation' => 'STR',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertSame(12, $submitter->count_submissions);
+        $this->assertSame(8, $submitter->curations_definitive);
+        $this->assertSame(4, $submitter->curations_strong);
+    }
+
+    /** @test */
+    public function submitter_count_accessors_read_legacy_flat_json_counts()
+    {
+        $submitter = Submitter::factory()->create([
+            'counts' => [
+                'count_submissions' => 9,
+                'curations_definitive' => 6,
+                'curations_strong' => 3,
+            ],
+        ]);
+
+        $this->assertSame(9, $submitter->count_submissions);
+        $this->assertSame(6, $submitter->curations_definitive);
+        $this->assertSame(3, $submitter->curations_strong);
+    }
 }

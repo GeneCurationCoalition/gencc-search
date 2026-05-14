@@ -198,6 +198,7 @@ return new class extends Migration
             $table->integer('curations_noknown')->default(0);
             $table->integer('curations_supportive')->default(0);
             $table->integer('curations_nul')->default(0);
+            $table->json('counts')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

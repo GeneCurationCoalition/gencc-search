@@ -14,10 +14,15 @@ class SubmitterController extends Controller
      */
     public function index()
     {
-        // Don't eager load submissions - curation counts are computed via accessors
         $submitters = Submitter::where('status', 1)->paginate(25);
+        $submitterCountSummaries = Submitter::submissionCountSummariesFor($submitters->getCollection());
         $page_meta['seo']['title'] = "GenCC Members";
-        return view('submitters.index', ['submitters' => $submitters, 'page' => 'submitter', 'page_meta' => $page_meta]);
+        return view('submitters.index', [
+            'submitters' => $submitters,
+            'submitterCountSummaries' => $submitterCountSummaries,
+            'page' => 'submitter',
+            'page_meta' => $page_meta,
+        ]);
     }
 
 
@@ -32,8 +37,9 @@ class SubmitterController extends Controller
     {
         $classifications = Classification::all();
         $submitter = Submitter::ident($id)->firstOrFail();
-        $classificationCounts = $submitter->livePublishedSubmissionCountsByClassification();
-        $submitterSubmissionsCount = $classificationCounts->sum();
+        $countSummary = $submitter->submissionCountSummary();
+        $classificationCounts = $countSummary['classificationCounts'];
+        $submitterSubmissionsCount = $countSummary['total'];
         $page_meta['seo']['title'] = $submitter->title . " submitter information and submissions";
         return view('submitters.show', [
             'classifications' => $classifications,

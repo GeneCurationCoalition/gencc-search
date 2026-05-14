@@ -25,6 +25,18 @@ trait HasCurationCounts
         'noknown' => 9,
     ];
 
+    protected static array $curationClassificationNames = [
+        'definitive' => ['Definitive'],
+        'strong' => ['Strong'],
+        'moderate' => ['Moderate'],
+        'supportive' => ['Supportive'],
+        'limited' => ['Limited'],
+        'disputed' => ['Disputed Evidence', 'Disputed'],
+        'refuted' => ['Refuted Evidence', 'Refuted'],
+        'animal' => ['Animal Model Only', 'Animal Model'],
+        'noknown' => ['No Known Disease Relationship', 'No Known'],
+    ];
+
     /**
      * Get a curation count by type.
      *
@@ -40,14 +52,24 @@ trait HasCurationCounts
     {
         $column = 'curations_' . $type;
 
-        // Check individual column first
+        if (isset($this->counts['by_classification'])) {
+            foreach (static::$curationClassificationNames[$type] ?? [] as $classificationName) {
+                if (isset($this->counts['by_classification'][$classificationName]['count'])) {
+                    return (int) $this->counts['by_classification'][$classificationName]['count'];
+                }
+            }
+        }
+
+        if (array_key_exists($column, $this->counts ?? [])) {
+            return (int) $this->counts[$column];
+        }
+
         if (isset($this->attributes[$column])) {
             return (int) $this->attributes[$column];
         }
 
-        // Check JSON counts array
         if (!empty($this->counts[$type])) {
-            return $this->counts[$type];
+            return (int) $this->counts[$type];
         }
 
         // Compute from relationship if available
