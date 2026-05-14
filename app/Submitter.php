@@ -15,45 +15,6 @@ class Submitter extends Model
     use DisplayTransform;
     use HasCurationCounts;
 
-    protected static $classificationCountFields = [
-        1 => [
-            'field' => 'curations_definitive',
-            'type' => 'definitive',
-        ],
-        2 => [
-            'field' => 'curations_strong',
-            'type' => 'strong',
-        ],
-        3 => [
-            'field' => 'curations_moderate',
-            'type' => 'moderate',
-        ],
-        4 => [
-            'field' => 'curations_supportive',
-            'type' => 'supportive',
-        ],
-        5 => [
-            'field' => 'curations_limited',
-            'type' => 'limited',
-        ],
-        6 => [
-            'field' => 'curations_disputed',
-            'type' => 'disputed',
-        ],
-        7 => [
-            'field' => 'curations_refuted',
-            'type' => 'refuted',
-        ],
-        8 => [
-            'field' => 'curations_animal',
-            'type' => 'animal',
-        ],
-        9 => [
-            'field' => 'curations_noknown',
-            'type' => 'noknown',
-        ],
-    ];
-
     /**
      * The attributes that should be cast to native types.
      * Note: gencc-sub uses individual columns instead of JSON for counts.
@@ -149,10 +110,10 @@ class Submitter extends Model
             return null;
         }
 
-        foreach (static::$classificationCountFields as $classificationId => $metadata) {
+        foreach (static::curationClassificationMap() as $type => $classificationId) {
             $count = 0;
 
-            foreach (static::curationClassificationNamesFor($metadata['type']) as $name) {
+            foreach (static::curationClassificationNamesFor($type) as $name) {
                 if (isset($byClassification[$name]['count'])) {
                     if (!is_numeric($byClassification[$name]['count'])) {
                         return null;
@@ -164,7 +125,7 @@ class Submitter extends Model
             }
 
             $classificationCounts->put($classificationId, $count);
-            $displayCounts[$metadata['field']] = $count;
+            $displayCounts[$type] = $count;
         }
 
         return [
@@ -176,18 +137,17 @@ class Submitter extends Model
 
     protected static function emptyDisplayCounts()
     {
-        return collect(static::$classificationCountFields)
-            ->pluck('field')
-            ->mapWithKeys(function ($field) {
-                return [$field => 0];
+        return collect(static::curationClassificationMap())
+            ->mapWithKeys(function ($classificationId, $type) {
+                return [$type => 0];
             })
             ->all();
     }
 
     protected static function emptyClassificationCounts()
     {
-        return collect(static::$classificationCountFields)
-            ->mapWithKeys(function ($metadata, $classificationId) {
+        return collect(static::curationClassificationMap())
+            ->mapWithKeys(function ($classificationId) {
                 return [$classificationId => 0];
             });
     }

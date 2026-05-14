@@ -197,8 +197,8 @@ class SubmitterModelTest extends TestCase
         $this->assertSame(12, $summary['total']);
         $this->assertSame(8, (int) $summary['classificationCounts']->get(1));
         $this->assertSame(4, (int) $summary['classificationCounts']->get(2));
-        $this->assertSame(8, $summary['displayCounts']['curations_definitive']);
-        $this->assertSame(4, $summary['displayCounts']['curations_strong']);
+        $this->assertSame(8, $summary['displayCounts']['definitive']);
+        $this->assertSame(4, $summary['displayCounts']['strong']);
     }
 
     /** @test */
@@ -212,7 +212,7 @@ class SubmitterModelTest extends TestCase
 
         $this->assertSame(0, $summary['total']);
         $this->assertSame(0, (int) $summary['classificationCounts']->get(1));
-        $this->assertSame(0, $summary['displayCounts']['curations_definitive']);
+        $this->assertSame(0, $summary['displayCounts']['definitive']);
     }
 
     /** @test */

@@ -197,8 +197,8 @@ class MemberFeatureTest extends TestCase
         $response->assertStatus(200);
         $summary = $response->viewData('submitterCountSummaries')->get($submitter->id);
         $this->assertSame(12, $summary['total']);
-        $this->assertSame(8, $summary['displayCounts']['curations_definitive']);
-        $this->assertSame(4, $summary['displayCounts']['curations_strong']);
+        $this->assertSame(8, $summary['displayCounts']['definitive']);
+        $this->assertSame(4, $summary['displayCounts']['strong']);
     }
 
     /** @test */

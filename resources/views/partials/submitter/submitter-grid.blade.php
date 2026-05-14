@@ -56,23 +56,23 @@
               <div class="grid grid-cols-9 gap-1 w-full">
                     <div class="col-span-3 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-3 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_definitive'], "definitive", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_strong'], "strong", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_moderate'], "moderate", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['definitive'], "definitive", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['strong'], "strong", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['moderate'], "moderate", route('member-show', $submitter->uuid)) !!}
                         </div>
                     </div>
                     <div class="col-span-1 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-1 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_supportive'], "supportive", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['supportive'], "supportive", route('member-show', $submitter->uuid)) !!}
                          </div>
                     </div>
                     <div class="col-span-5 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-5 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_limited'], "limited", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_disputed'], "disputed", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_refuted'], "refuted", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_animal'], "animal-model-only", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['curations_noknown'], "no-known-disease-relationship", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['limited'], "limited", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['disputed'], "disputed", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['refuted'], "refuted", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['animal'], "animal-model-only", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['noknown'], "no-known-disease-relationship", route('member-show', $submitter->uuid)) !!}
                         </div>
                     </div>
                 </div>

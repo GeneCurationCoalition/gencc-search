@@ -25,6 +25,11 @@ trait HasCurationCounts
         'noknown' => 9,
     ];
 
+    protected static function curationClassificationMap(): array
+    {
+        return static::$curationClassificationMap;
+    }
+
     protected static array $curationClassificationNames = [
         'definitive' => ['Definitive'],
         'strong' => ['Strong'],
