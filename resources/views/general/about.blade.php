@@ -40,12 +40,12 @@
             <tr>
                 <td class="border border-gray-300 px-4 py-2 text-gray-900">
                     <div class="font-semibold text-xl">Fowzan Alkuraya</div>
-                    King Faisal Specialist Hospital and Research Center
+                    Lifera Omics
                 </td>
             </tr>
             <tr>
                 <td class="border border-gray-300 px-4 py-2 text-gray-900">
-                    <div class="font-semibold text-xl">Christina Austin-Tse</div>
+                    <div class="font-semibold text-xl">Stephanie DiTroia</div>
                     Broad CMG
                 </td>
             </tr>
@@ -69,12 +69,6 @@
             </tr>
             <tr>
                 <td class="border border-gray-300 px-4 py-2 text-gray-900">
-                    <div class="font-semibold text-xl">Yaron Einhorn</div>
-                    Franklin by Genoox
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-gray-300 px-4 py-2 text-gray-900">
                     <div class="font-semibold text-xl">Helen Firth</div>
                     DECIPHER
                 </td>
@@ -94,7 +88,7 @@
             <tr>
                 <td class="border border-gray-300 px-4 py-2 text-gray-900">
                     <div class="font-semibold text-xl">Yunyun Jiang</div>
-                    Invitae
+                    Labcorp Genetics (formerly Invitae)
                 </td>
             </tr>
             <tr>
