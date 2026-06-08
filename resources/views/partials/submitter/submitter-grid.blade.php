@@ -18,16 +18,13 @@
               <h3 class="mt-0 text-xl leading-7 font-semibold">
                {{ $submitter->title }}
               </h3>
-              {{-- <p class="mt-3 text-base leading-6 text-gray-500">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium praesentium eius, ut atque fuga culpa, similique sequi cum eos quis dolorum.
-              </p> --}}
-              <a href="{{ route('member-show', $submitter->curie) }}" class=" text-blue-700 text-xs hover:underline">
+              <span class="text-blue-700 text-xs hover:underline">
                 @if($hasCountSummary && $submitterSubmissionsCount > 0)
                   View data submissions and learn more
                 @else
                   Learn more
                 @endif
-              <i class="far fa-arrow-alt-circle-right"></i></a>
+              <i class="far fa-arrow-alt-circle-right"></i></span>
             </a>
           </div>
         </div>
