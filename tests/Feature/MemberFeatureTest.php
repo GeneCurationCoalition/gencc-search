@@ -62,7 +62,7 @@ class MemberFeatureTest extends TestCase
 
         $response = $this->get('/members/GENCC_000101');
 
-        $response->assertRedirect('/members/GENCC:000101');
+        $response->assertRedirect(route('member-show', $submitter->curie));
     }
 
     /** @test */
