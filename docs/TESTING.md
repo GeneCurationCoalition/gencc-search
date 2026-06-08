@@ -206,7 +206,7 @@ public function genes_listing_component_renders()
 
 GitHub Actions runs tests automatically on:
 
-- Push to `main`, `master`, `develop` branches
+- Push to `main`, `develop` branches
 - Pull requests
 
 Configuration: `.github/workflows/tests.yaml`
