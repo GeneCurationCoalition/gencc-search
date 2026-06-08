@@ -374,6 +374,6 @@ class MemberFeatureTest extends TestCase
         $response = $this->get('/members');
 
         $response->assertStatus(200);
-        $response->assertSee('/members/GENCC:000901');
+        $response->assertSee(route('member-show', $submitter->curie));
     }
 }
