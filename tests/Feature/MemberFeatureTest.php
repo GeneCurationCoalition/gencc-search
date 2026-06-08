@@ -74,7 +74,7 @@ class MemberFeatureTest extends TestCase
         ]);
 
         $response = $this->get('/members/GENCC_000202');
-        $response->assertRedirect('/members/GENCC:000202');
+        $response->assertRedirect(route('member-show', $submitter->curie));
 
         // Following the redirect should load the correct submitter
         $followUp = $this->get('/members/GENCC:000202');
