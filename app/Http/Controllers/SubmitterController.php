@@ -40,7 +40,7 @@ class SubmitterController extends Controller
 
         if (!$submitter) {
             $submitter = Submitter::ident($id)->firstOrFail();
-            return redirect()->route('member-show', $submitter->curie);
+            return redirect()->route('member-show', $submitter->curie, 301);
         }
 
         $classifications = Classification::all();
