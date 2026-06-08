@@ -94,7 +94,7 @@
             <tr>
                 <td class="border border-gray-300 px-4 py-2 text-gray-900">
                     <div class="font-semibold text-xl">Teri Klein</div>
-                    PharmGKB
+                    ClinPGx
                 </td>
             </tr>
             <tr>
