@@ -35,8 +35,15 @@ class SubmitterController extends Controller
      */
     public function show($id)
     {
+        // If accessed via old ident-based URL, redirect to curie-based URL
+        $submitter = Submitter::curie($id)->first();
+
+        if (!$submitter) {
+            $submitter = Submitter::ident($id)->firstOrFail();
+            return redirect()->route('member-show', $submitter->curie, 301);
+        }
+
         $classifications = Classification::all();
-        $submitter = Submitter::ident($id)->firstOrFail();
         $countSummary = $submitter->submissionCountSummary();
         $classificationCounts = $countSummary['classificationCounts'] ?? collect();
         $submitterSubmissionsCount = $countSummary['total'] ?? null;

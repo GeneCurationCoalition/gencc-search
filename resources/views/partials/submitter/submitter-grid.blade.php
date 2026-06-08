@@ -8,26 +8,23 @@
       @endphp
       <div class="flex flex-col rounded-lg shadow-lg border border-gray-400 overflow-hidden">
         <div class="flex-shrink-0">
-          <a href="{{ route('member-show', $submitter->uuid) }}" class="block">
+          <a href="{{ route('member-show', $submitter->curie) }}" class="block">
           <img class="h-48 w-full object-cover" src="{{ $submitter->logo }}" alt="{{ $submitter->title }}">
           </a>
         </div>
         <div class="flex-1 bg-white pt-3 pb-3 px-6 flex flex-col justify-between">
           <div class="flex-1">
-            <a href="{{ route('member-show', $submitter->uuid) }}" class="block hover:underline">
+            <a href="{{ route('member-show', $submitter->curie) }}" class="block hover:underline">
               <h3 class="mt-0 text-xl leading-7 font-semibold">
                {{ $submitter->title }}
               </h3>
-              {{-- <p class="mt-3 text-base leading-6 text-gray-500">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium praesentium eius, ut atque fuga culpa, similique sequi cum eos quis dolorum.
-              </p> --}}
-              <a href="{{ route('member-show', $submitter->uuid) }}" class=" text-blue-700 text-xs hover:underline">
+              <span class="text-blue-700 text-xs hover:underline">
                 @if($hasCountSummary && $submitterSubmissionsCount > 0)
                   View data submissions and learn more
                 @else
                   Learn more
                 @endif
-              <i class="far fa-arrow-alt-circle-right"></i></a>
+              <i class="far fa-arrow-alt-circle-right"></i></span>
             </a>
           </div>
         </div>
@@ -56,23 +53,23 @@
               <div class="grid grid-cols-9 gap-1 w-full">
                     <div class="col-span-3 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-3 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['definitive'], "definitive", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['strong'], "strong", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['moderate'], "moderate", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['definitive'], "definitive", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['strong'], "strong", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['moderate'], "moderate", route('member-show', $submitter->curie)) !!}
                         </div>
                     </div>
                     <div class="col-span-1 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-1 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['supportive'], "supportive", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['supportive'], "supportive", route('member-show', $submitter->curie)) !!}
                          </div>
                     </div>
                     <div class="col-span-5 bg-gray-300 border-white-100 border-solid border-2 rounded-full py-1 px-1">
                         <div class='grid grid-cols-5 gap-1/2'>
-                            {!! $submitter->displayCurationCountPill($displayCounts['limited'], "limited", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['disputed'], "disputed", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['refuted'], "refuted", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['animal'], "animal-model-only", route('member-show', $submitter->uuid)) !!}
-                            {!! $submitter->displayCurationCountPill($displayCounts['noknown'], "no-known-disease-relationship", route('member-show', $submitter->uuid)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['limited'], "limited", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['disputed'], "disputed", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['refuted'], "refuted", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['animal'], "animal-model-only", route('member-show', $submitter->curie)) !!}
+                            {!! $submitter->displayCurationCountPill($displayCounts['noknown'], "no-known-disease-relationship", route('member-show', $submitter->curie)) !!}
                         </div>
                     </div>
                 </div>
