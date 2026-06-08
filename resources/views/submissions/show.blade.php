@@ -54,7 +54,7 @@
 
         <div class="col-span-2 pt-3 text-right pr-3">Submitter:</div>
         <div class="col-span-10 py-1 my-2 border-l-8 pl-3">
-          <div class="font-normal font-bold"><a class="underline" href="{{ route('member-show', $submission->submitter->uuid) }}">{{ $submission->submitter->title }}</a></div>
+          <div class="font-normal font-bold"><a class="underline" href="{{ route('member-show', $submission->submitter->curie) }}">{{ $submission->submitter->title }}</a></div>
           {{-- <div class="text-xs">{{ $submission->submitter->curie }}</div> --}}
         </div>
 

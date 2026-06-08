@@ -41,12 +41,11 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
-    public function member_show_page_returns_200_for_valid_submitter()
+    public function member_show_page_returns_200_for_curie()
     {
-        // Controller looks up by ident column
-        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-ident']);
+        $submitter = Submitter::factory()->create(['curie' => 'GENCC:000101']);
 
-        $response = $this->get('/members/test-submitter-ident');
+        $response = $this->get('/members/GENCC:000101');
 
         $response->assertStatus(200);
         $response->assertViewIs('submitters.show');
@@ -54,9 +53,41 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
-    public function member_show_page_returns_404_for_invalid_submitter()
+    public function member_show_redirects_ident_to_curie()
     {
-        $response = $this->get('/members/non-existent-uuid');
+        $submitter = Submitter::factory()->create([
+            'ident' => 'GENCC_000101',
+            'curie' => 'GENCC:000101',
+        ]);
+
+        $response = $this->get('/members/GENCC_000101');
+
+        $response->assertRedirect('/members/GENCC:000101');
+    }
+
+    /** @test */
+    public function member_show_redirect_preserves_submitter_identity()
+    {
+        $submitter = Submitter::factory()->create([
+            'ident' => 'GENCC_000202',
+            'curie' => 'GENCC:000202',
+        ]);
+
+        $response = $this->get('/members/GENCC_000202');
+        $response->assertRedirect('/members/GENCC:000202');
+
+        // Following the redirect should load the correct submitter
+        $followUp = $this->get('/members/GENCC:000202');
+        $followUp->assertStatus(200);
+        $followUp->assertViewHas('submitter', function ($viewSubmitter) use ($submitter) {
+            return $viewSubmitter->id === $submitter->id;
+        });
+    }
+
+    /** @test */
+    public function member_show_page_returns_404_for_invalid_identifier()
+    {
+        $response = $this->get('/members/non-existent-id');
 
         $response->assertStatus(404);
     }
@@ -64,10 +95,9 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_includes_classifications()
     {
-        // Controller looks up by ident column
-        $submitter = Submitter::factory()->create(['ident' => 'test-submitter-class']);
+        $submitter = Submitter::factory()->create(['curie' => 'GENCC:000301']);
 
-        $response = $this->get('/members/test-submitter-class');
+        $response = $this->get('/members/GENCC:000301');
 
         $response->assertStatus(200);
         $response->assertViewHas('classifications');
@@ -77,7 +107,7 @@ class MemberFeatureTest extends TestCase
     public function member_show_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
         $submitter = Submitter::factory()->create([
-            'ident' => 'test-submitter-counts',
+            'curie' => 'GENCC:000401',
             'counts' => [
                 'total' => 2,
             ],
@@ -102,7 +132,7 @@ class MemberFeatureTest extends TestCase
         DB::enableQueryLog();
 
         try {
-            $response = $this->get('/members/test-submitter-counts');
+            $response = $this->get('/members/GENCC:000401');
             $queries = DB::getQueryLog();
         } finally {
             DB::disableQueryLog();
@@ -126,7 +156,7 @@ class MemberFeatureTest extends TestCase
     public function member_show_uses_precomputed_release_json_counts_when_available()
     {
         $submitter = Submitter::factory()->create([
-            'ident' => 'test-submitter-json-counts',
+            'curie' => 'GENCC:000501',
             'counts' => [
                 'total' => 99,
                 'by_classification' => [
@@ -144,7 +174,7 @@ class MemberFeatureTest extends TestCase
         $definitive = Classification::factory()->definitive()->create();
         $strong = Classification::factory()->strong()->create();
 
-        $response = $this->get('/members/test-submitter-json-counts');
+        $response = $this->get('/members/GENCC:000501');
 
         $response->assertStatus(200);
         $this->assertFalse($response->viewData('submitter')->relationLoaded('submissions'));
@@ -157,14 +187,14 @@ class MemberFeatureTest extends TestCase
     public function member_show_with_zero_release_counts_shows_submission_data_coming_soon()
     {
         $submitter = Submitter::factory()->create([
-            'ident' => 'test-submitter-zero-counts',
+            'curie' => 'GENCC:000601',
             'counts' => [
                 'total' => 0,
                 'by_classification' => [],
             ],
         ]);
 
-        $response = $this->get('/members/test-submitter-zero-counts');
+        $response = $this->get('/members/GENCC:000601');
 
         $response->assertStatus(200);
         $response->assertSee('Submission Data Coming Soon');
@@ -176,11 +206,11 @@ class MemberFeatureTest extends TestCase
     public function member_show_with_empty_release_counts_shows_submission_data_coming_soon()
     {
         $submitter = Submitter::factory()->create([
-            'ident' => 'test-submitter-empty-counts',
+            'curie' => 'GENCC:000701',
             'counts' => [],
         ]);
 
-        $response = $this->get('/members/test-submitter-empty-counts');
+        $response = $this->get('/members/GENCC:000701');
 
         $response->assertStatus(200);
         $response->assertSee('Submission Data Coming Soon');
@@ -315,15 +345,35 @@ class MemberFeatureTest extends TestCase
     /** @test */
     public function member_show_page_has_seo_meta_title()
     {
-        // Controller looks up by ident column
         $submitter = Submitter::factory()->create([
-            'ident' => 'test-submitter-meta',
+            'curie' => 'GENCC:000801',
             'name' => 'Test Consortium'
         ]);
 
-        $response = $this->get('/members/test-submitter-meta');
+        $response = $this->get('/members/GENCC:000801');
 
         $response->assertStatus(200);
         $response->assertViewHas('page_meta');
+    }
+
+    /** @test */
+    public function member_show_links_use_curie_format()
+    {
+        $submitter = Submitter::factory()->create([
+            'status' => 1,
+            'curie' => 'GENCC:000901',
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [
+                    'Definitive' => ['count' => 1, 'abbreviation' => 'DEF'],
+                ],
+            ],
+        ]);
+        Classification::factory()->definitive()->create();
+
+        $response = $this->get('/members');
+
+        $response->assertStatus(200);
+        $response->assertSee('/members/GENCC:000901');
     }
 }
