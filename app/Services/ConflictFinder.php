@@ -21,8 +21,16 @@ use Illuminate\Support\Str;
  */
 class ConflictFinder
 {
-    /** Cache key for the computed conflict set. Bump the suffix when the shape changes. */
-    const CACHE_KEY = 'conflict-viewer.triples.v2';
+    /**
+     * Cache key for the computed conflict set.
+     *
+     * The cached value is a nested array that Blade and Livewire destructure by
+     * key, and the cache is not ephemeral: CACHE_DRIVER=file with storage/
+     * bind-mounted from the host, so entries survive a redeploy. If the shape of
+     * that array changes, run `php artisan cache:clear` after deploying, or wait
+     * out CACHE_HOURS.
+     */
+    const CACHE_KEY = 'conflict-viewer.triples';
 
     /** Highest classifications.order still considered "strong" (Definitive 10, Strong 20, Moderate 30). */
     const STRONG_MAX_ORDER = 30;
