@@ -27,8 +27,8 @@ class ConflictFinder
      * The cached value is a nested array that Blade and Livewire destructure by
      * key, and the cache is not ephemeral: CACHE_DRIVER=file with storage/
      * bind-mounted from the host, so entries survive a redeploy. If the shape of
-     * that array changes, run `php artisan cache:clear` after deploying, or wait
-     * out CACHE_HOURS.
+     * that array changes, run `php artisan conflicts:clear-cache` after deploying,
+     * or wait out CACHE_HOURS.
      */
     const CACHE_KEY = 'conflict-viewer.triples';
 
@@ -166,10 +166,7 @@ class ConflictFinder
                     'strong_count'  => 0,
                     'other_count'   => 0,
                     'total_count'   => 0,
-                    'min_order'     => $row->classification_order,
                     'max_order'     => $row->classification_order,
-                    'strongest'     => $row->classification,
-                    'weakest'       => $row->classification,
                 ];
             }
 
@@ -177,8 +174,11 @@ class ConflictFinder
             $side     = $row->classification_order <= self::STRONG_MAX_ORDER ? 'strong' : 'other';
             $submitter = $row->submitter ?: 'Unknown';
 
-            // Submitter => set of classifications, so a submitter appears once per side.
-            $group[$side][$submitter][$row->classification] = $row->classification;
+            // Submitter => classification name => classifications.order, so a submitter
+            // appears once per side. The order is carried as the value so orderSide()
+            // can rank both the submitters and each submitter's own pills by strength;
+            // it is replaced by a plain list of names before the group is returned.
+            $group[$side][$submitter][$row->classification] = (int) $row->classification_order;
             $group[$side . '_count']++;
             $group['total_count']++;
 
@@ -189,14 +189,8 @@ class ConflictFinder
                 $group['other_slugs'][Str::slug($submitter)] = $submitter;
             }
 
-            if ($row->classification_order < $group['min_order']) {
-                $group['min_order'] = $row->classification_order;
-                $group['strongest'] = $row->classification;
-            }
-
             if ($row->classification_order > $group['max_order']) {
                 $group['max_order'] = $row->classification_order;
-                $group['weakest']   = $row->classification;
             }
 
             unset($group);
@@ -207,10 +201,61 @@ class ConflictFinder
             // max_order is only final once a group has been fully folded.
             ->map(function ($group) {
                 $group['severity_tier'] = self::tierFor((int) $group['max_order']);
+                $group['strong']        = self::orderSide($group['strong']);
+                $group['other']         = self::orderSide($group['other']);
 
                 return $group;
             })
             ->sortByDesc('total_count')
             ->values();
+    }
+
+    /**
+     * Rank one side of a conflict by evidence strength, then by submitter name.
+     *
+     * Both levels are ordered: each submitter's own classifications are listed
+     * strongest-first, and the submitters themselves are ranked by the strongest
+     * classification they assert. Reading a row top-to-bottom therefore walks
+     * from the strongest assertion to the weakest, which is what the removed
+     * "Range" column used to state explicitly.
+     *
+     * The submitter name breaks ties so the output is deterministic. Without it
+     * the order fell out of `submissions.id` — stable in practice but arbitrary,
+     * and free to change whenever a submitter reloads its data.
+     *
+     * Takes submitter => [classification name => classifications.order] and
+     * returns submitter => [classification name, ...], which is the shape Blade
+     * iterates.
+     *
+     * @param  array  $side
+     * @return array
+     */
+    protected static function orderSide(array $side): array
+    {
+        $submitters = [];
+
+        foreach ($side as $submitter => $classifications) {
+            // Ascending classifications.order == strongest evidence first.
+            asort($classifications);
+
+            $submitters[] = [
+                'name'            => $submitter,
+                'strongest_order' => (int) reset($classifications),
+                'classifications' => array_keys($classifications),
+            ];
+        }
+
+        // mb_strtolower so casing does not outrank the alphabet: a byte comparison
+        // sorts every capitalised name ahead of every lowercased one.
+        usort($submitters, fn ($a, $b) => [$a['strongest_order'], mb_strtolower($a['name'])]
+            <=> [$b['strongest_order'], mb_strtolower($b['name'])]);
+
+        $ordered = [];
+
+        foreach ($submitters as $submitter) {
+            $ordered[$submitter['name']] = $submitter['classifications'];
+        }
+
+        return $ordered;
     }
 }

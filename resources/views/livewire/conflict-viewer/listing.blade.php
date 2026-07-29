@@ -99,7 +99,7 @@
             <div class="col-span-3">
                 <button type="button" class="hover:underline" wire:click="sortBy('disease_name')">Disease {!! $sortCaret('disease_name') !!}</button>
             </div>
-            <div class="col-span-1">
+            <div class="col-span-2">
                 <button type="button" class="hover:underline" wire:click="sortBy('moi')">MOI {!! $sortCaret('moi') !!}</button>
             </div>
             <div class="col-span-2">
@@ -107,9 +107,6 @@
             </div>
             <div class="col-span-2">
                 <span>Other Evidence</span>
-            </div>
-            <div class="col-span-1">
-                <span>Range</span>
             </div>
             <div class="col-span-1 pr-3 text-right">
                 <button type="button" class="hover:underline" wire:click="sortBy('total_count')">Total {!! $sortCaret('total_count') !!}</button>
@@ -131,7 +128,7 @@
                         <div class="list-text-desc">{{ $item['disease_curie'] }}</div>
                     </a>
                 </div>
-                <div class="col-span-1 pr-2 text-gray-600">{{ $item['moi'] }}</div>
+                <div class="col-span-2 pr-2 text-gray-600">{{ $item['moi'] }}</div>
 
                 <div class="col-span-2 pr-2">
                     @foreach ($item['strong'] as $submitter => $classifications)
@@ -153,11 +150,6 @@
                             @endforeach
                         </div>
                     @endforeach
-                </div>
-
-                <div class="col-span-1 pr-2">
-                    <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap gencc-{{ Str::slug($item['strongest'], '') }} ">{{ $item['strongest'] }}</span>
-                    <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap gencc-{{ Str::slug($item['weakest'], '') }} ">{{ $item['weakest'] }}</span>
                 </div>
 
                 <div class="col-span-1 pr-3 text-right">

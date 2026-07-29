@@ -81,10 +81,10 @@ class ConflictViewerTest extends TestCase
         $this->assertSame(1, $row['strong_count']);
         $this->assertSame(1, $row['other_count']);
         $this->assertSame(2, $row['total_count']);
-        $this->assertSame('Definitive', $row['strongest']);
-        $this->assertSame('Limited', $row['weakest']);
         $this->assertArrayHasKey('ClinGen', $row['strong']);
         $this->assertArrayHasKey('Orphanet', $row['other']);
+        $this->assertSame(['Definitive'], $row['strong']['ClinGen']);
+        $this->assertSame(['Limited'], $row['other']['Orphanet']);
     }
 
     /** @test */
@@ -349,6 +349,81 @@ class ConflictViewerTest extends TestCase
 
         // The strong-side submitter is not a dissenter.
         $this->assertArrayNotHasKey('clingen', $row['other_slugs']);
+    }
+
+    /** @test */
+    public function each_side_is_ordered_by_evidence_strength_then_by_submitter_name()
+    {
+        $gene    = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi     = Inheritance::factory()->create();
+
+        // Inserted in an order that contradicts the expected output on both axes,
+        // so passing cannot be an artefact of submissions.id.
+        $inserted = [
+            ['Zeta Labs', 'Definitive', 10],
+            ['Aardvark Labs', 'Disputed Evidence', 60],
+            ['Middle Labs', 'Moderate', 30],
+            ['Beta Labs', 'Limited', 50],
+            ['Alpha Labs', 'Definitive', 10],
+        ];
+
+        foreach ($inserted as [$submitter, $classification, $order]) {
+            $this->submission([
+                'gene_id'           => $gene->id,
+                'disease_id'        => $disease->id,
+                'inheritance_id'    => $moi->id,
+                'classification_id' => $this->classification($classification, $order)->id,
+                'submitter_id'      => Submitter::factory()->create(['name' => $submitter])->id,
+            ]);
+        }
+
+        $row = ConflictFinder::conflicts()->first();
+
+        // Definitive (10) outranks Moderate (30); the two Definitives tie and fall
+        // back to the alphabet, which is also where Zeta loses its insertion lead.
+        $this->assertSame(['Alpha Labs', 'Zeta Labs', 'Middle Labs'], array_keys($row['strong']));
+
+        // Strength beats the alphabet: Limited (50) precedes Disputed Evidence (60)
+        // even though Aardvark sorts first by name and was inserted first.
+        $this->assertSame(['Beta Labs', 'Aardvark Labs'], array_keys($row['other']));
+    }
+
+    /** @test */
+    public function a_submitters_own_classifications_are_listed_strongest_first()
+    {
+        $gene    = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi     = Inheritance::factory()->create();
+
+        $this->submission([
+            'gene_id'           => $gene->id,
+            'disease_id'        => $disease->id,
+            'inheritance_id'    => $moi->id,
+            'classification_id' => $this->classification('Definitive', 10)->id,
+            'submitter_id'      => Submitter::factory()->create(['name' => 'ClinGen'])->id,
+        ]);
+
+        // One dissenter asserting three different weak classifications, inserted
+        // weakest-first.
+        $ambry = Submitter::factory()->create(['name' => 'Ambry Genetics'])->id;
+
+        foreach ([['Refuted Evidence', 70], ['Disputed Evidence', 60], ['Limited', 50]] as [$name, $order]) {
+            $this->submission([
+                'gene_id'           => $gene->id,
+                'disease_id'        => $disease->id,
+                'inheritance_id'    => $moi->id,
+                'classification_id' => $this->classification($name, $order)->id,
+                'submitter_id'      => $ambry,
+            ]);
+        }
+
+        $row = ConflictFinder::conflicts()->first();
+
+        $this->assertSame(
+            ['Limited', 'Disputed Evidence', 'Refuted Evidence'],
+            $row['other']['Ambry Genetics']
+        );
     }
 
     /** @test */

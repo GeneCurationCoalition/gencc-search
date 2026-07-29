@@ -64,10 +64,13 @@ class Listing extends Component
     /**
      * Columns a user is allowed to sort by. Anything else is ignored.
      *
-     * strong_count, other_count and min_order were deliberately removed: they
-     * sorted on something other than what their cells render (submission counts
-     * against per-submitter blocks) or had too few distinct values to be useful
-     * (min_order takes 3 values across the whole set). The facets replace them.
+     * strong_count and other_count were deliberately left out: they sort on
+     * something other than what their cells render (submission counts against
+     * per-submitter blocks). The facets replace them.
+     *
+     * Evidence strength is not sortable either. Within a row it is already the
+     * order of the Strong and Other cells (see ConflictFinder::orderSide()), and
+     * across rows it takes too few distinct values to be a useful column sort.
      *
      * @var array
      */
