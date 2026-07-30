@@ -12,32 +12,11 @@ namespace App\Traits;
 trait NormalizesSearchInput
 {
     /**
-     * Whitespace characters that survive a copy/paste but that PHP's trim()
-     * does not strip by default. Non-breaking spaces in particular are common
-     * when pasting out of Word, Excel, or a rendered web page.
-     */
-    protected static array $searchWhitespace = [
-        "\u{00A0}", // no-break space
-        "\u{2007}", // figure space
-        "\u{202F}", // narrow no-break space
-    ];
-
-    /**
-     * Zero-width characters are dropped outright rather than turned into
-     * spaces, so a pasted "GJB<ZWSP>2" still matches the GJB2 symbol.
-     */
-    protected static array $searchInvisibles = [
-        "\u{FEFF}", // zero width no-break space / BOM
-        "\u{200B}", // zero width space
-        "\u{200C}", // zero width non-joiner
-        "\u{200D}", // zero width joiner
-    ];
-
-    /**
      * Normalize a user-supplied search term for use in a LIKE pattern.
      *
-     * Converts exotic whitespace to plain spaces, trims the ends, and collapses
-     * internal runs of whitespace to a single space.
+     * Drops invisible formatting characters, collapses every kind of whitespace
+     * — including the non-breaking and exotic spaces that survive a copy/paste
+     * out of Word, Excel, or a rendered web page — and trims the ends.
      *
      * @param  string|null  $term
      * @return string
@@ -48,9 +27,21 @@ trait NormalizesSearchInput
             return '';
         }
 
-        $term = str_replace(static::$searchInvisibles, '', $term);
-        $term = str_replace(static::$searchWhitespace, ' ', $term);
+        // Invalid UTF-8 makes the /u patterns below return null, which would
+        // collapse the term to '' — and an empty term matches every row. Fall
+        // back to a plain trim so a malformed term matches nothing instead.
+        if (preg_match('//u', $term) !== 1) {
+            return trim($term);
+        }
 
-        return trim(preg_replace('/\s+/u', ' ', $term));
+        // Cf covers the zero-width characters (ZWSP, ZWNJ, ZWJ, BOM) plus the
+        // word joiner, soft hyphen, and bidi marks. Dropped outright rather
+        // than turned into spaces, so a pasted "GJB<ZWSP>2" still matches GJB2.
+        $term = preg_replace('/\p{Cf}/u', '', $term);
+
+        // \s in UTF mode already folds no-break, figure, thin, and ideographic
+        // spaces on PCRE2; \p{Z} states that intent explicitly rather than
+        // leaning on how the PCRE library happens to be built.
+        return trim(preg_replace('/[\s\p{Z}]+/u', ' ', $term));
     }
 }
