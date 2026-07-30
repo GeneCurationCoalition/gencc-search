@@ -10,8 +10,8 @@
         <script>
           function searchGenes(event) {
             event.preventDefault();
-            const searchTerm = document.getElementById('gene-search').value;
-            if (searchTerm.trim()) {
+            const searchTerm = document.getElementById('gene-search').value.trim();
+            if (searchTerm) {
               window.location.href = '{{ route("genes") }}?title=' + encodeURIComponent(searchTerm);
             } else {
               window.location.href = '{{ route("genes") }}';

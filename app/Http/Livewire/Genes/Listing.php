@@ -6,10 +6,12 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Gene;
 use App\Submitter;
+use App\Traits\NormalizesSearchInput;
 
 class Listing extends Component
 {
     use WithPagination;
+    use NormalizesSearchInput;
 
     public $title                           = '';
     public $hasDisease                      = '';
@@ -177,9 +179,10 @@ class Listing extends Component
         if ($query['num_curations_animal'] > 0) $enabledClassifications[] = 8;
         if ($query['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
 
-        $query_disease = $this->hasDisease;
+        $query_disease = $this->normalizeSearchTerm($this->hasDisease);
+        $query_symbol  = $this->normalizeSearchTerm($this->title);
 
-        $genes = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
+        $genes = Gene::where('symbol', 'LIKE', '%' . $query_symbol . '%')
             ->whereHas('submissions', function ($q) use ($query_disease, $enabledClassifications, $submitterIds) {
                 if (!empty($query_disease)) {
                     $q->whereHas('disease', function ($diseaseQuery) use ($query_disease) {

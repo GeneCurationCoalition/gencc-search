@@ -189,4 +189,71 @@ class SubmitterListingOfSubmissionsTest extends TestCase
 
         $component->assertStatus(200);
     }
+
+    /**
+     * @test
+     * @dataProvider paddedSearchTermProvider
+     *
+     * Regression for #207: a pasted leading/trailing space was becoming part of
+     * the LIKE pattern, so the search silently returned nothing.
+     */
+    public function listing_of_submissions_ignores_surrounding_whitespace_in_search($pad)
+    {
+        $submitter = $this->createSearchableSubmission('GJB2', 'hearing loss');
+
+        $component = Livewire::test(ListingOfSubmissions::class, ['submitter' => $submitter])
+            ->set('query_gene', $pad . 'GJB2' . $pad);
+
+        $this->assertCount(1, $component->viewData('records'));
+
+        $component->set('query_gene', '')
+            ->set('query_disease', $pad . 'hearing loss' . $pad);
+
+        $this->assertCount(1, $component->viewData('records'));
+    }
+
+    public function paddedSearchTermProvider(): array
+    {
+        return [
+            'space'        => [' '],
+            'tab'          => ["\t"],
+            'newline'      => ["\n"],
+            'non-breaking' => ["\u{00A0}"],
+        ];
+    }
+
+    /** @test */
+    public function listing_of_submissions_still_excludes_non_matching_search_terms()
+    {
+        $submitter = $this->createSearchableSubmission('GJB2', 'hearing loss');
+
+        $component = Livewire::test(ListingOfSubmissions::class, ['submitter' => $submitter])
+            ->set('query_gene', ' BRCA1 ');
+
+        $this->assertCount(0, $component->viewData('records'));
+    }
+
+    /**
+     * Create a published submission with a known gene symbol and disease name.
+     */
+    private function createSearchableSubmission(string $symbol, string $diseaseName): Submitter
+    {
+        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+        $disease = Disease::factory()->create(['name' => $diseaseName, 'title' => $diseaseName]);
+        $classification = Classification::factory()->definitive()->create();
+        $submitter = Submitter::factory()->create();
+        $inheritance = Inheritance::factory()->autosomalDominant()->create();
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'classification_id' => $classification->id,
+            'submitter_id' => $submitter->id,
+            'inheritance_id' => $inheritance->id,
+            'is_live' => true,
+            'status' => 'published',
+        ]);
+
+        return $submitter;
+    }
 }
