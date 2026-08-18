@@ -179,6 +179,14 @@ class Listing extends Component
         if ($query['num_curations_animal'] > 0) $enabledClassifications[] = 8;
         if ($query['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
 
+        // Normalize here rather than in mount() or updating(), so $this->title
+        // keeps whatever the user actually typed or pasted and the filter box
+        // still shows it back to them. That also means every path into this
+        // component is covered at once — the Livewire-bound filter box and the
+        // ?title= parameter mount() reads. The latter matters: the gene search
+        // box in shared/gene-headline.blade.php trims client-side before
+        // building the URL, but a bookmarked or hand-edited ?title= never runs
+        // that JavaScript, so this is the only normalization it gets.
         $query_disease = $this->normalizeSearchTerm($this->hasDisease);
         $query_symbol  = $this->normalizeSearchTerm($this->title);
 

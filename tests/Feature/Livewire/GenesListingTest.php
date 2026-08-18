@@ -10,6 +10,7 @@ use App\Submission;
 use App\Inheritance;
 use App\Http\Livewire\Genes\Listing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -409,6 +410,153 @@ class GenesListingTest extends TestCase
         $component->assertSee('MULTIGENE_B');
         // Should NOT show gene C (only has submission from submitter3)
         $component->assertDontSee('MULTIGENE_C');
+    }
+
+    /**
+     * @test
+     * @dataProvider paddedTitleProvider
+     *
+     * Regression for #207, covering the gene-symbol filter on /genes.
+     *
+     * Two entry points reach the same LIKE pattern and both are asserted here:
+     * the Livewire-bound filter box (`set('title', ...)`) and the `?title=`
+     * query parameter that `mount()` copies onto the component. The `?title=`
+     * form is the one the search box in gene-headline.blade.php builds, and
+     * while that Blade template now trims client-side, a bookmarked, shared, or
+     * hand-edited URL skips the JavaScript entirely — server-side
+     * normalization in render() is the only thing left protecting it.
+     */
+    public function genes_listing_ignores_surrounding_whitespace_in_title($pad)
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+
+        // Entry point 1: term typed or pasted into the filter box.
+        $fromFilterBox = Livewire::test(Listing::class)
+            ->set('title', $pad . 'GJB2' . $pad);
+
+        $this->assertCount(1, $fromFilterBox->viewData('genes'));
+        $fromFilterBox->assertSee('GJB2')->assertDontSee('BRCA1');
+
+        // Entry point 2: same term arriving as ?title=, which mount() reads.
+        $fromUrl = Livewire::withQueryParams(['title' => $pad . 'GJB2' . $pad])
+            ->test(Listing::class);
+
+        $this->assertCount(1, $fromUrl->viewData('genes'));
+        $fromUrl->assertSee('GJB2')->assertDontSee('BRCA1');
+    }
+
+    public function paddedTitleProvider(): array
+    {
+        return [
+            'space'        => [' '],
+            'tab'          => ["\t"],
+            'newline'      => ["\n"],
+            'non-breaking' => ["\u{00A0}"],
+        ];
+    }
+
+    /**
+     * @test
+     *
+     * Normalizing the term must not widen the match: a padded term that does
+     * not exist should still return nothing, rather than collapsing to an
+     * empty pattern that matches every gene.
+     */
+    public function genes_listing_still_excludes_non_matching_title()
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+
+        $component = Livewire::test(Listing::class)
+            ->set('title', ' NOSUCHGENE ');
+
+        $this->assertCount(0, $component->viewData('genes'));
+    }
+
+    /**
+     * @test
+     *
+     * A whitespace-only term normalizes to '', which builds the pattern '%%'
+     * and is intended to behave as "no filter" rather than "no results".
+     */
+    public function genes_listing_treats_whitespace_only_title_as_no_filter()
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+
+        $component = Livewire::test(Listing::class)
+            ->set('title', "  \t ");
+
+        $this->assertCount(2, $component->viewData('genes'));
+    }
+
+    /**
+     * Create a gene with a known symbol plus one submission, so it survives the
+     * component's whereHas('submissions') filter.
+     */
+    private function createGeneWithSubmission(string $symbol): Gene
+    {
+        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => Disease::factory()->create()->id,
+            'classification_id' => Classification::factory()->create()->id,
+            'submitter_id' => Submitter::factory()->create()->id,
+            'inheritance_id' => Inheritance::factory()->create()->id,
+        ]);
+
+        return $gene;
+    }
+
+    /**
+     * render() uses REGEXP_SUBSTR in one place only: the orderByRaw that
+     * natural-sorts gene symbols, so GJB2 precedes GJB10. MySQL has that
+     * function and SQLite does not, which is why the rendering tests above skip
+     * themselves on SQLite — but CI runs SQLite only (.github/workflows/
+     * tests.yaml), so skipping means never running. Register a PHP equivalent
+     * so the query can execute; the assertions here are about which rows come
+     * back, not what order they come back in.
+     *
+     * Ports the MySQL signature REGEXP_SUBSTR(subject, pattern[, position[,
+     * occurrence]]) — 1-indexed character position (hence mb_substr), NULL when
+     * the Nth occurrence is absent. The 5th match_type argument is unused by
+     * this query and not implemented.
+     *
+     * This alone does not reproduce production row order, since ORDER BY still
+     * collates differently on the two engines. A test that asserts on ordering
+     * needs further SQLite patching to match MySQL, or should be restricted to
+     * MySQL and skipped here like the tests above.
+     */
+    private function shimRegexpSubstrForSqlite(): void
+    {
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            return;
+        }
+
+        DB::connection()->getPdo()->sqliteCreateFunction(
+            'REGEXP_SUBSTR',
+            function ($subject, $pattern, $position = 1, $occurrence = 1) {
+                if ($subject === null || $pattern === null) {
+                    return null;
+                }
+
+                $offset = max(0, ((int) $position) - 1);
+                $haystack = mb_substr((string) $subject, $offset);
+
+                if (!preg_match_all('/' . $pattern . '/u', $haystack, $matches)) {
+                    return null;
+                }
+
+                return $matches[0][((int) $occurrence) - 1] ?? null;
+            }
+        );
     }
 
     /**
