@@ -5,7 +5,7 @@
             Several groups and resources provide information that pertains to the validity of gene-disease relationships; however, the standards and terminologies to define the evidence base for a gene’s role in disease are still evolving, and the community is in need of trusted and harmonized sources that define the level of evidence for a gene’s role in disease. To tackle this issue, the Gene Curation Coalition (GenCC) was formed.
         </p>
         <p class="mb-4">
-            The Gene Curation Coalition brings together groups engaged in the evaluation of gene-disease validity with a willingness to share data publicly, to develop consistent terminology for gene curation activities, and to facilitate the consistent assessment of genes that have been reported in association with disease.
+            The Gene Curation Coalition brings together groups engaged in the evaluation of gene-disease validity with a willingness to share data publicly, to develop consistent terminology for gene curation activities, and to facilitate the consistent assessment of genes that have been reported in association with disease. For more information, please see our <a href="https://www.gimjournal.org/article/S1098-3600(22)00746-8/fulltext" target="_blank" class="text-blue-600 hover:text-blue-800">marker paper</a> (DiStefano et al., PMID: 35507016).
         </p>
     <!-- </div> -->
 
