@@ -14,6 +14,34 @@ class Classification extends Model
     use DisplayTransform;
 
     /**
+     * Clinical validity ranking, keyed by classification ID, lowest value being
+     * the strongest. Used to place a gene in a single bucket — the one for its
+     * strongest assertion — for the by-gene statistics chart (#210).
+     *
+     * Keyed by ID rather than the `order` column because IDs are what the rest of
+     * the codebase already pins these terms to (see getHrefAttribute and
+     * getCssClassAttribute), and `order` disagrees between fixtures and
+     * production.
+     *
+     * The sequence follows the term order published in the FAQ, with one
+     * deliberate exception: Supportive (4) sorts last, so a gene only lands in
+     * the Supportive bucket when Supportive is its sole assertion. Supportive is
+     * a granularity fallback used by resources such as OMIM and Orphanet rather
+     * than a validity level in its own right.
+     */
+    const VALIDITY_RANK = [
+        1 => 1, // Definitive
+        2 => 2, // Strong
+        3 => 3, // Moderate
+        5 => 4, // Limited
+        6 => 5, // Disputed
+        8 => 6, // Animal Model Only
+        7 => 7, // Refuted
+        9 => 8, // No known disease relationship
+        4 => 9, // Supportive — only wins when nothing else is present
+    ];
+
+    /**
      * Get all the live published (publicly visible) submissions for this classification.
      * Filters by is_live=true (most recent version) AND status='published'.
      */
