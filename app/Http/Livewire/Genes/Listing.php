@@ -11,6 +11,12 @@ class Listing extends Component
 {
     use WithPagination;
 
+    /**
+     * ?submitters= value meaning "deliberately none selected", as distinct from
+     * an absent parameter meaning "no submitter filter at all" (#204).
+     */
+    const SUBMITTERS_NONE = 'none';
+
     public $title                           = '';
     public $hasDisease                      = '';
     public $curations_definitive            = '';
@@ -28,6 +34,11 @@ class Listing extends Component
     public $filtering_by_submitter          = false;
     public $sort                            = '';
     public $page                            = 1;
+    /**
+     * Comma-joined submitter idents, the URL-facing form of
+     * curations_from_submitters. Empty means "all submitters" (#204).
+     */
+    public $submitterFilter                 = '';
     protected $submitters;
 
     /**
@@ -62,6 +73,35 @@ class Listing extends Component
         'count_unique_diseases',
     ];
 
+    /**
+     * Reflect the filters in the URL so a filtered view can be bookmarked and
+     * shared (#204).
+     *
+     * Every entry carries an 'except' matching its unfiltered value, so a clean
+     * /genes URL stays clean and only the filters the user actually changed show
+     * up. The classification defaults are '1' because render() turns all nine on
+     * for a fresh load.
+     *
+     * Submitters are exposed as a comma-joined ?submitters= list rather than
+     * binding curations_from_submitters directly: that array holds every
+     * submitter when unfiltered, which would put twenty-odd idents into the URL
+     * of an unfiltered page. See syncSubmitterFilter().
+     */
+    protected $queryString = [
+        'title'                  => ['except' => ''],
+        'hasDisease'             => ['except' => ''],
+        'curations_definitive'   => ['except' => '1', 'as' => 'definitive'],
+        'curations_strong'       => ['except' => '1', 'as' => 'strong'],
+        'curations_moderate'     => ['except' => '1', 'as' => 'moderate'],
+        'curations_supportive'   => ['except' => '1', 'as' => 'supportive'],
+        'curations_limited'      => ['except' => '1', 'as' => 'limited'],
+        'curations_disputed'     => ['except' => '1', 'as' => 'disputed'],
+        'curations_refuted'      => ['except' => '1', 'as' => 'refuted'],
+        'curations_animal'       => ['except' => '1', 'as' => 'animal'],
+        'curations_noknown'      => ['except' => '1', 'as' => 'noknown'],
+        'submitterFilter'        => ['except' => '', 'as' => 'submitters'],
+    ];
+
     protected $rules = [
         'curations_definitive' => 'numeric',
         'curations_strong' => 'numeric',
@@ -82,11 +122,105 @@ class Listing extends Component
     {
         $this->submitters = $this->submittersWithSubmissions();
 
-        $this->title                        = request('title');
-        $this->hasDisease                   = request('hasDisease');
-        $this->curations_from_submitters    = request('curations_from_submitters');
+        // Coalesced to '' rather than left null: null would round-trip into the
+        // URL as an empty ?title=, defeating the 'except' rules above (#204).
+        $this->title                        = request('title', '') ?? '';
+        $this->hasDisease                   = request('hasDisease', '') ?? '';
         $this->count_submissions            = request('count_submissions');
         $this->count_unique_diseases        = request('count_unique_diseases');
+
+        // ?submitters=a,b,c wins if present. Otherwise stay null so render()
+        // defaults to every submitter; the legacy ?curations_from_submitters=
+        // array form is still honoured.
+        $this->submitterFilter = request('submitters', '') ?? '';
+
+        if ($this->submitterFilter !== '') {
+            $this->curations_from_submitters = $this->expandSubmitterFilter($this->submitterFilter);
+        } else {
+            $this->curations_from_submitters = request('curations_from_submitters');
+        }
+    }
+
+    /**
+     * Turn ?submitters=a,b,c into the array the query builder wants, keeping only
+     * idents that exist so a stale or hand-edited URL cannot empty the listing.
+     */
+    private function expandSubmitterFilter($value)
+    {
+        // An empty selection cannot be spelled as an empty string, since that is
+        // also how "no filter" is spelled. Hence the explicit sentinel.
+        if ($value === self::SUBMITTERS_NONE) {
+            return [];
+        }
+
+        $requested = array_filter(array_map('trim', explode(',', $value)), 'strlen');
+
+        if (empty($requested)) {
+            return null;
+        }
+
+        $known = $this->submittersWithSubmissions()->pluck('uuid')->toArray();
+        $valid = array_values(array_intersect($requested, $known));
+
+        return empty($valid) ? null : $valid;
+    }
+
+    /**
+     * Keep the URL-facing ?submitters= list in step with the selection. Cleared
+     * when every submitter is selected, so an unfiltered page has a clean URL.
+     */
+    private function syncSubmitterFilter()
+    {
+        $selected = $this->curations_from_submitters ?? [];
+        $total = $this->submittersWithSubmissions()->count();
+
+        if (count($selected) === $total) {
+            $this->submitterFilter = '';
+        } elseif (empty($selected)) {
+            $this->submitterFilter = self::SUBMITTERS_NONE;
+        } else {
+            $this->submitterFilter = implode(',', $selected);
+        }
+    }
+
+    /**
+     * True when the listing is showing anything other than the full data set,
+     * so the view can say so rather than leaving a stale filter invisible (#204).
+     */
+    public function getHasActiveFiltersProperty()
+    {
+        if ($this->title !== '' && !is_null($this->title)) {
+            return true;
+        }
+
+        if ($this->hasDisease !== '' && !is_null($this->hasDisease)) {
+            return true;
+        }
+
+        if ($this->submitterFilter !== '') {
+            return true;
+        }
+
+        foreach ($this->classificationFilters as $filter) {
+            if ($this->$filter !== '' && !is_null($this->$filter) && (int) $this->$filter !== 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Reset every filter to its unfiltered default, which also empties the query
+     * string thanks to the 'except' rules.
+     */
+    public function clearAllFilters()
+    {
+        $this->resetPage();
+        $this->title = '';
+        $this->hasDisease = '';
+        $this->selectAllClassifications();
+        $this->selectAllSubmitters();
     }
 
     public function updating($name, $value)
@@ -165,20 +299,6 @@ class Listing extends Component
         return Submitter::has('submissions')->orderBy('name')->get();
     }
 
-    /**
-     * True only on a fresh load, before any toggle has been touched. Used to
-     * pick defaults without clobbering a deliberate all-off selection.
-     */
-    private function classificationsAreUnset()
-    {
-        foreach ($this->classificationFilters as $filter) {
-            if ($this->$filter !== '' && $this->$filter !== null) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
 
 
@@ -197,21 +317,23 @@ class Listing extends Component
             $this->filtering_by_submitter = false;
         }
 
-        // Default every classification to on for a fresh load. This used to fire
-        // whenever all nine were off, which made an all-off selection impossible
-        // to hold — the loose == 0 comparison could not tell '' ("never set")
-        // from '0' ("turned off"). classificationsAreUnset() only matches the
-        // former, so "none" now sticks (#203).
-        if($this->classificationsAreUnset()) {
-            $this->curations_definitive            = 1;
-            $this->curations_strong                = 1;
-            $this->curations_moderate              = 1;
-            $this->curations_limited               = 1;
-            $this->curations_disputed              = 1;
-            $this->curations_refuted               = 1;
-            $this->curations_animal                = 1;
-            $this->curations_noknown               = 1;
-            $this->curations_supportive            = 1;
+        // Done here rather than in each action so every path that changes the
+        // selection — the per-submitter toggle, select all, select none, and the
+        // fresh-load default above — lands in the URL (#204).
+        $this->syncSubmitterFilter();
+
+        // Default each unset classification to on, one at a time.
+        //
+        // This used to reset all nine whenever all nine were off, which made an
+        // all-off selection impossible to hold — the loose == 0 comparison could
+        // not tell '' ("never set") from '0' ("turned off") (#203). Defaulting
+        // per toggle rather than all-or-nothing also matters for URLs that name
+        // only some of them: ?definitive=0 must leave the other eight on rather
+        // than stranding them at '' and silently disabling everything (#204).
+        foreach ($this->classificationFilters as $filter) {
+            if ($this->$filter === '' || is_null($this->$filter)) {
+                $this->$filter = 1;
+            }
         }
 
         $query = [

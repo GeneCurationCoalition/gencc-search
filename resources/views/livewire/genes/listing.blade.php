@@ -1,4 +1,18 @@
 <div class="">
+    @if($this->hasActiveFilters)
+        {{-- Filters now survive in the URL, so a bookmarked or shared link can
+             arrive pre-filtered. Say so plainly rather than letting the user
+             wonder why rows are missing (#204). --}}
+        <div class="flex items-center justify-between bg-blue-100 border border-blue-300 text-blue-900 rounded px-4 py-2 mb-3 text-sm">
+            <div>
+                <i class="fas fa-filter"></i>
+                Filters are active — this is a partial view of the data.
+            </div>
+            <button wire:click="clearAllFilters" class="font-semibold hover:underline focus:outline-none whitespace-no-wrap">
+                Clear all filters
+            </button>
+        </div>
+    @endif
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
         <div class="col-span-4 xl:col-span-2 mt-3">
