@@ -448,6 +448,39 @@ class GenesListingTest extends TestCase
         $fromUrl->assertSee('GJB2')->assertDontSee('BRCA1');
     }
 
+    /**
+     * @test
+     * @dataProvider paddedTitleProvider
+     *
+     * Regression for #207, covering the submitted-disease filter on /genes.
+     *
+     * The sibling of the gene-symbol case above: the disease term reaches its
+     * own LIKE pattern one line earlier in render(), through the nested
+     * whereHas on diseases.name. Both entry points are asserted here too — the
+     * Livewire-bound filter box and the ?hasDisease= parameter mount() reads.
+     */
+    public function genes_listing_ignores_surrounding_whitespace_in_has_disease($pad)
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2', 'hearing loss');
+        $this->createGeneWithSubmission('BRCA1', 'breast cancer');
+
+        // Entry point 1: term typed or pasted into the filter box.
+        $fromFilterBox = Livewire::test(Listing::class)
+            ->set('hasDisease', $pad . 'hearing loss' . $pad);
+
+        $this->assertCount(1, $fromFilterBox->viewData('genes'));
+        $fromFilterBox->assertSee('GJB2')->assertDontSee('BRCA1');
+
+        // Entry point 2: same term arriving as ?hasDisease=, which mount() reads.
+        $fromUrl = Livewire::withQueryParams(['hasDisease' => $pad . 'hearing loss' . $pad])
+            ->test(Listing::class);
+
+        $this->assertCount(1, $fromUrl->viewData('genes'));
+        $fromUrl->assertSee('GJB2')->assertDontSee('BRCA1');
+    }
+
     public function paddedTitleProvider(): array
     {
         return [
@@ -499,14 +532,22 @@ class GenesListingTest extends TestCase
     /**
      * Create a gene with a known symbol plus one submission, so it survives the
      * component's whereHas('submissions') filter.
+     *
+     * Pass $diseaseName when the test filters on the disease term as well; the
+     * factory derives both name and title from it, and only `name` is what the
+     * component's nested whereHas matches on.
      */
-    private function createGeneWithSubmission(string $symbol): Gene
+    private function createGeneWithSubmission(string $symbol, string $diseaseName = null): Gene
     {
         $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
 
+        $diseaseAttributes = $diseaseName === null
+            ? []
+            : ['name' => $diseaseName, 'title' => $diseaseName];
+
         Submission::factory()->create([
             'gene_id' => $gene->id,
-            'disease_id' => Disease::factory()->create()->id,
+            'disease_id' => Disease::factory()->create($diseaseAttributes)->id,
             'classification_id' => Classification::factory()->create()->id,
             'submitter_id' => Submitter::factory()->create()->id,
             'inheritance_id' => Inheritance::factory()->create()->id,
