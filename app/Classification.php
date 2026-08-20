@@ -42,6 +42,27 @@ class Classification extends Model
     ];
 
     /**
+     * Query-string names the genes listing binds its nine classification toggles
+     * to — the 'as' aliases in Listing::$queryString — keyed by classification ID.
+     *
+     * Keyed by ID for the same reason as VALIDITY_RANK and getHrefAttribute: IDs
+     * are what the rest of the codebase pins these terms to. Deliberately not
+     * derived from the slug map, which spells two of the terms differently
+     * ('animal-model-only', 'no-known').
+     */
+    const FILTER_PARAMS = [
+        1 => 'definitive',
+        2 => 'strong',
+        3 => 'moderate',
+        4 => 'supportive',
+        5 => 'limited',
+        6 => 'disputed',
+        7 => 'refuted',
+        8 => 'animal',
+        9 => 'noknown',
+    ];
+
+    /**
      * Get all the live published (publicly visible) submissions for this classification.
      * Filters by is_live=true (most recent version) AND status='published'.
      */
@@ -134,6 +155,41 @@ class Classification extends Model
         ];
 
         return $hrefMap[$this->id] ?? '';
+    }
+
+    /**
+     * Get filter_param attribute - the name this classification's toggle goes by
+     * in the genes listing query string.
+     *
+     * The href attribute above is the legacy 'curations_definitive' spelling,
+     * which the listing no longer binds to; this is the short alias it does.
+     */
+    public function getFilterParamAttribute()
+    {
+        return self::FILTER_PARAMS[$this->id] ?? '';
+    }
+
+    /**
+     * Get only_filter_query attribute - a genes listing query string selecting
+     * this classification and nothing else.
+     *
+     * All nine toggles default to on, so naming only this one ('?definitive=1')
+     * would leave the other eight enabled and filter nothing at all. The other
+     * eight have to be switched off explicitly.
+     */
+    public function getOnlyFilterQueryAttribute()
+    {
+        if (!isset(self::FILTER_PARAMS[$this->id])) {
+            return '';
+        }
+
+        $pairs = [];
+
+        foreach (self::FILTER_PARAMS as $id => $param) {
+            $pairs[] = $param . '=' . ($id === (int) $this->id ? '1' : '0');
+        }
+
+        return implode('&', $pairs);
     }
 
     /**
