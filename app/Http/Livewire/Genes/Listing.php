@@ -6,10 +6,12 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Gene;
 use App\Submitter;
+use App\Traits\NormalizesSearchInput;
 
 class Listing extends Component
 {
     use WithPagination;
+    use NormalizesSearchInput;
 
     public $title                           = '';
     public $hasDisease                      = '';
@@ -177,9 +179,18 @@ class Listing extends Component
         if ($query['num_curations_animal'] > 0) $enabledClassifications[] = 8;
         if ($query['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
 
-        $query_disease = $this->hasDisease;
+        // Normalize here rather than in mount() or updating(), so $this->title
+        // keeps whatever the user actually typed or pasted and the filter box
+        // still shows it back to them. That also means every path into this
+        // component is covered at once — the Livewire-bound filter box and the
+        // ?title= parameter mount() reads. The latter matters: the gene search
+        // box in shared/gene-headline.blade.php trims client-side before
+        // building the URL, but a bookmarked or hand-edited ?title= never runs
+        // that JavaScript, so this is the only normalization it gets.
+        $query_disease = $this->normalizeSearchTerm($this->hasDisease);
+        $query_symbol  = $this->normalizeSearchTerm($this->title);
 
-        $genes = Gene::where('symbol', 'LIKE', '%' . $this->title . '%')
+        $genes = Gene::where('symbol', 'LIKE', '%' . $query_symbol . '%')
             ->whereHas('submissions', function ($q) use ($query_disease, $enabledClassifications, $submitterIds) {
                 if (!empty($query_disease)) {
                     $q->whereHas('disease', function ($diseaseQuery) use ($query_disease) {

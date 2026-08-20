@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Submitter;
 
 use App\Classification;
 use App\Submission;
+use App\Traits\NormalizesSearchInput;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -14,6 +15,7 @@ class ListingOfSubmissions extends Component
 {
 
     use WithPagination;
+    use NormalizesSearchInput;
 
     public $count = 0;
     public $submitter_id;
@@ -279,8 +281,9 @@ class ListingOfSubmissions extends Component
                         //dd($filter_set['classifications']);
                         //$query->whereNotIn('id', $filter_set['diseases']);
                     //}
-                    if (!empty($this->query_disease)) {
-                        $query->where('name', 'like', '%' . $this->query_disease . '%');
+                    $query_disease = $this->normalizeSearchTerm($this->query_disease);
+                    if (!empty($query_disease)) {
+                        $query->where('name', 'like', '%' . $query_disease . '%');
                     }
                 })->whereHas('inheritance', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['inheritances'] as $key => $item) {
@@ -292,8 +295,9 @@ class ListingOfSubmissions extends Component
                         //dd($filter_set['classifications']);
                         //$query->whereNotIn('id', $filter_set['genes']);
                     //}
-                    if (!empty($this->query_gene)) {
-                        $query->where('symbol', 'like', '%' . $this->query_gene . '%');
+                    $query_gene = $this->normalizeSearchTerm($this->query_gene);
+                    if (!empty($query_gene)) {
+                        $query->where('symbol', 'like', '%' . $query_gene . '%');
                     }
                 })->whereHas('submitter', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['submitters'] as $key => $item) {
