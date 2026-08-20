@@ -243,7 +243,7 @@ class GenesListingTest extends TestCase
     }
 
     /** @test */
-    public function genes_listing_resets_curation_filters_when_all_off()
+    public function genes_listing_honours_an_explicit_all_off_classification_selection()
     {
         // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
         if (config('database.default') === 'sqlite') {
@@ -276,9 +276,13 @@ class GenesListingTest extends TestCase
             ->set('curations_noknown', 0)
             ->set('curations_supportive', 0);
 
-        // After render, filters should be reset to 1
-        $this->assertEquals(1, $component->get('curations_definitive'));
-        $this->assertEquals(1, $component->get('curations_strong'));
+        // An explicit all-off selection is now honoured rather than reset (#203),
+        // so the toggles stay off and the listing shows nothing. Defaulting to
+        // all-on still happens, but only on a fresh load — see
+        // GenesListingSelectAllTest::fresh_load_defaults_every_classification_on.
+        $this->assertEquals(0, $component->get('curations_definitive'));
+        $this->assertEquals(0, $component->get('curations_strong'));
+        $this->assertCount(0, $component->viewData('genes'));
     }
 
     /**

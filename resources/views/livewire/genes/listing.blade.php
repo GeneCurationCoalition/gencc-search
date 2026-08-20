@@ -26,6 +26,13 @@
             </div>
             <div x-show="open" @click.away="open = false" class="z-20 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg" style="display: none;">
                 <div class="rounded-md bg-white shadow-xs">
+                <div class="flex border-b border-gray-200 px-4 py-2 text-sm leading-5">
+                    <button wire:click="selectAllSubmitters"
+                        class="text-blue-800 hover:underline focus:outline-none">Select all</button>
+                    <span class="px-2 text-gray-400">|</span>
+                    <button wire:click="selectNoSubmitters"
+                        class="text-blue-800 hover:underline focus:outline-none">Select none</button>
+                </div>
                 <div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                     @foreach ($submitters as $submitter)
 {{-- wire:click="addTodo({{ $todo->id }}, '{{ $todo->name }}')" --}}
@@ -152,6 +159,13 @@
                     <button class="text-gencc-noknown rounded-full h-6 border-2 mt-1 w-100 font-bold text-sm border-gencc-noknown bg-gray-200" wire:click="$set('curations_noknown', '0')" ><i class="fas fa-check"></i></button>
                 @endif
 
+            </div>
+            <div class="flex text-xs mt-2 ml-3">
+                <button wire:click="selectAllClassifications"
+                    class="text-blue-800 hover:underline focus:outline-none">Select all</button>
+                <span class="px-2 text-gray-400">|</span>
+                <button wire:click="selectNoClassifications"
+                    class="text-blue-800 hover:underline focus:outline-none">Select none</button>
             </div>
         </div>
             <div class="hidden xl:inline-block xl:visible text-blue-800 pl-0 text-xs mt-6 leading-tight"> <i class="far fa-question-circle"></i><a class="hover:underline" target="_blank" href="{{ route('faq') }}#validity-termsdelphi-survey"> About GenCC<div class="ml-4">Classifications</div></a></div>

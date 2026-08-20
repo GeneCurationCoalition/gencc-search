@@ -31,6 +31,22 @@ class Listing extends Component
     public $sort                            = '';
     public $page                            = 1;
     protected $submitters;
+
+    /**
+     * The nine classification toggles, in the order they appear in the UI.
+     */
+    protected $classificationFilters = [
+        'curations_definitive',
+        'curations_strong',
+        'curations_moderate',
+        'curations_supportive',
+        'curations_limited',
+        'curations_disputed',
+        'curations_refuted',
+        'curations_animal',
+        'curations_noknown',
+    ];
+
     protected $filtersThatResetPage = [
         'title',
         'hasDisease',
@@ -66,7 +82,7 @@ class Listing extends Component
 
     public function mount()
     {
-        $this->submitters = Submitter::has('submissions')->orderBy('name')->get();
+        $this->submitters = $this->submittersWithSubmissions();
 
         $this->title                        = request('title');
         $this->hasDisease                   = request('hasDisease');
@@ -98,13 +114,84 @@ class Listing extends Component
         $this->curations_from_submitters = array_unique($result);
     }
 
+    /**
+     * Toggle every classification at once (#203).
+     *
+     * '0' rather than '' matters: '' means "never set", which render() treats as
+     * a fresh page load and initializes to all-on. Writing '0' records a
+     * deliberate choice, so an empty selection survives the next render and the
+     * listing shows nothing until the user picks something.
+     */
+    public function selectAllClassifications()
+    {
+        $this->setAllClassifications('1');
+    }
+
+    public function selectNoClassifications()
+    {
+        $this->setAllClassifications('0');
+    }
+
+    private function setAllClassifications($value)
+    {
+        $this->resetPage();
+
+        foreach ($this->classificationFilters as $filter) {
+            $this->$filter = $value;
+        }
+    }
+
+    /**
+     * Toggle every submitter at once (#203). Same empty-selection reasoning as
+     * the classifications above, except the "never set" marker is null.
+     */
+    public function selectAllSubmitters()
+    {
+        $this->resetPage();
+        // Queried rather than read from $this->submitters: that property is
+        // protected, so Livewire does not carry it across requests and it is null
+        // by the time an action runs.
+        $this->curations_from_submitters = $this->submittersWithSubmissions()->pluck('uuid')->toArray();
+        $this->filtering_by_submitter = false;
+    }
+
+    public function selectNoSubmitters()
+    {
+        $this->resetPage();
+        $this->curations_from_submitters = [];
+        $this->filtering_by_submitter = true;
+    }
+
+    private function submittersWithSubmissions()
+    {
+        return Submitter::has('submissions')->orderBy('name')->get();
+    }
+
+    /**
+     * True only on a fresh load, before any toggle has been touched. Used to
+     * pick defaults without clobbering a deliberate all-off selection.
+     */
+    private function classificationsAreUnset()
+    {
+        foreach ($this->classificationFilters as $filter) {
+            if ($this->$filter !== '' && $this->$filter !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
 
     public function render()
     {
 
-        $this->submitters     = Submitter::has('submissions')->orderBy('name')->get();
-        if(empty($this->curations_from_submitters)){
+        $this->submitters     = $this->submittersWithSubmissions();
+        // Default to every submitter on a fresh load, but leave an explicitly
+        // emptied selection alone — is_null, not empty(), so that "none" sticks
+        // instead of snapping back to all (#203).
+        if(is_null($this->curations_from_submitters)){
             $curations_from_submitters = $this->submitters->pluck(['uuid']);
             $this->curations_from_submitters = $curations_from_submitters->toArray();
         }
@@ -112,19 +199,12 @@ class Listing extends Component
             $this->filtering_by_submitter = false;
         }
 
-        // TODO
-        // Check if all of the filters are off, if so, switch all back on
-        if(
-            ($this->curations_definitive == 0) &&
-            ($this->curations_strong == 0) &&
-            ($this->curations_moderate == 0) &&
-            ($this->curations_supportive == 0) &&
-            ($this->curations_limited == 0) &&
-            ($this->curations_disputed == 0) &&
-            ($this->curations_refuted == 0) &&
-            ($this->curations_animal == 0) &&
-            ($this->curations_noknown == 0)
-        ) {
+        // Default every classification to on for a fresh load. This used to fire
+        // whenever all nine were off, which made an all-off selection impossible
+        // to hold — the loose == 0 comparison could not tell '' ("never set")
+        // from '0' ("turned off"). classificationsAreUnset() only matches the
+        // former, so "none" now sticks (#203).
+        if($this->classificationsAreUnset()) {
             $this->curations_definitive            = 1;
             $this->curations_strong                = 1;
             $this->curations_moderate              = 1;
@@ -197,12 +277,11 @@ class Listing extends Component
                         $diseaseQuery->where('name', 'like', '%' . $query_disease . '%');
                     });
                 }
-                if (!empty($enabledClassifications)) {
-                    $q->whereIn('classification_id', $enabledClassifications);
-                }
-                if (!empty($submitterIds)) {
-                    $q->whereIn('submitter_id', $submitterIds);
-                }
+                // Applied unconditionally: an empty list means the user turned
+                // everything off, which has to match nothing. Skipping the
+                // clause would silently widen that to "match everything" (#203).
+                $q->whereIn('classification_id', $enabledClassifications);
+                $q->whereIn('submitter_id', $submitterIds);
             })
             ->with('submissions')
             ->orderByRaw("
