@@ -63,6 +63,47 @@ class StaticPagesFeatureTest extends TestCase
 
     /**
      * @test
+     *
+     * The four FAQ revisions agreed on a GenCC call (#208).
+     */
+    public function faq_page_reflects_the_agreed_revisions()
+    {
+        $response = $this->get('/faq');
+
+        // 1) The marker paper is referenced.
+        $response->assertSee('marker paper', false);
+        $response->assertSee('35507016');
+
+        // 2) The Delphi survey description and its image are gone, and the
+        // section is retitled. The anchor deliberately keeps its old value.
+        $response->assertDontSee('Delphi');
+        $response->assertDontSee('img/faq/delphi.png', false);
+        $response->assertSee('Standardized Clinical Validity terms');
+
+        // 3) Supportive joins the term definitions.
+        $response->assertSee('Supportive');
+        $response->assertSee('did not curate to the same level of granularity');
+
+        // 4) A publications section, listed in the section index.
+        $response->assertSee('GenCC Publications');
+        $response->assertSee('#gencc-publications', false);
+        $response->assertSee('S1098-3600(23)01045-6', false);
+    }
+
+    /**
+     * @test
+     *
+     * The retitled section keeps its original anchor because the genes listing
+     * links straight to it (livewire/genes/listing.blade.php), as do external
+     * bookmarks.
+     */
+    public function faq_validity_terms_anchor_is_unchanged()
+    {
+        $this->get('/faq')->assertSee('id="validity-termsdelphi-survey"', false);
+    }
+
+    /**
+     * @test
      * @group skip-ci
      */
     public function reports_page_returns_200()
