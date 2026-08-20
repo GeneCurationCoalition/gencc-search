@@ -18,6 +18,22 @@ class StaticPagesFeatureTest extends TestCase
         $response->assertViewIs('general.about');
     }
 
+    /**
+     * @test
+     *
+     * The ClinGen SC asked for this specifically to correct a misreading of
+     * GenCC's relationship to ClinGen (#211), so the disclaimer is the point of
+     * the section, not incidental copy.
+     */
+    public function about_page_shows_clingen_funding_and_review_disclaimer()
+    {
+        $response = $this->get('/about');
+
+        $response->assertSee('Funding');
+        $response->assertSee('U24HG006834');
+        $response->assertSee('does not review for accuracy or modify submitted content');
+    }
+
     /** @test */
     public function privacy_page_returns_200()
     {
