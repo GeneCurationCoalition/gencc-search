@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Classification;
 use App\Submission;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -11,13 +12,10 @@ use Illuminate\Support\Str;
 /**
  * Finds gene + disease + mode-of-inheritance groups where curating groups disagree.
  *
- * A group is "conflicting" when at least one live, published submission asserts
- * strong evidence (Definitive, Strong or Moderate — classifications.order <= 30)
- * and at least one asserts something weaker.
- *
- * Ranking is done strictly on classifications.order because classifications.slug
- * is NULL for every row in the production data, and the classification ids are not
- * in strength order (GENCC:100009 Supportive is id 4).
+ * A group is "conflicting" when at least one live, published submission has a
+ * classification in the vocabulary's strong bucket and at least one has a known
+ * classification in another conflict bucket. Database IDs and order values do
+ * not carry classification meaning.
  */
 class ConflictFinder
 {
@@ -30,20 +28,7 @@ class ConflictFinder
      * that array changes, run `php artisan conflicts:clear-cache` after deploying,
      * or wait out CACHE_HOURS.
      */
-    const CACHE_KEY = 'conflict-viewer.triples';
-
-    /** Highest classifications.order still considered "strong" (Definitive 10, Strong 20, Moderate 30). */
-    const STRONG_MAX_ORDER = 30;
-
-    /** Lowest weakest-classification order that makes a conflict "vs Limited" (Limited 50). */
-    const TIER_LIMITED_MIN_ORDER = 50;
-
-    /**
-     * Lowest weakest-classification order that makes a conflict "vs Contradictory":
-     * Disputed Evidence 60, Refuted Evidence 70, Animal Model Only 80,
-     * No Known Disease Relationship 90.
-     */
-    const TIER_CONTRADICTORY_MIN_ORDER = 60;
+    const CACHE_KEY = 'conflict-viewer.triples.v2';
 
     const TIER_SUPPORTIVE    = 'supportive';
     const TIER_LIMITED       = 'limited';
@@ -68,24 +53,17 @@ class ConflictFinder
     const CACHE_HOURS = 6;
 
     /**
-     * The severity tier for a group, keyed off the weakest classification present.
+     * The severity tier for a known classification CURIE.
      *
      * Public and static so it can be exercised without building fixture rows.
      *
-     * @param  int  $maxOrder
-     * @return string
+     * @return string|null
      */
-    public static function tierFor(int $maxOrder): string
+    public static function tierFor(string $curie): ?string
     {
-        if ($maxOrder >= self::TIER_CONTRADICTORY_MIN_ORDER) {
-            return self::TIER_CONTRADICTORY;
-        }
+        $bucket = Classification::conflictBucket($curie);
 
-        if ($maxOrder >= self::TIER_LIMITED_MIN_ORDER) {
-            return self::TIER_LIMITED;
-        }
-
-        return self::TIER_SUPPORTIVE;
+        return in_array($bucket, array_keys(self::TIER_LABELS), true) ? $bucket : null;
     }
 
     /**
@@ -142,14 +120,22 @@ class ConflictFinder
                 'd.curie as disease_curie',
                 'd.name as disease_name',
                 'i.name as moi',
+                'c.curie as classification_curie',
                 'c.name as classification',
-                'c.order as classification_order',
                 'sub.name as submitter'
             )
             ->orderBy('s.id')
             ->cursor();
 
         foreach ($rows as $row) {
+            $metadata = Classification::VOCABULARY[$row->classification_curie] ?? null;
+
+            // Placeholder and future terms have no conflict semantics until they
+            // are explicitly added to the application vocabulary.
+            if ($metadata === null) {
+                continue;
+            }
+
             $key = $row->gene_id . '|' . $row->disease_id . '|' . $row->inheritance_id;
 
             if (! isset($groups[$key])) {
@@ -166,19 +152,23 @@ class ConflictFinder
                     'strong_count'  => 0,
                     'other_count'   => 0,
                     'total_count'   => 0,
-                    'max_order'     => $row->classification_order,
+                    // Retained for cache/result shape compatibility. This is now
+                    // the weakest canonical vocabulary priority, not a DB order.
+                    'max_order'     => $metadata['priority'],
+                    'severity_tier' => null,
                 ];
             }
 
             $group    = &$groups[$key];
-            $side     = $row->classification_order <= self::STRONG_MAX_ORDER ? 'strong' : 'other';
+            $bucket   = $metadata['conflict_bucket'];
+            $side     = $bucket === 'strong' ? 'strong' : 'other';
             $submitter = $row->submitter ?: 'Unknown';
 
-            // Submitter => classification name => classifications.order, so a submitter
-            // appears once per side. The order is carried as the value so orderSide()
+            // Submitter => classification name => vocabulary priority, so a submitter
+            // appears once per side. The priority is carried so orderSide()
             // can rank both the submitters and each submitter's own pills by strength;
             // it is replaced by a plain list of names before the group is returned.
-            $group[$side][$submitter][$row->classification] = (int) $row->classification_order;
+            $group[$side][$submitter][$row->classification] = $metadata['priority'];
             $group[$side . '_count']++;
             $group['total_count']++;
 
@@ -187,10 +177,14 @@ class ConflictFinder
             // and is not stable across database reloads.
             if ($side === 'other') {
                 $group['other_slugs'][Str::slug($submitter)] = $submitter;
+                if ($group['severity_tier'] === null
+                    || $metadata['priority'] > $group['max_order']) {
+                    $group['severity_tier'] = $bucket;
+                }
             }
 
-            if ($row->classification_order > $group['max_order']) {
-                $group['max_order'] = $row->classification_order;
+            if ($metadata['priority'] > $group['max_order']) {
+                $group['max_order'] = $metadata['priority'];
             }
 
             unset($group);
@@ -198,9 +192,7 @@ class ConflictFinder
 
         return collect($groups)
             ->filter(fn ($group) => $group['strong_count'] > 0 && $group['other_count'] > 0)
-            // max_order is only final once a group has been fully folded.
             ->map(function ($group) {
-                $group['severity_tier'] = self::tierFor((int) $group['max_order']);
                 $group['strong']        = self::orderSide($group['strong']);
                 $group['other']         = self::orderSide($group['other']);
 
@@ -223,7 +215,7 @@ class ConflictFinder
      * the order fell out of `submissions.id` — stable in practice but arbitrary,
      * and free to change whenever a submitter reloads its data.
      *
-     * Takes submitter => [classification name => classifications.order] and
+     * Takes submitter => [classification name => vocabulary priority] and
      * returns submitter => [classification name, ...], which is the shape Blade
      * iterates.
      *
@@ -235,7 +227,7 @@ class ConflictFinder
         $submitters = [];
 
         foreach ($side as $submitter => $classifications) {
-            // Ascending classifications.order == strongest evidence first.
+            // Ascending vocabulary priority == canonical display order.
             asort($classifications);
 
             $submitters[] = [

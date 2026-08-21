@@ -177,9 +177,11 @@ class ListingOfSubmissions extends Component
 
         // Get distinct classifications (only ~9 possible, safe to load)
         $classificationIds = (clone $baseQuery)->distinct()->pluck('classification_id');
-        $classifications = Classification::whereIn('id', $classificationIds)
-            ->select('id', 'ident', 'name')
-            ->get();
+        $classifications = Classification::orderCollection(
+            Classification::whereIn('id', $classificationIds)
+                ->select('id', 'ident', 'curie', 'name')
+                ->get()
+        );
         foreach ($classifications as $classification) {
             $this->filter['classifications'][$classification->ident] = [
                 'title' => $classification->name,
@@ -269,6 +271,19 @@ class ListingOfSubmissions extends Component
             //dd($filter);
             $has_records = Submission::where('submitter_id', '=', $submitter_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->count();
             //dd($has_records);
+            $idsByCurie = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
+                ->pluck('id', 'curie');
+            $classificationOrder = 'CASE classification_id';
+
+            foreach (Classification::VOCABULARY as $curie => $metadata) {
+                if ($idsByCurie->has($curie)) {
+                    $classificationOrder .= ' WHEN ' . (int) $idsByCurie->get($curie)
+                        . ' THEN ' . (int) $metadata['priority'];
+                }
+            }
+
+            $classificationOrder .= ' ELSE 99 END';
+
             $records = Submission::where('submitter_id', '=', $submitter_id)
                 ->whereHas('classification', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['classifications'] as $key => $item) {
@@ -310,7 +325,7 @@ class ListingOfSubmissions extends Component
                 //     }])
                 ->where('is_live', '=', true)
                 ->where('status', '=', Submission::STATUS_PUBLISHED)
-                ->orderBy('classification_id', 'ASC')
+                ->orderByRaw($classificationOrder)
                 ->orderBy('report_date', 'DESC')
                 ->paginate(20);
         // }

@@ -37,6 +37,9 @@ class Listing extends Component
     /** Comma-separated dissenting-submitter slugs to HIDE. Empty means every submitter is shown. */
     public $hideDissenters = '';
 
+    /** Whether malformed or unknown URL exclusions were discarded. */
+    public $invalidUrlFiltersIgnored = false;
+
     /**
      * Filter state is shareable. Every entry excepts its default, so a wholly
      * default view has a bare /conflict-viewer URL with no query string at all.
@@ -83,6 +86,11 @@ class Listing extends Component
         'total_count',
     ];
 
+    public function mount()
+    {
+        $this->normalizeExclusionFilters(ConflictFinder::conflicts());
+    }
+
     public function updating($name, $value)
     {
         $property = explode('.', $name)[0];
@@ -125,7 +133,11 @@ class Listing extends Component
      */
     public function toggleTier($tier)
     {
-        $this->hideTiers = $this->toggleCsv($this->hideTiers, (string) $tier);
+        if (! is_string($tier) || ! array_key_exists($tier, ConflictFinder::TIER_LABELS)) {
+            return;
+        }
+
+        $this->hideTiers = $this->toggleCsv($this->hideTiers, $tier);
         $this->resetPage();
     }
 
@@ -137,7 +149,11 @@ class Listing extends Component
      */
     public function toggleDissenter($slug)
     {
-        $this->hideDissenters = $this->toggleCsv($this->hideDissenters, (string) $slug);
+        if (! is_string($slug) || ! in_array($slug, $this->knownDissenterSlugs(ConflictFinder::conflicts()), true)) {
+            return;
+        }
+
+        $this->hideDissenters = $this->toggleCsv($this->hideDissenters, $slug);
         $this->resetPage();
     }
 
@@ -152,6 +168,7 @@ class Listing extends Component
         $this->disease        = '';
         $this->hideTiers      = '';
         $this->hideDissenters = '';
+        $this->invalidUrlFiltersIgnored = false;
 
         $this->resetPage();
     }
@@ -188,10 +205,83 @@ class Listing extends Component
      */
     protected function csvToArray($csv): array
     {
+        if (! is_string($csv)) {
+            return [];
+        }
+
         return array_values(array_filter(
-            array_map('trim', explode(',', (string) $csv)),
+            array_map('trim', explode(',', $csv)),
             fn ($value) => $value !== ''
         ));
+    }
+
+    /**
+     * Canonicalize both URL-facing exclusion lists and discard invalid entries.
+     */
+    protected function normalizeExclusionFilters(Collection $all): void
+    {
+        $this->hideTiers = $this->normalizeCsv(
+            $this->hideTiers,
+            array_keys(ConflictFinder::TIER_LABELS)
+        );
+        $this->hideDissenters = $this->normalizeCsv(
+            $this->hideDissenters,
+            $this->knownDissenterSlugs($all)
+        );
+    }
+
+    /**
+     * Accept only scalar CSV strings and return a sorted, unique known subset.
+     */
+    protected function normalizeCsv($value, array $known): string
+    {
+        if (! is_string($value)) {
+            $this->invalidUrlFiltersIgnored = true;
+
+            return '';
+        }
+
+        $valid = [];
+
+        foreach (explode(',', $value) as $part) {
+            $trimmed = trim($part);
+
+            if ($trimmed === '') {
+                if ($value !== '') {
+                    $this->invalidUrlFiltersIgnored = true;
+                }
+                continue;
+            }
+
+            if ($trimmed !== $part
+                || in_array($trimmed, $valid, true)
+                || ! in_array($trimmed, $known, true)) {
+                $this->invalidUrlFiltersIgnored = true;
+            }
+
+            if (in_array($trimmed, $known, true) && ! in_array($trimmed, $valid, true)) {
+                $valid[] = $trimmed;
+            }
+        }
+
+        sort($valid);
+
+        return implode(',', $valid);
+    }
+
+    /** Return every dissenter slug present in the unfiltered conflict set. */
+    protected function knownDissenterSlugs(Collection $all): array
+    {
+        $slugs = [];
+
+        foreach ($all as $row) {
+            $slugs = array_merge($slugs, array_keys($row['other_slugs']));
+        }
+
+        $slugs = array_values(array_unique($slugs));
+        sort($slugs);
+
+        return $slugs;
     }
 
     /**
@@ -340,6 +430,7 @@ class Listing extends Component
     public function render()
     {
         $all  = ConflictFinder::conflicts();
+        $this->normalizeExclusionFilters($all);
         $base = $this->applyTextFilters($all);
 
         $hiddenTiers      = $this->csvToArray($this->hideTiers);

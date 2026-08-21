@@ -49,9 +49,9 @@ trait ModelTransform
     $return = "0";
     if (!empty($data)) {
       $return = ($total / $data) * 140;
-      //dd($return);
     }
-    return $return;
+
+    return max(0, min(100, $return));
   }
 
 

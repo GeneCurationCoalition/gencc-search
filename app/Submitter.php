@@ -110,7 +110,11 @@ class Submitter extends Model
             return null;
         }
 
-        foreach (static::curationClassificationMap() as $type => $classificationId) {
+        $classificationIds = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
+            ->pluck('id', 'curie');
+
+        foreach (Classification::VOCABULARY as $curie => $metadata) {
+            $type = str_replace('curations_', '', $metadata['property']);
             $count = 0;
 
             foreach (static::curationClassificationNamesFor($type) as $name) {
@@ -124,6 +128,10 @@ class Submitter extends Model
                 }
             }
 
+            $classificationId = $classificationIds->get(
+                $curie,
+                static::curationClassificationMap()[$type]
+            );
             $classificationCounts->put($classificationId, $count);
             $displayCounts[$type] = $count;
         }

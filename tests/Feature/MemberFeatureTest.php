@@ -104,6 +104,29 @@ class MemberFeatureTest extends TestCase
     }
 
     /** @test */
+    public function member_classification_collection_uses_canonical_order_not_database_order()
+    {
+        $submitter = Submitter::factory()->create(['curie' => 'GENCC:000302']);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100006',
+            'name' => 'Refuted Evidence',
+            'order' => 1,
+        ]);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100007',
+            'name' => 'Animal Model Only',
+            'order' => 999,
+        ]);
+
+        $titles = $this->get(route('member-show', $submitter->curie))
+            ->viewData('classifications')
+            ->pluck('title')
+            ->all();
+
+        $this->assertSame(['Animal Model Only', 'Refuted Evidence'], $titles);
+    }
+
+    /** @test */
     public function member_show_with_missing_counts_shows_unavailable_without_aggregate_fallback()
     {
         $submitter = Submitter::factory()->create([

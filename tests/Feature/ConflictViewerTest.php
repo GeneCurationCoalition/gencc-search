@@ -25,13 +25,29 @@ class ConflictViewerTest extends TestCase
         ConflictFinder::flush();
     }
 
-    /**
-     * ClassificationFactory defaults to order 1..6, but production ranks with
-     * 10..90 and STRONG_MAX_ORDER is 30 — so always set order explicitly.
-     */
+    /** Build a known classification while allowing deliberately misleading DB order values. */
     protected function classification(string $name, int $order): Classification
     {
+        $curies = [
+            'Definitive' => 'GENCC:100001',
+            'Strong' => 'GENCC:100002',
+            'Moderate' => 'GENCC:100003',
+            'Supportive' => 'GENCC:100009',
+            'Limited' => 'GENCC:100004',
+            'Disputed' => 'GENCC:100005',
+            'Disputed Evidence' => 'GENCC:100005',
+            'Animal Model Only' => 'GENCC:100007',
+            'Refuted' => 'GENCC:100006',
+            'Refuted Evidence' => 'GENCC:100006',
+            'No Known Disease Relationship' => 'GENCC:100008',
+        ];
+
+        if ($existing = Classification::where('curie', $curies[$name])->first()) {
+            return $existing;
+        }
+
         return Classification::factory()->create([
+            'curie' => $curies[$name],
             'name'  => $name,
             'title' => $name,
             'order' => $order,
@@ -286,18 +302,105 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function the_severity_tier_is_derived_from_the_weakest_classification_order()
+    public function severity_tiers_are_derived_from_explicit_curie_buckets()
     {
-        // Supportive 40, Limited 50, then Disputed 60 / Refuted 70 / Animal 80 /
-        // No Known 90 all collapse into the contradictory tier. 80 never occurs in
-        // the production data, which is exactly why the boundary is a >= 60 test
-        // rather than an enumeration of the orders that happen to be present.
-        $this->assertSame(ConflictFinder::TIER_SUPPORTIVE, ConflictFinder::tierFor(40));
-        $this->assertSame(ConflictFinder::TIER_LIMITED, ConflictFinder::tierFor(50));
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor(60));
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor(70));
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor(80));
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor(90));
+        $this->assertSame(ConflictFinder::TIER_SUPPORTIVE, ConflictFinder::tierFor('GENCC:100009'));
+        $this->assertSame(ConflictFinder::TIER_LIMITED, ConflictFinder::tierFor('GENCC:100004'));
+
+        foreach (['GENCC:100005', 'GENCC:100007', 'GENCC:100006', 'GENCC:100008'] as $curie) {
+            $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor($curie));
+        }
+
+        $this->assertNull(ConflictFinder::tierFor('GENCC:199999'));
+    }
+
+    /** @test */
+    public function curies_control_conflict_membership_and_severity_when_database_orders_are_permuted()
+    {
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi = Inheritance::factory()->create();
+
+        $base = [
+            'gene_id' => $gene->id,
+            'disease_id' => $disease->id,
+            'inheritance_id' => $moi->id,
+        ];
+
+        $this->submission($base + [
+            'classification_id' => $this->classification('Moderate', 999)->id,
+            'submitter_id' => Submitter::factory()->create(['name' => 'Strong Lab'])->id,
+        ]);
+        $this->submission($base + [
+            'classification_id' => $this->classification('Animal Model Only', -10)->id,
+            'submitter_id' => Submitter::factory()->create(['name' => 'Other Lab'])->id,
+        ]);
+
+        $row = ConflictFinder::conflicts()->first();
+
+        $this->assertSame(['Strong Lab'], array_keys($row['strong']));
+        $this->assertSame(['Other Lab'], array_keys($row['other']));
+        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, $row['severity_tier']);
+    }
+
+    /** @test */
+    public function unknown_classifications_never_participate_in_conflicts_or_counts()
+    {
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi = Inheritance::factory()->create();
+        $unknown = Classification::factory()->create([
+            'curie' => 'GENCC:199999',
+            'name' => 'Future Term',
+            'order' => 0,
+        ]);
+        $limited = $this->classification('Limited', 0);
+
+        foreach ([$unknown, $limited] as $classification) {
+            $this->submission([
+                'gene_id' => $gene->id,
+                'disease_id' => $disease->id,
+                'inheritance_id' => $moi->id,
+                'classification_id' => $classification->id,
+                'submitter_id' => Submitter::factory()->create()->id,
+            ]);
+        }
+
+        $this->assertCount(0, ConflictFinder::conflicts());
+    }
+
+    /** @test */
+    public function unknown_classifications_are_omitted_from_an_otherwise_valid_conflict()
+    {
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi = Inheritance::factory()->create();
+        $classifications = [
+            $this->classification('Definitive', 900),
+            $this->classification('Limited', -20),
+            Classification::factory()->create([
+                'curie' => 'GENCC:199999',
+                'name' => 'Future Term',
+                'order' => 0,
+            ]),
+        ];
+
+        foreach ($classifications as $classification) {
+            $this->submission([
+                'gene_id' => $gene->id,
+                'disease_id' => $disease->id,
+                'inheritance_id' => $moi->id,
+                'classification_id' => $classification->id,
+                'submitter_id' => Submitter::factory()->create()->id,
+            ]);
+        }
+
+        $row = ConflictFinder::conflicts()->first();
+
+        $this->assertSame(2, $row['total_count']);
+        $this->assertSame(1, $row['strong_count']);
+        $this->assertSame(1, $row['other_count']);
+        $this->assertStringNotContainsString('Future Term', json_encode($row));
     }
 
     /** @test */
@@ -408,7 +511,7 @@ class ConflictViewerTest extends TestCase
         // weakest-first.
         $ambry = Submitter::factory()->create(['name' => 'Ambry Genetics'])->id;
 
-        foreach ([['Refuted Evidence', 70], ['Disputed Evidence', 60], ['Limited', 50]] as [$name, $order]) {
+        foreach ([['Refuted Evidence', 1], ['Animal Model Only', 999], ['Disputed Evidence', 60], ['Limited', 50]] as [$name, $order]) {
             $this->submission([
                 'gene_id'           => $gene->id,
                 'disease_id'        => $disease->id,
@@ -421,7 +524,7 @@ class ConflictViewerTest extends TestCase
         $row = ConflictFinder::conflicts()->first();
 
         $this->assertSame(
-            ['Limited', 'Disputed Evidence', 'Refuted Evidence'],
+            ['Limited', 'Disputed Evidence', 'Animal Model Only', 'Refuted Evidence'],
             $row['other']['Ambry Genetics']
         );
     }

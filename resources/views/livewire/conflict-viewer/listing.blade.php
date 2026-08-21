@@ -12,6 +12,15 @@
     $filter_enabled = count($active_filters) > 0;
 @endphp
 <div class="">
+    @if($invalidUrlFiltersIgnored)
+        <div role="alert" class="flex items-center justify-between bg-yellow-100 border border-yellow-400 text-yellow-900 rounded px-4 py-2 mb-3 text-sm">
+            <span>Invalid URL filters were ignored.</span>
+            <a href="{{ route('conflict-viewer') }}" class="font-semibold hover:underline whitespace-no-wrap">
+                Reset filters
+            </a>
+        </div>
+    @endif
+
     <div class=" text-xl text-gray-600 mb-2">
         <span class=" font-bold ">{{ number_format($conflicts->total()) }}</span>
         @if($filter_enabled)

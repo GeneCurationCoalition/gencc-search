@@ -65,6 +65,27 @@ class DiseaseFeatureTest extends TestCase
         $response->assertStatus(404);
     }
 
+    /** @test */
+    public function disease_classification_collection_uses_canonical_order_not_database_order()
+    {
+        $disease = Disease::factory()->create(['curie' => 'MONDO:0005432']);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100006',
+            'name' => 'Refuted Evidence',
+            'order' => 1,
+        ]);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100007',
+            'name' => 'Animal Model Only',
+            'order' => 999,
+        ]);
+
+        $view = app(\App\Http\Controllers\DiseaseController::class)->show($disease->curie);
+        $titles = $view->getData()['classifications']->pluck('title')->all();
+
+        $this->assertSame(['Animal Model Only', 'Refuted Evidence'], $titles);
+    }
+
     /**
      * @test
      * Note: This test verifies disease show page with submissions.

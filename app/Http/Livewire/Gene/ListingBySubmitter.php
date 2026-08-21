@@ -115,7 +115,8 @@ class ListingBySubmitter extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get();
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get()
+            ->sortBy(fn ($submission) => Classification::priority($submission->classification->curie) ?? PHP_INT_MAX);
 
         $count_submissions = $records->count();
         $this->filter = [
@@ -216,7 +217,8 @@ class ListingBySubmitter extends Component
                 })
                 ->where('is_live', '=', true)
                 ->where('status', '=', Submission::STATUS_PUBLISHED)
-                ->get();
+                ->get()
+                ->sortBy(fn ($submission) => Classification::priority($submission->classification->curie) ?? PHP_INT_MAX);
         }
 
         // $posts = App\Models\Post::whereHas('comments', function (Builder $query) {

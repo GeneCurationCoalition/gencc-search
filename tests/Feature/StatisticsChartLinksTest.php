@@ -223,6 +223,27 @@ class StatisticsChartLinksTest extends TestCase
         $this->assertSame(['LIMGENE'], $symbols);
     }
 
+    /** @test */
+    public function both_statistics_charts_cap_dominant_bars_at_the_container_edge()
+    {
+        $this->geneWithSubmission('ONLYGENE', 'GENCC:100001');
+
+        $html = $this->get('/statistics')->getContent();
+        preg_match_all('/style="width:([0-9.]+)%"/', $html, $matches);
+
+        $this->assertNotEmpty($matches[1]);
+
+        foreach ($matches[1] as $width) {
+            $this->assertGreaterThanOrEqual(0, (float) $width);
+            $this->assertLessThanOrEqual(100, (float) $width);
+        }
+
+        $this->assertGreaterThanOrEqual(2, count(array_filter(
+            $matches[1],
+            fn ($width) => (float) $width === 100.0
+        )));
+    }
+
     /**
      * Every genes-listing link on the page that carries a query string, with the
      * HTML entity encoding Blade applies to '&' undone.

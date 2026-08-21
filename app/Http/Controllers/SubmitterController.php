@@ -43,7 +43,7 @@ class SubmitterController extends Controller
             return redirect()->route('member-show', $submitter->curie, 301);
         }
 
-        $classifications = Classification::all();
+        $classifications = Classification::orderCollection(Classification::all());
         $countSummary = $submitter->submissionCountSummary();
         $classificationCounts = $countSummary['classificationCounts'] ?? collect();
         $submitterSubmissionsCount = $countSummary['total'] ?? null;

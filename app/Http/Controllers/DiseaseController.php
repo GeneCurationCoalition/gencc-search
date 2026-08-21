@@ -27,7 +27,7 @@ class DiseaseController extends Controller
     public function show($id)
     {
         $item = Disease::curie($id)->with('submissions.gene', 'submissions.disease')->firstOrFail();
-        $classifications = Classification::all();
+        $classifications = Classification::orderCollection(Classification::all());
         return view('diseases.show', ['disease' => $item, 'classifications' => $classifications]);
     }
 }

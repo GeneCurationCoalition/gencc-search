@@ -42,13 +42,22 @@ class ConflictViewerListingTest extends TestCase
         ConflictFinder::flush();
     }
 
-    /**
-     * ClassificationFactory defaults to order 1..6, but production ranks with
-     * 10..90 and STRONG_MAX_ORDER is 30 — so always set order explicitly.
-     */
+    /** Build a known classification while allowing deliberately misleading DB order values. */
     protected function classification(string $name, int $order): Classification
     {
+        $curies = [
+            'Definitive' => 'GENCC:100001',
+            'Supportive' => 'GENCC:100009',
+            'Limited' => 'GENCC:100004',
+            'Refuted Evidence' => 'GENCC:100006',
+        ];
+
+        if ($existing = Classification::where('curie', $curies[$name])->first()) {
+            return $existing;
+        }
+
         return Classification::factory()->create([
+            'curie' => $curies[$name],
             'name'  => $name,
             'title' => $name,
             'order' => $order,
@@ -321,6 +330,8 @@ class ConflictViewerListingTest extends TestCase
     /** @test */
     public function toggling_a_facet_resets_pagination_to_the_first_page()
     {
+        $this->oneRowPerTier();
+
         // updating() does not fire for wire:click methods, so each toggle has to
         // reset the page itself.
         Livewire::test(Listing::class)
@@ -390,6 +401,81 @@ class ConflictViewerListingTest extends TestCase
             ->assertStatus(200)
             ->assertDontSee('AGL')
             ->assertSee('BRCA1');
+    }
+
+    /** @test */
+    public function array_valued_exclusions_return_200_warn_and_use_the_unfiltered_default()
+    {
+        $this->oneRowPerTier();
+
+        foreach (['hideTiers', 'hideDissenters'] as $filter) {
+            $this->get('/conflict-viewer?' . http_build_query([$filter => ['supportive']]))
+                ->assertOk()
+                ->assertSee('Invalid URL filters were ignored.')
+                ->assertSee('role="alert"', false)
+                ->assertSee('href="' . route('conflict-viewer') . '"', false)
+                ->assertSee('AGL')
+                ->assertSee('BRCA1')
+                ->assertSee('TTN');
+        }
+    }
+
+    /** @test */
+    public function exclusions_are_trimmed_deduplicated_intersected_and_canonicalized()
+    {
+        $this->oneRowPerTier();
+
+        Livewire::test(Listing::class)
+            ->set('hideTiers', ' supportive,limited,supportive,unknown ')
+            ->assertSet('hideTiers', 'limited,supportive')
+            ->assertSee('Invalid URL filters were ignored.')
+            ->assertDontSee('AGL')
+            ->assertDontSee('BRCA1')
+            ->assertSee('TTN')
+            ->set('hideDissenters', ' orphanet,orphanet,missing ')
+            ->assertSet('hideDissenters', 'orphanet')
+            ->assertDontSee('-1 of');
+    }
+
+    /** @test */
+    public function invalid_only_exclusions_become_the_unfiltered_default()
+    {
+        $this->oneRowPerTier();
+
+        Livewire::test(Listing::class)
+            ->set('hideTiers', 'unknown')
+            ->assertSet('hideTiers', '')
+            ->set('hideDissenters', 'missing')
+            ->assertSet('hideDissenters', '')
+            ->assertSee('Invalid URL filters were ignored.')
+            ->assertSee('AGL')
+            ->assertSee('BRCA1')
+            ->assertSee('TTN');
+    }
+
+    /** @test */
+    public function valid_exclusions_are_sorted_without_a_warning()
+    {
+        $this->oneRowPerTier();
+
+        Livewire::test(Listing::class)
+            ->set('hideTiers', 'supportive,limited')
+            ->assertSet('hideTiers', 'limited,supportive')
+            ->assertDontSee('Invalid URL filters were ignored.');
+    }
+
+    /** @test */
+    public function toggle_actions_reject_unknown_and_non_scalar_values()
+    {
+        $this->oneRowPerTier();
+
+        Livewire::test(Listing::class)
+            ->call('toggleTier', 'unknown')
+            ->call('toggleTier', ['supportive'])
+            ->assertSet('hideTiers', '')
+            ->call('toggleDissenter', 'missing')
+            ->call('toggleDissenter', ['orphanet'])
+            ->assertSet('hideDissenters', '');
     }
 
     /**

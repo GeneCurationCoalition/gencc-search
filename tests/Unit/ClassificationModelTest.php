@@ -168,6 +168,34 @@ class ClassificationModelTest extends TestCase
     }
 
     /** @test */
+    public function conflict_buckets_are_explicitly_mapped_by_curie()
+    {
+        foreach (['GENCC:100001', 'GENCC:100002', 'GENCC:100003'] as $curie) {
+            $this->assertSame('strong', Classification::conflictBucket($curie));
+        }
+
+        $this->assertSame('supportive', Classification::conflictBucket('GENCC:100009'));
+        $this->assertSame('limited', Classification::conflictBucket('GENCC:100004'));
+
+        foreach (['GENCC:100005', 'GENCC:100007', 'GENCC:100006', 'GENCC:100008'] as $curie) {
+            $this->assertSame('contradictory', Classification::conflictBucket($curie));
+        }
+
+        $this->assertNull(Classification::conflictBucket('GENCC:199999'));
+    }
+
+    /** @test */
+    public function statistics_bar_width_is_scaled_but_always_bounded()
+    {
+        $classification = new Classification();
+
+        $this->assertSame(0, $classification->displayStatChartBarPercent(0, 10));
+        $this->assertSame(35.0, $classification->displayStatChartBarPercent(100, 25));
+        $this->assertSame(100, $classification->displayStatChartBarPercent(140, 100));
+        $this->assertSame(100, $classification->displayStatChartBarPercent(100, 80));
+    }
+
+    /** @test */
     public function classification_order_determines_sort_order()
     {
         // Note: gencc-sub uses 'name' column, accessor maps title->name

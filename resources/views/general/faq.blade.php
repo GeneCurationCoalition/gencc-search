@@ -342,13 +342,13 @@
                 <a href="https://www.gimjournal.org/article/S1098-3600(22)00746-8/fulltext" target="_blank" class="text-blue-600 hover:text-blue-800">
                     The Gene Curation Coalition: A global effort to harmonize gene-disease evidence resources
                 </a>
-                — Genetics in Medicine, 2022 (PMID: 35507016). The GenCC marker paper.
+                — <em>Genetics in Medicine</em>, 2022; PMID 35507016; DOI 10.1016/j.gim.2022.04.017. The GenCC marker paper.
             </li>
             <li>
                 <a href="https://www.gimjournal.org/article/S1098-3600(23)01045-6/fulltext" target="_blank" class="text-blue-600 hover:text-blue-800">
-                    https://www.gimjournal.org/article/S1098-3600(23)01045-6/fulltext
+                    Toward robust clinical genome interpretation: Developing a consistent terminology to characterize Mendelian disease-gene relationships&mdash;allelic requirement, inheritance modes, and disease mechanisms
                 </a>
-                — Genetics in Medicine, 2023.
+                — <em>Genetics in Medicine</em>, 2024; PMID 37982373; DOI 10.1016/j.gim.2023.101029.
             </li>
         </ul>
 
