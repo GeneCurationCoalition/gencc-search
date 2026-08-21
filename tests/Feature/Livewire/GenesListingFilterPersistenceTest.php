@@ -10,6 +10,7 @@ use App\Submission;
 use App\Inheritance;
 use App\Http\Livewire\Genes\Listing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Concerns\ShimsSqliteFunctions;
 use Tests\TestCase;
@@ -40,6 +41,30 @@ class GenesListingFilterPersistenceTest extends TestCase
         // curations_from_submitters straight to the URL would have produced.
         $this->assertSame('', $component->get('submitterFilter'));
         $this->assertFalse($component->get('hasActiveFilters'));
+        $this->assertSame([], $this->pathQuery($component));
+    }
+
+    /** @test */
+    public function classification_url_state_contains_only_non_default_toggles()
+    {
+        $this->shimRegexpSubstrForSqlite();
+        $this->createGeneWithSubmission('GJB2');
+
+        $component = Livewire::withQueryParams(['definitive' => '0'])->test(Listing::class);
+
+        $this->assertSame(['definitive' => '0'], $this->pathQuery($component));
+
+        $none = array_fill_keys(array_column(Classification::VOCABULARY, 'query'), '0');
+        $component = Livewire::withQueryParams($none)->test(Listing::class);
+        $this->assertSame(
+            $none,
+            $this->pathQuery($component)
+        );
+
+        $component = Livewire::withQueryParams(
+            array_fill_keys(array_column(Classification::VOCABULARY, 'query'), '1')
+        )->test(Listing::class);
+        $this->assertSame([], $this->pathQuery($component));
     }
 
     /** @test */
@@ -80,12 +105,13 @@ class GenesListingFilterPersistenceTest extends TestCase
         $first = $this->createGeneWithSubmission('GJB2');
         $this->createGeneWithSubmission('BRCA1');
 
-        $wanted = Submission::where('gene_id', $first->id)->first()->submitter->ident;
+        $submitter = Submission::where('gene_id', $first->id)->first()->submitter;
 
-        $component = Livewire::withQueryParams(['submitters' => $wanted])->test(Listing::class);
+        $component = Livewire::withQueryParams(['submitters' => $submitter->curie])->test(Listing::class);
 
-        $this->assertSame([$wanted], $component->get('curations_from_submitters'));
-        $this->assertSame($wanted, $component->get('submitterFilter'));
+        $this->assertSame([$submitter->ident], $component->get('curations_from_submitters'));
+        $this->assertSame($submitter->curie, $component->get('submitterFilter'));
+        $this->assertSame(['submitters' => $submitter->curie], $this->pathQuery($component));
         $this->assertCount(1, $component->viewData('genes'));
         $this->assertTrue($component->get('hasActiveFilters'));
     }
@@ -126,6 +152,10 @@ class GenesListingFilterPersistenceTest extends TestCase
             ->test(Listing::class);
 
         $this->assertCount(1, $component->viewData('genes'));
+        $component->assertSee('Invalid URL filters were ignored.')
+            ->assertSee('role="alert"', false)
+            ->assertSee('Reset filters');
+        $this->assertSame([], $this->pathQuery($component));
     }
 
     /** @test */
@@ -179,6 +209,94 @@ class GenesListingFilterPersistenceTest extends TestCase
             ->test(Listing::class);
 
         $this->assertCount(1, $component->viewData('genes'));
+        $submitter = Submitter::where('ident', $wanted)->firstOrFail();
+        $this->assertSame(['submitters' => $submitter->curie], $this->pathQuery($component));
+    }
+
+    /** @test */
+    public function malformed_url_filters_are_discarded_without_losing_valid_submitters()
+    {
+        $this->shimRegexpSubstrForSqlite();
+        $wantedGene = $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+        $submitter = Submission::where('gene_id', $wantedGene->id)->first()->submitter;
+
+        $component = Livewire::withQueryParams([
+            'submitters' => $submitter->curie . ',GENCC:999999',
+            'definitive' => '2',
+            'title' => ['GJB2'],
+        ])->test(Listing::class);
+
+        $this->assertSame([$submitter->ident], $component->get('curations_from_submitters'));
+        $this->assertSame('1', $component->get('curations_definitive'));
+        $this->assertSame('', $component->get('title'));
+        $this->assertCount(1, $component->viewData('genes'));
+        $component->assertSee('Invalid URL filters were ignored.')
+            ->assertDontSee('GENCC:999999');
+        $this->assertSame(['submitters' => $submitter->curie], $this->pathQuery($component));
+    }
+
+    /** @test */
+    public function array_shaped_submitters_and_malformed_toggles_restore_defaults()
+    {
+        $this->shimRegexpSubstrForSqlite();
+        $this->createGeneWithSubmission('GJB2');
+
+        $component = Livewire::withQueryParams([
+            'submitters' => ['GENCC:000001'],
+            'strong' => ['0'],
+            'moderate' => false,
+        ])->test(Listing::class);
+
+        $this->assertSame('1', $component->get('curations_strong'));
+        $this->assertSame('1', $component->get('curations_moderate'));
+        $this->assertCount(1, $component->viewData('genes'));
+        $component->assertSee('Invalid URL filters were ignored.');
+        $this->assertSame([], $this->pathQuery($component));
+    }
+
+    /** @test */
+    public function legacy_submitters_are_trimmed_deduplicated_and_checked_against_known_idents()
+    {
+        $this->shimRegexpSubstrForSqlite();
+        $wantedGene = $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+        $submitter = Submission::where('gene_id', $wantedGene->id)->first()->submitter;
+
+        $component = Livewire::withQueryParams(['curations_from_submitters' => [
+            ' ' . $submitter->ident . ' ',
+            $submitter->ident,
+            ['nested'],
+            'STALE_IDENT',
+        ]])->test(Listing::class);
+
+        $this->assertSame([$submitter->ident], $component->get('curations_from_submitters'));
+        $this->assertCount(1, $component->viewData('genes'));
+        $component->assertSee('Invalid URL filters were ignored.');
+        $this->assertSame(['submitters' => $submitter->curie], $this->pathQuery($component));
+    }
+
+    /** @test */
+    public function submitters_with_submissions_are_loaded_once_per_component_request()
+    {
+        $this->shimRegexpSubstrForSqlite();
+        $this->createGeneWithSubmission('GJB2');
+        $matches = 0;
+
+        DB::listen(function ($query) use (&$matches) {
+            $sql = strtolower($query->sql);
+
+            if (strpos($sql, 'from "submitters"') !== false && strpos($sql, 'exists') !== false) {
+                $matches++;
+            }
+        });
+
+        $component = Livewire::test(Listing::class);
+        $this->assertSame(1, $matches);
+
+        $matches = 0;
+        $component->call('selectNoClassifications');
+        $this->assertSame(1, $matches);
     }
 
     /**
@@ -189,7 +307,7 @@ class GenesListingFilterPersistenceTest extends TestCase
     {
         $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
 
-        $classification = Classification::first() ?: Classification::factory()->create();
+        $classification = Classification::first() ?: Classification::factory()->definitive()->create();
 
         Submission::factory()->create([
             'gene_id' => $gene->id,
@@ -200,5 +318,13 @@ class GenesListingFilterPersistenceTest extends TestCase
         ]);
 
         return $gene;
+    }
+
+    private function pathQuery($component): array
+    {
+        $query = parse_url(data_get($component->payload, 'effects.path', ''), PHP_URL_QUERY);
+        parse_str($query ?? '', $params);
+
+        return $params;
     }
 }

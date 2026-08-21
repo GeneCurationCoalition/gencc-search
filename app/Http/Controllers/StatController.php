@@ -24,7 +24,9 @@ class StatController extends Controller
         $submitters_with_submissions = Submitter::has('submissions');
         $submissionsCount = Submission::where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->count();
         // Use withCount instead of with('submissions') to avoid loading all 28k+ submissions
-        $classifications = Classification::withCount('submissions')->get();
+        $classifications = Classification::orderCollection(
+            Classification::withCount('submissions')->get()
+        );
         // Show all active submitters - the view will handle displaying stats vs "Member" vs "Coming Soon"
         $submitters = Submitter::where('status', 1)->paginate(25);
         $submitterCountSummaries = Submitter::submissionCountSummariesFor($submitters->getCollection());
@@ -59,19 +61,11 @@ class StatController extends Controller
         $rows = [];
 
         foreach ($classifications as $classification) {
-            if (!array_key_exists($classification->id, Classification::VALIDITY_RANK)) {
-                continue;
-            }
+            $metadata = $classification->vocabularyMetadata();
 
-            // Skipped by the submission chart above for the same reason: it is a
-            // placeholder, not a term users should see.
-            if ($classification->curie === 'GENCC:000000') {
-                continue;
-            }
-
-            $rows[Classification::VALIDITY_RANK[$classification->id]] = [
+            $rows[$metadata['priority']] = [
                 'classification' => $classification,
-                'genes_count' => $geneCounts[$classification->id] ?? 0,
+                'genes_count' => $geneCounts[$classification->curie] ?? 0,
             ];
         }
 
@@ -85,18 +79,20 @@ class StatController extends Controller
      *
      * A gene with Definitive, Strong and Moderate assertions counts only towards
      * Definitive; a gene with three Limited assertions counts once towards
-     * Limited. Supportive ranks last in Classification::VALIDITY_RANK, so a gene
-     * reaches the Supportive bucket only when it has no other assertion.
+     * Limited. Supportive ranks between Moderate and Limited.
      *
      * Aggregated in SQL rather than in PHP: the submissions table runs to tens of
      * thousands of rows and this page is public, so loading them to group in
      * memory is not an option.
      *
-     * @return array classification ID => number of genes, strongest bucket first
+     * @return array classification CURIE => number of genes, strongest first
      */
     private function genesByStrongestClassification()
     {
-        $rankCase = $this->validityRankCaseExpression();
+        $idsByCurie = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
+            ->pluck('id', 'curie')
+            ->all();
+        $rankCase = $this->validityRankCaseExpression($idsByCurie);
 
         $strongestPerGene = DB::table('submissions')
             ->selectRaw("gene_id, MIN({$rankCase}) as best_rank")
@@ -111,11 +107,11 @@ class StatController extends Controller
             ->pluck('genes_count', 'best_rank')
             ->toArray();
 
-        // Back from rank to classification ID, preserving strongest-first order.
+        // Back from rank to stable CURIE, preserving strongest-first order.
         $counts = [];
 
-        foreach (Classification::VALIDITY_RANK as $classificationId => $rank) {
-            $counts[$classificationId] = (int) ($countsByRank[$rank] ?? 0);
+        foreach (Classification::VOCABULARY as $curie => $metadata) {
+            $counts[$curie] = (int) ($countsByRank[$metadata['priority']] ?? 0);
         }
 
         return $counts;
@@ -125,12 +121,18 @@ class StatController extends Controller
      * A CASE expression mapping classification_id to its validity rank, so the
      * ranking lives in one place rather than being duplicated in SQL.
      */
-    private function validityRankCaseExpression()
+    private function validityRankCaseExpression(array $idsByCurie)
     {
         $whens = '';
 
-        foreach (Classification::VALIDITY_RANK as $classificationId => $rank) {
-            $whens .= ' WHEN ' . (int) $classificationId . ' THEN ' . (int) $rank;
+        foreach (Classification::VOCABULARY as $curie => $metadata) {
+            if (isset($idsByCurie[$curie])) {
+                $whens .= ' WHEN ' . (int) $idsByCurie[$curie] . ' THEN ' . (int) $metadata['priority'];
+            }
+        }
+
+        if ($whens === '') {
+            return '99';
         }
 
         // Anything unranked sorts last so a new term cannot outrank Definitive

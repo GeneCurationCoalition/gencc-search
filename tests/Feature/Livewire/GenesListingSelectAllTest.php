@@ -142,16 +142,14 @@ class GenesListingSelectAllTest extends TestCase
      * Create a gene with one submission so it survives the component's
      * whereHas('submissions') filter.
      *
-     * The classification is reused across calls rather than created per gene:
-     * render() filters on hardcoded classification IDs 1-9, so a fixture that
-     * mints a fresh classification for every gene would eventually allocate an
-     * ID outside that range and drop the gene for reasons unrelated to the test.
+     * The known classification is reused across calls because its CURIE, rather
+     * than its database ID, carries the filter semantics.
      */
     private function createGeneWithSubmission(string $symbol): Gene
     {
         $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
 
-        $classification = Classification::first() ?: Classification::factory()->create();
+        $classification = Classification::first() ?: Classification::factory()->definitive()->create();
 
         Submission::factory()->create([
             'gene_id' => $gene->id,

@@ -41,6 +41,7 @@ class ClassificationFactory extends Factory
     public function definitive()
     {
         return $this->state(fn () => [
+            'curie' => 'GENCC:100001',
             'name' => 'Definitive',
             'title' => 'Definitive',
             'abbreviation' => 'DEF',
@@ -52,6 +53,7 @@ class ClassificationFactory extends Factory
     public function strong()
     {
         return $this->state(fn () => [
+            'curie' => 'GENCC:100002',
             'name' => 'Strong',
             'title' => 'Strong',
             'abbreviation' => 'STR',

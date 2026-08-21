@@ -110,7 +110,7 @@ class GenesListingTest extends TestCase
         $gene1 = Gene::factory()->create(['title' => 'BRCA1', 'counts' => $counts]);
         $gene2 = Gene::factory()->create(['title' => 'TP53', 'counts' => $counts]);
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
@@ -179,7 +179,7 @@ class GenesListingTest extends TestCase
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         Submission::factory()->create([
@@ -210,7 +210,7 @@ class GenesListingTest extends TestCase
         $submitter2 = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         // Create submissions for both submitters
@@ -253,7 +253,7 @@ class GenesListingTest extends TestCase
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         Submission::factory()->create([
@@ -552,7 +552,7 @@ class GenesListingTest extends TestCase
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => Disease::factory()->create($diseaseAttributes)->id,
-            'classification_id' => Classification::factory()->create()->id,
+            'classification_id' => $this->knownClassification()->id,
             'submitter_id' => Submitter::factory()->create()->id,
             'inheritance_id' => Inheritance::factory()->create()->id,
         ]);
@@ -611,7 +611,7 @@ class GenesListingTest extends TestCase
     {
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
@@ -622,5 +622,11 @@ class GenesListingTest extends TestCase
             'submitter_id' => $submitter->id,
             'inheritance_id' => $inheritance->id,
         ]);
+    }
+
+    private function knownClassification(): Classification
+    {
+        return Classification::curie('GENCC:100001')->first()
+            ?: Classification::factory()->definitive()->create();
     }
 }

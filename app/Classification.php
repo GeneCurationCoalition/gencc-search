@@ -14,53 +14,139 @@ class Classification extends Model
     use DisplayTransform;
 
     /**
-     * Clinical validity ranking, keyed by classification ID, lowest value being
-     * the strongest. Used to place a gene in a single bucket — the one for its
-     * strongest assertion — for the by-gene statistics chart (#210).
+     * The application vocabulary for GenCC classifications, strongest first.
      *
-     * Keyed by ID rather than the `order` column because IDs are what the rest of
-     * the codebase already pins these terms to (see getHrefAttribute and
-     * getCssClassAttribute), and `order` disagrees between fixtures and
-     * production.
-     *
-     * The sequence follows the term order published in the FAQ, with one
-     * deliberate exception: Supportive (4) sorts last, so a gene only lands in
-     * the Supportive bucket when Supportive is its sole assertion. Supportive is
-     * a granularity fallback used by resources such as OMIM and Orphanet rather
-     * than a validity level in its own right.
+     * CURIEs, unlike database IDs, retain their meaning when rows are imported
+     * in a different order. Keep filtering, presentation, URL generation, and
+     * strongest-bucket ranking together here so those concerns cannot drift.
      */
-    const VALIDITY_RANK = [
-        1 => 1, // Definitive
-        2 => 2, // Strong
-        3 => 3, // Moderate
-        5 => 4, // Limited
-        6 => 5, // Disputed
-        8 => 6, // Animal Model Only
-        7 => 7, // Refuted
-        9 => 8, // No known disease relationship
-        4 => 9, // Supportive — only wins when nothing else is present
+    const VOCABULARY = [
+        'GENCC:100001' => [
+            'title' => 'Definitive',
+            'property' => 'curations_definitive',
+            'query' => 'definitive',
+            'slug' => 'definitive',
+            'css_class' => 'gencc-definitive',
+            'priority' => 1,
+        ],
+        'GENCC:100002' => [
+            'title' => 'Strong',
+            'property' => 'curations_strong',
+            'query' => 'strong',
+            'slug' => 'strong',
+            'css_class' => 'gencc-strong',
+            'priority' => 2,
+        ],
+        'GENCC:100003' => [
+            'title' => 'Moderate',
+            'property' => 'curations_moderate',
+            'query' => 'moderate',
+            'slug' => 'moderate',
+            'css_class' => 'gencc-moderate',
+            'priority' => 3,
+        ],
+        'GENCC:100009' => [
+            'title' => 'Supportive',
+            'property' => 'curations_supportive',
+            'query' => 'supportive',
+            'slug' => 'supportive',
+            'css_class' => 'gencc-supportive',
+            'priority' => 4,
+        ],
+        'GENCC:100004' => [
+            'title' => 'Limited',
+            'property' => 'curations_limited',
+            'query' => 'limited',
+            'slug' => 'limited',
+            'css_class' => 'gencc-limited',
+            'priority' => 5,
+        ],
+        'GENCC:100005' => [
+            'title' => 'Disputed Evidence',
+            'property' => 'curations_disputed',
+            'query' => 'disputed',
+            'slug' => 'disputed',
+            'css_class' => 'gencc-disputedevidence',
+            'priority' => 6,
+        ],
+        'GENCC:100007' => [
+            'title' => 'Animal Model Only',
+            'property' => 'curations_animal',
+            'query' => 'animal',
+            'slug' => 'animal-model-only',
+            'css_class' => 'gencc-animalmodelonly',
+            'priority' => 7,
+        ],
+        'GENCC:100006' => [
+            'title' => 'Refuted Evidence',
+            'property' => 'curations_refuted',
+            'query' => 'refuted',
+            'slug' => 'refuted',
+            'css_class' => 'gencc-refutedevidence',
+            'priority' => 8,
+        ],
+        'GENCC:100008' => [
+            'title' => 'No Known Disease Relationship',
+            'property' => 'curations_noknown',
+            'query' => 'noknown',
+            'slug' => 'no-known',
+            'css_class' => 'gencc-noknowndiseaserelationship',
+            'priority' => 9,
+        ],
     ];
 
+    public static function filterProperties(): array
+    {
+        return array_column(self::VOCABULARY, 'property');
+    }
+
+    public static function filterParams(): array
+    {
+        return array_column(self::VOCABULARY, 'query');
+    }
+
+    public static function validityRanks(): array
+    {
+        $ranks = [];
+
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            $ranks[$curie] = $metadata['priority'];
+        }
+
+        return $ranks;
+    }
+
+    public static function queryStringBindings(): array
+    {
+        $bindings = [];
+
+        foreach (self::VOCABULARY as $metadata) {
+            $bindings[$metadata['property']] = [
+                'except' => '1',
+                'as' => $metadata['query'],
+            ];
+        }
+
+        return $bindings;
+    }
+
     /**
-     * Query-string names the genes listing binds its nine classification toggles
-     * to — the 'as' aliases in Listing::$queryString — keyed by classification ID.
-     *
-     * Keyed by ID for the same reason as VALIDITY_RANK and getHrefAttribute: IDs
-     * are what the rest of the codebase pins these terms to. Deliberately not
-     * derived from the slug map, which spells two of the terms differently
-     * ('animal-model-only', 'no-known').
+     * Return known classification models in canonical vocabulary order.
      */
-    const FILTER_PARAMS = [
-        1 => 'definitive',
-        2 => 'strong',
-        3 => 'moderate',
-        4 => 'supportive',
-        5 => 'limited',
-        6 => 'disputed',
-        7 => 'refuted',
-        8 => 'animal',
-        9 => 'noknown',
-    ];
+    public static function orderCollection($classifications)
+    {
+        $byCurie = $classifications->keyBy('curie');
+
+        return collect(array_keys(self::VOCABULARY))
+            ->map(fn ($curie) => $byCurie->get($curie))
+            ->filter()
+            ->values();
+    }
+
+    public function vocabularyMetadata(): ?array
+    {
+        return self::VOCABULARY[$this->curie] ?? null;
+    }
 
     /**
      * Get all the live published (publicly visible) submissions for this classification.
@@ -104,57 +190,21 @@ class Classification extends Model
     }
 
     /**
-     * Get slug attribute - computed from classification ID if not in database.
-     * Maps classification IDs to slug names for color lookups.
+     * Get slug attribute for color lookups.
      */
     public function getSlugAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['slug'])) {
-            return $this->attributes['slug'];
-        }
-
-        // Compute from classification ID
-        $slugMap = [
-            1 => 'definitive',
-            2 => 'strong',
-            3 => 'moderate',
-            4 => 'supportive',
-            5 => 'limited',
-            6 => 'disputed',
-            7 => 'refuted',
-            8 => 'animal-model-only',
-            9 => 'no-known',
-        ];
-
-        return $slugMap[$this->id] ?? '';
+        return $this->vocabularyMetadata()['slug']
+            ?? ($this->attributes['slug'] ?? '');
     }
 
     /**
-     * Get href attribute - computed from classification ID if not in database.
-     * Maps classification IDs to filter parameter names.
+     * Get the legacy long filter property name.
      */
     public function getHrefAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['href'])) {
-            return $this->attributes['href'];
-        }
-
-        // Compute from classification ID
-        $hrefMap = [
-            1 => 'curations_definitive',
-            2 => 'curations_strong',
-            3 => 'curations_moderate',
-            4 => 'curations_supportive',
-            5 => 'curations_limited',
-            6 => 'curations_disputed',
-            7 => 'curations_refuted',
-            8 => 'curations_animal',
-            9 => 'curations_noknown',
-        ];
-
-        return $hrefMap[$this->id] ?? '';
+        return $this->vocabularyMetadata()['property']
+            ?? ($this->attributes['href'] ?? '');
     }
 
     /**
@@ -166,7 +216,7 @@ class Classification extends Model
      */
     public function getFilterParamAttribute()
     {
-        return self::FILTER_PARAMS[$this->id] ?? '';
+        return $this->vocabularyMetadata()['query'] ?? '';
     }
 
     /**
@@ -179,44 +229,26 @@ class Classification extends Model
      */
     public function getOnlyFilterQueryAttribute()
     {
-        if (!isset(self::FILTER_PARAMS[$this->id])) {
+        if (!$this->vocabularyMetadata()) {
             return '';
         }
 
         $pairs = [];
 
-        foreach (self::FILTER_PARAMS as $id => $param) {
-            $pairs[] = $param . '=' . ($id === (int) $this->id ? '1' : '0');
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            $pairs[] = $metadata['query'] . '=' . ($curie === $this->curie ? '1' : '0');
         }
 
         return implode('&', $pairs);
     }
 
     /**
-     * Get css_class attribute - computed from classification ID if not in database.
-     * Maps classification IDs to CSS class names for color bars.
+     * Get css_class attribute for color bars.
      */
     public function getCssClassAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['css_class'])) {
-            return $this->attributes['css_class'];
-        }
-
-        // Compute from classification ID
-        $cssMap = [
-            1 => 'gencc-definitive',
-            2 => 'gencc-strong',
-            3 => 'gencc-moderate',
-            4 => 'gencc-supportive',
-            5 => 'gencc-limited',
-            6 => 'gencc-disputedevidence',
-            7 => 'gencc-refutedevidence',
-            8 => 'gencc-animalmodelonly',
-            9 => 'gencc-noknowndiseaserelationship',
-        ];
-
-        return $cssMap[$this->id] ?? 'gencc-nul';
+        return $this->vocabularyMetadata()['css_class']
+            ?? ($this->attributes['css_class'] ?? 'gencc-nul');
     }
 
     protected $fillable = [

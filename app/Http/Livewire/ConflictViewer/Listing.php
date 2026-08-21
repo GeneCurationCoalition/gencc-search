@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\ConflictViewer;
 
 use App\Services\ConflictFinder;
+use App\Traits\NormalizesSearchInput;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -13,6 +14,7 @@ use Livewire\WithPagination;
 class Listing extends Component
 {
     use WithPagination;
+    use NormalizesSearchInput;
 
     const PER_PAGE = 25;
 
@@ -200,13 +202,14 @@ class Listing extends Component
      */
     protected function applyTextFilters(Collection $rows): Collection
     {
-        if ($this->gene !== '' && $this->gene !== null) {
-            $gene = $this->gene;
+        $gene = $this->normalizeSearchTerm($this->gene);
+        $disease = $this->normalizeSearchTerm($this->disease);
+
+        if ($gene !== '') {
             $rows = $rows->filter(fn ($row) => Str::contains(Str::lower((string) $row['gene_symbol']), Str::lower($gene)));
         }
 
-        if ($this->disease !== '' && $this->disease !== null) {
-            $disease = $this->disease;
+        if ($disease !== '') {
             $rows = $rows->filter(fn ($row) => Str::contains(Str::lower((string) $row['disease_name']), Str::lower($disease)));
         }
 
@@ -358,12 +361,13 @@ class Listing extends Component
             : $rows->sortByDesc($field);
 
         $rows = $rows->values();
+        $page = $this->resolveValidPage();
 
         $conflicts = new LengthAwarePaginator(
-            $rows->forPage($this->page, self::PER_PAGE)->values(),
+            $rows->forPage($page, self::PER_PAGE)->values(),
             $rows->count(),
             self::PER_PAGE,
-            $this->page,
+            $page,
             ['path' => Paginator::resolveCurrentPath()]
         );
 
@@ -381,6 +385,28 @@ class Listing extends Component
         ]);
     }
 
+    /** Resolve one canonical positive integer for slicing and pagination. */
+    private function resolveValidPage(): int
+    {
+        $value = $this->page;
+        $page = false;
+
+        if (is_int($value) && $value > 0) {
+            $page = $value;
+        } elseif (is_string($value) && preg_match('/^[1-9][0-9]*$/D', $value)) {
+            $page = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        }
+
+        if ($page === false) {
+            $page = 1;
+        }
+
+        $this->page = $page;
+        $this->paginators['page'] = $page;
+
+        return $page;
+    }
+
     /**
      * Human-readable descriptions of the active filters, for the summary line.
      *
@@ -393,11 +419,11 @@ class Listing extends Component
     {
         $labels = [];
 
-        if ($this->gene !== '' && $this->gene !== null) {
+        if (is_string($this->gene) && $this->normalizeSearchTerm($this->gene) !== '') {
             $labels[] = 'gene matches “' . $this->gene . '”';
         }
 
-        if ($this->disease !== '' && $this->disease !== null) {
+        if (is_string($this->disease) && $this->normalizeSearchTerm($this->disease) !== '') {
             $labels[] = 'disease matches “' . $this->disease . '”';
         }
 

@@ -21,33 +21,29 @@ class GenesByClassificationChartTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * The nine real GenCC terms, keyed by the IDs production uses. The ranking and
-     * the href/css_class maps are all keyed by ID, and ClassificationFactory
-     * assigns a random title from a six-term subset, so these tests seed the terms
-     * explicitly rather than trusting the factory.
-     */
-    const TERMS = [
-        1 => 'Definitive',
-        2 => 'Strong',
-        3 => 'Moderate',
-        4 => 'Supportive',
-        5 => 'Limited',
-        6 => 'Disputed',
-        7 => 'Refuted',
-        8 => 'Animal Model Only',
-        9 => 'No known disease relationship',
+    /** Deliberately unrelated IDs prove semantics come from CURIEs. */
+    const IDS = [
+        'GENCC:100001' => 81,
+        'GENCC:100002' => 12,
+        'GENCC:100003' => 63,
+        'GENCC:100009' => 4,
+        'GENCC:100004' => 55,
+        'GENCC:100005' => 26,
+        'GENCC:100007' => 97,
+        'GENCC:100006' => 38,
+        'GENCC:100008' => 9,
     ];
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        foreach (self::TERMS as $id => $title) {
+        foreach (Classification::VOCABULARY as $curie => $metadata) {
             Classification::factory()->create([
-                'id' => $id,
-                'name' => $title,
-                'title' => $title,
+                'id' => self::IDS[$curie],
+                'curie' => $curie,
+                'name' => $metadata['title'],
+                'title' => $metadata['title'],
             ]);
         }
     }
@@ -71,9 +67,9 @@ class GenesByClassificationChartTest extends TestCase
     public function a_gene_is_counted_once_under_its_strongest_classification()
     {
         $gene = $this->gene('GENEA');
-        $this->submission($gene, 1);
-        $this->submission($gene, 2);
-        $this->submission($gene, 3);
+        $this->submission($gene, 'GENCC:100001');
+        $this->submission($gene, 'GENCC:100002');
+        $this->submission($gene, 'GENCC:100003');
 
         $counts = $this->chartCounts();
 
@@ -90,9 +86,9 @@ class GenesByClassificationChartTest extends TestCase
     public function repeated_assertions_of_one_classification_count_once()
     {
         $gene = $this->gene('GENEB');
-        $this->submission($gene, 5);
-        $this->submission($gene, 5);
-        $this->submission($gene, 5);
+        $this->submission($gene, 'GENCC:100004');
+        $this->submission($gene, 'GENCC:100004');
+        $this->submission($gene, 'GENCC:100004');
 
         $this->assertSame(1, $this->chartCounts()['Limited']);
     }
@@ -100,45 +96,44 @@ class GenesByClassificationChartTest extends TestCase
     /**
      * @test
      *
-     * Gene C: 1 Limited, 1 Supportive — counted under Limited, not Supportive.
+     * Supportive ranks above Limited.
      */
-    public function supportive_loses_to_any_other_classification()
+    public function supportive_outranks_limited()
     {
         $gene = $this->gene('GENEC');
-        $this->submission($gene, 5);
-        $this->submission($gene, 4);
+        $this->submission($gene, 'GENCC:100004');
+        $this->submission($gene, 'GENCC:100009');
 
         $counts = $this->chartCounts();
 
-        $this->assertSame(1, $counts['Limited']);
-        $this->assertSame(0, $counts['Supportive']);
+        $this->assertSame(0, $counts['Limited']);
+        $this->assertSame(1, $counts['Supportive']);
     }
 
-    /**
-     * @test
-     *
-     * Gene D: 1 Supportive only — counted under Supportive.
-     */
-    public function supportive_counts_when_it_is_the_only_assertion()
+    /** @test */
+    public function moderate_still_outranks_supportive()
     {
         $gene = $this->gene('GENED');
-        $this->submission($gene, 4);
+        $this->submission($gene, 'GENCC:100009');
+        $this->submission($gene, 'GENCC:100003');
 
-        $this->assertSame(1, $this->chartCounts()['Supportive']);
+        $counts = $this->chartCounts();
+        $this->assertSame(1, $counts['Moderate']);
+        $this->assertSame(0, $counts['Supportive']);
     }
 
     /** @test */
     public function genes_are_spread_across_buckets_independently()
     {
         $definitive = $this->gene('GENE1');
-        $this->submission($definitive, 1);
-        $this->submission($definitive, 5);
+        $this->submission($definitive, 'GENCC:100001');
+        $this->submission($definitive, 'GENCC:100004');
 
         $limited = $this->gene('GENE2');
-        $this->submission($limited, 5);
+        $this->submission($limited, 'GENCC:100004');
 
         $supportive = $this->gene('GENE3');
-        $this->submission($supportive, 4);
+        $this->submission($supportive, 'GENCC:100009');
 
         $counts = $this->chartCounts();
 
@@ -157,15 +152,47 @@ class GenesByClassificationChartTest extends TestCase
     public function unpublished_and_superseded_submissions_are_excluded()
     {
         $gene = $this->gene('GENEX');
-        $this->submission($gene, 1, ['status' => Submission::STATUS_UNPUBLISHED]);
-        $this->submission($gene, 5, ['is_live' => false]);
-        $this->submission($gene, 3);
+        $this->submission($gene, 'GENCC:100001', ['status' => Submission::STATUS_UNPUBLISHED]);
+        $this->submission($gene, 'GENCC:100004', ['is_live' => false]);
+        $this->submission($gene, 'GENCC:100003');
 
         $counts = $this->chartCounts();
 
         $this->assertSame(0, $counts['Definitive']);
         $this->assertSame(0, $counts['Limited']);
         $this->assertSame(1, $counts['Moderate']);
+    }
+
+    /** @test */
+    public function chart_order_places_animal_model_before_refuted_evidence()
+    {
+        $titles = collect($this->get('/statistics')->viewData('genesByClassification'))
+            ->pluck('classification.title')
+            ->values()
+            ->all();
+
+        $this->assertLessThan(
+            array_search('Refuted Evidence', $titles, true),
+            array_search('Animal Model Only', $titles, true)
+        );
+    }
+
+    /** @test */
+    public function unknown_classifications_do_not_change_a_known_strongest_bucket()
+    {
+        $gene = $this->gene('GENEUNKNOWN');
+        $this->submission($gene, 'GENCC:100004');
+        $unknown = Classification::factory()->create(['curie' => 'GENCC:199999', 'name' => 'Future term']);
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => Disease::factory()->create()->id,
+            'classification_id' => $unknown->id,
+            'submitter_id' => Submitter::factory()->create()->id,
+            'inheritance_id' => Inheritance::factory()->create()->id,
+        ]);
+
+        $this->assertSame(1, $this->chartCounts()['Limited']);
     }
 
     /**
@@ -191,15 +218,14 @@ class GenesByClassificationChartTest extends TestCase
     }
 
     /**
-     * Create a live, published submission for $gene against a specific
-     * classification ID, since the ranking is keyed by ID.
+     * Create a live, published submission using a stable classification CURIE.
      */
-    private function submission(Gene $gene, int $classificationId, array $overrides = []): Submission
+    private function submission(Gene $gene, string $classificationCurie, array $overrides = []): Submission
     {
         return Submission::factory()->create(array_merge([
             'gene_id' => $gene->id,
             'disease_id' => Disease::factory()->create()->id,
-            'classification_id' => $classificationId,
+            'classification_id' => self::IDS[$classificationCurie],
             'submitter_id' => Submitter::factory()->create()->id,
             'inheritance_id' => Inheritance::factory()->create()->id,
             'is_live' => true,

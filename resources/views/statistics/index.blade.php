@@ -67,28 +67,27 @@
   <p class="mb-4 text-sm text-gray-600">
     Each gene is counted once, in the bucket for its strongest assertion. A gene
     with Definitive, Strong and Moderate assertions appears only under Definitive.
-    Supportive is counted only where it is a gene’s sole assertion.
   </p>
+  {{-- A future strongest-classification genes-list mode must define whether
+       strength is global or recalculated after submitter and disease filters. --}}
   <div class="grid grid-cols-12 gap-0">
     @foreach ($genesByClassification as $row)
       @php($item = $row['classification'])
       @php($geneCount = $row['genes_count'])
         <div class="col-span-4 xl:col-span-2 border-r-2 border-gray-300 py-2 px-2">
           <div class="rounded-full py-1 px-1 text-right leading-tight">
-            <a href="{{ route('genes') }}?{{ $item->only_filter_query }}">
-              {{ $item->title }}
-            </a>
+            {{ $item->title }}
           </div>
         </div>
         <div class="col-span-8 xl:col-span-9 py-1 px-2">
           @if($geneCount != 0)
-            <a href="{{ route('genes') }}?{{ $item->only_filter_query }}" class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($genesByClassificationTotal, $geneCount) }}%">
+            <span class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($genesByClassificationTotal, $geneCount) }}%">
               &nbsp;
-            </a>
+            </span>
           @endif
-          <a @class(['pt-1 inline-block' => $geneCount == 0]) href="{{ route('genes') }}?{{ $item->only_filter_query }}">
+          <span @class(['pt-1 inline-block' => $geneCount == 0])>
             <span class="font-bold">{{ $geneCount }} </span> Genes
-          </a>
+          </span>
         </div>
     @endforeach
   </div>

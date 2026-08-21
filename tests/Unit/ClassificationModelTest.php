@@ -146,6 +146,28 @@ class ClassificationModelTest extends TestCase
     }
 
     /** @test */
+    public function known_classification_metadata_is_derived_from_its_curie_not_its_database_id()
+    {
+        $classification = Classification::factory()->create([
+            'id' => 814,
+            'curie' => 'GENCC:100009',
+            'slug' => null,
+            'css_class' => null,
+            'href' => null,
+        ]);
+
+        $this->assertSame('supportive', $classification->slug);
+        $this->assertSame('gencc-supportive', $classification->css_class);
+        $this->assertSame('curations_supportive', $classification->href);
+        $this->assertSame('supportive', $classification->filter_param);
+
+        parse_str($classification->only_filter_query, $params);
+        $this->assertSame('1', $params['supportive']);
+        $this->assertSame('0', $params['limited']);
+        $this->assertCount(9, $params);
+    }
+
+    /** @test */
     public function classification_order_determines_sort_order()
     {
         // Note: gencc-sub uses 'name' column, accessor maps title->name

@@ -32,27 +32,28 @@ class StatisticsChartLinksTest extends TestCase
      * reason as GenesByClassificationChartTest: the filter-param map is keyed by
      * ID and ClassificationFactory covers only six terms with random titles.
      */
-    const TERMS = [
-        1 => 'Definitive',
-        2 => 'Strong',
-        3 => 'Moderate',
-        4 => 'Supportive',
-        5 => 'Limited',
-        6 => 'Disputed',
-        7 => 'Refuted',
-        8 => 'Animal Model Only',
-        9 => 'No known disease relationship',
+    const IDS = [
+        'GENCC:100001' => 81,
+        'GENCC:100002' => 12,
+        'GENCC:100003' => 63,
+        'GENCC:100009' => 4,
+        'GENCC:100004' => 55,
+        'GENCC:100005' => 26,
+        'GENCC:100007' => 97,
+        'GENCC:100006' => 38,
+        'GENCC:100008' => 9,
     ];
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        foreach (self::TERMS as $id => $title) {
+        foreach (Classification::VOCABULARY as $curie => $metadata) {
             Classification::factory()->create([
-                'id' => $id,
-                'name' => $title,
-                'title' => $title,
+                'id' => self::IDS[$curie],
+                'curie' => $curie,
+                'name' => $metadata['title'],
+                'title' => $metadata['title'],
             ]);
         }
     }
@@ -60,14 +61,13 @@ class StatisticsChartLinksTest extends TestCase
     /**
      * @test
      *
-     * The drift guard. Classification::FILTER_PARAMS only works because its
-     * values are exactly the 'as' aliases the listing binds its toggles to; if
+     * The drift guard. Vocabulary query names must be exactly the aliases the
+     * listing binds its toggles to; if
      * either side is renamed the links go quietly dead again.
      */
     public function every_filter_param_matches_the_alias_the_listing_binds()
     {
-        $queryString = (new \ReflectionClass(Listing::class))
-            ->getDefaultProperties()['queryString'];
+        $queryString = (new Listing())->getQueryString();
 
         $aliases = [];
 
@@ -77,15 +77,15 @@ class StatisticsChartLinksTest extends TestCase
             }
         }
 
-        foreach (Classification::FILTER_PARAMS as $id => $param) {
+        foreach (Classification::filterParams() as $param) {
             $this->assertContains(
                 $param,
                 $aliases,
-                "Classification {$id} filters on '{$param}', which the listing does not bind."
+                "Classification filter '{$param}' is not bound by the listing."
             );
         }
 
-        $this->assertCount(9, Classification::FILTER_PARAMS);
+        $this->assertCount(9, Classification::filterParams());
     }
 
     /**
@@ -96,7 +96,7 @@ class StatisticsChartLinksTest extends TestCase
      */
     public function the_only_filter_query_switches_the_other_eight_terms_off()
     {
-        $query = Classification::find(1)->only_filter_query;
+        $query = Classification::curie('GENCC:100001')->firstOrFail()->only_filter_query;
 
         parse_str($query, $params);
 
@@ -122,8 +122,7 @@ class StatisticsChartLinksTest extends TestCase
     /**
      * @test
      *
-     * Every link on either chart has to be a real single-classification filter,
-     * which also covers the by-gene chart #210 added.
+     * Every submissions-chart link has to be a real single-classification filter.
      */
     public function every_chart_link_is_a_single_classification_filter()
     {
@@ -145,9 +144,33 @@ class StatisticsChartLinksTest extends TestCase
             $this->assertContains($query, $expected);
         }
 
-        // Both charts link every term, so all nine turn up rather than just the
-        // one that happens to sort first.
+        // The submissions chart links every term.
         $this->assertCount(9, array_unique($queries));
+    }
+
+    /** @test */
+    public function submissions_chart_keeps_links_but_the_entire_by_gene_chart_has_none()
+    {
+        $this->seedOneGenePerClassification();
+        $html = $this->get('/statistics')->getContent();
+
+        [, $afterByGeneHeading] = explode('Classifications Visualized by Gene', $html, 2);
+        [$byGeneChart] = explode('GenCC Submitters Stats', $afterByGeneHeading, 2);
+        [$submissionsChart] = explode('Classifications Visualized by Gene', $html, 2);
+
+        $this->assertStringContainsString('<a ', $submissionsChart);
+        $this->assertStringNotContainsString('<a ', $byGeneChart);
+    }
+
+    /** @test */
+    public function submissions_chart_uses_the_canonical_curie_order()
+    {
+        Classification::factory()->create(['curie' => 'GENCC:000000', 'name' => 'Not Classified']);
+        Classification::factory()->create(['curie' => 'GENCC:199999', 'name' => 'Future Term']);
+
+        $titles = $this->get('/statistics')->viewData('classifications')->pluck('title')->all();
+
+        $this->assertSame(array_column(Classification::VOCABULARY, 'title'), $titles);
     }
 
     /**
@@ -160,13 +183,13 @@ class StatisticsChartLinksTest extends TestCase
     {
         $this->shimRegexpSubstrForSqlite();
 
-        $definitive = $this->geneWithSubmission('DEFGENE', 1);
-        $limited = $this->geneWithSubmission('LIMGENE', 5);
+        $definitive = $this->geneWithSubmission('DEFGENE', 'GENCC:100001');
+        $limited = $this->geneWithSubmission('LIMGENE', 'GENCC:100004');
 
         $html = $this->get('/statistics')->getContent();
         $queries = $this->genesLinkQueries($html);
 
-        $definitiveQuery = Classification::find(1)->only_filter_query;
+        $definitiveQuery = Classification::curie('GENCC:100001')->firstOrFail()->only_filter_query;
         $this->assertContains($definitiveQuery, $queries);
 
         parse_str($definitiveQuery, $params);
@@ -186,10 +209,10 @@ class StatisticsChartLinksTest extends TestCase
     {
         $this->shimRegexpSubstrForSqlite();
 
-        $this->geneWithSubmission('DEFGENE', 1);
-        $this->geneWithSubmission('LIMGENE', 5);
+        $this->geneWithSubmission('DEFGENE', 'GENCC:100001');
+        $this->geneWithSubmission('LIMGENE', 'GENCC:100004');
 
-        parse_str(Classification::find(5)->only_filter_query, $params);
+        parse_str(Classification::curie('GENCC:100004')->firstOrFail()->only_filter_query, $params);
 
         $component = Livewire::withQueryParams($params)->test(Listing::class);
 
@@ -215,19 +238,19 @@ class StatisticsChartLinksTest extends TestCase
 
     private function seedOneGenePerClassification(): void
     {
-        foreach (array_keys(self::TERMS) as $id) {
-            $this->geneWithSubmission('GENE' . $id, $id);
+        foreach (array_keys(Classification::VOCABULARY) as $curie) {
+            $this->geneWithSubmission('GENE' . self::IDS[$curie], $curie);
         }
     }
 
-    private function geneWithSubmission(string $symbol, int $classificationId): Gene
+    private function geneWithSubmission(string $symbol, string $classificationCurie): Gene
     {
         $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
 
         Submission::factory()->create([
             'gene_id' => $gene->id,
             'disease_id' => Disease::factory()->create()->id,
-            'classification_id' => $classificationId,
+            'classification_id' => self::IDS[$classificationCurie],
             'submitter_id' => Submitter::factory()->create()->id,
             'inheritance_id' => Inheritance::factory()->create()->id,
             'is_live' => true,

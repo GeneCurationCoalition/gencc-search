@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Genes;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Classification;
 use App\Gene;
 use App\Submitter;
 use App\Traits\NormalizesSearchInput;
@@ -21,42 +22,25 @@ class Listing extends Component
 
     public $title                           = '';
     public $hasDisease                      = '';
-    public $curations_definitive            = '';
-    public $curations_strong                = '';
-    public $curations_moderate              = '';
-    public $curations_limited               = '';
-    public $curations_disputed              = '';
-    public $curations_refuted               = '';
-    public $curations_animal                = '';
-    public $curations_noknown               = '';
-    public $curations_supportive            = '';
+    public $curations_definitive            = '1';
+    public $curations_strong                = '1';
+    public $curations_moderate              = '1';
+    public $curations_limited               = '1';
+    public $curations_disputed              = '1';
+    public $curations_refuted               = '1';
+    public $curations_animal                = '1';
+    public $curations_noknown               = '1';
+    public $curations_supportive            = '1';
     public $curations_from_submitters       = [];
     public $count_submissions               = '';
     public $count_unique_diseases           = '';
     public $filtering_by_submitter          = false;
     public $sort                            = '';
     public $page                            = 1;
-    /**
-     * Comma-joined submitter idents, the URL-facing form of
-     * curations_from_submitters. Empty means "all submitters" (#204).
-     */
+    /** Comma-joined submitter CURIEs. Empty means "all submitters" (#204). */
     public $submitterFilter                 = '';
+    public $invalidUrlFiltersIgnored        = false;
     protected $submitters;
-
-    /**
-     * The nine classification toggles, in the order they appear in the UI.
-     */
-    protected $classificationFilters = [
-        'curations_definitive',
-        'curations_strong',
-        'curations_moderate',
-        'curations_supportive',
-        'curations_limited',
-        'curations_disputed',
-        'curations_refuted',
-        'curations_animal',
-        'curations_noknown',
-    ];
 
     protected $filtersThatResetPage = [
         'title',
@@ -89,20 +73,15 @@ class Listing extends Component
      * submitter when unfiltered, which would put twenty-odd idents into the URL
      * of an unfiltered page. See syncSubmitterFilter().
      */
-    protected $queryString = [
-        'title'                  => ['except' => ''],
-        'hasDisease'             => ['except' => ''],
-        'curations_definitive'   => ['except' => '1', 'as' => 'definitive'],
-        'curations_strong'       => ['except' => '1', 'as' => 'strong'],
-        'curations_moderate'     => ['except' => '1', 'as' => 'moderate'],
-        'curations_supportive'   => ['except' => '1', 'as' => 'supportive'],
-        'curations_limited'      => ['except' => '1', 'as' => 'limited'],
-        'curations_disputed'     => ['except' => '1', 'as' => 'disputed'],
-        'curations_refuted'      => ['except' => '1', 'as' => 'refuted'],
-        'curations_animal'       => ['except' => '1', 'as' => 'animal'],
-        'curations_noknown'      => ['except' => '1', 'as' => 'noknown'],
-        'submitterFilter'        => ['except' => '', 'as' => 'submitters'],
-    ];
+    protected function queryString(): array
+    {
+        return array_merge([
+            'title' => ['except' => ''],
+            'hasDisease' => ['except' => ''],
+        ], Classification::queryStringBindings(), [
+            'submitterFilter' => ['except' => '', 'as' => 'submitters'],
+        ]);
+    }
 
     protected $rules = [
         'curations_definitive' => 'numeric',
@@ -124,45 +103,135 @@ class Listing extends Component
     {
         $this->submitters = $this->submittersWithSubmissions();
 
-        // Coalesced to '' rather than left null: null would round-trip into the
-        // URL as an empty ?title=, defeating the 'except' rules above (#204).
-        $this->title                        = request('title', '') ?? '';
-        $this->hasDisease                   = request('hasDisease', '') ?? '';
+        $this->title = $this->normalizeTextFilter(request('title', ''));
+        $this->hasDisease = $this->normalizeTextFilter(request('hasDisease', ''));
         $this->count_submissions            = request('count_submissions');
         $this->count_unique_diseases        = request('count_unique_diseases');
+        $this->normalizeClassificationFilters();
 
-        // ?submitters=a,b,c wins if present. Otherwise stay null so render()
-        // defaults to every submitter; the legacy ?curations_from_submitters=
-        // array form is still honoured.
-        $this->submitterFilter = request('submitters', '') ?? '';
-
-        if ($this->submitterFilter !== '') {
-            $this->curations_from_submitters = $this->expandSubmitterFilter($this->submitterFilter);
+        // The CURIE form wins when both new and legacy parameters are present.
+        if (request()->query->has('submitters')) {
+            $this->curations_from_submitters = $this->expandSubmitterFilter(request()->query('submitters'));
         } else {
-            $this->curations_from_submitters = request('curations_from_submitters');
+            $this->curations_from_submitters = $this->normalizeLegacySubmitterFilter(
+                request()->query('curations_from_submitters')
+            );
+        }
+
+        // Legacy links remain accepted inbound, but generated URLs use only the
+        // stable CURIE-based submitters parameter.
+        request()->query->remove('curations_from_submitters');
+    }
+
+    private function normalizeTextFilter($value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        $this->invalidUrlFiltersIgnored = true;
+
+        return '';
+    }
+
+    private function normalizeClassificationFilters(): void
+    {
+        foreach (Classification::VOCABULARY as $metadata) {
+            $property = $metadata['property'];
+            $value = $this->$property;
+
+            if ((is_int($value) || is_string($value)) && ($value === 0 || $value === 1 || $value === '0' || $value === '1')) {
+                $this->$property = (string) $value;
+                continue;
+            }
+
+            $this->$property = '1';
+            $this->invalidUrlFiltersIgnored = true;
         }
     }
 
     /**
-     * Turn ?submitters=a,b,c into the array the query builder wants, keeping only
-     * idents that exist so a stale or hand-edited URL cannot empty the listing.
+     * Turn a CURIE CSV into the legacy ident array the query builder wants.
      */
     private function expandSubmitterFilter($value)
     {
+        if (!is_string($value)) {
+            $this->invalidUrlFiltersIgnored = true;
+            return null;
+        }
+
         // An empty selection cannot be spelled as an empty string, since that is
         // also how "no filter" is spelled. Hence the explicit sentinel.
         if ($value === self::SUBMITTERS_NONE) {
             return [];
         }
 
-        $requested = array_filter(array_map('trim', explode(',', $value)), 'strlen');
+        $parts = array_map('trim', explode(',', $value));
+        $requested = array_values(array_filter($parts, 'strlen'));
 
         if (empty($requested)) {
+            $this->invalidUrlFiltersIgnored = true;
             return null;
         }
 
-        $known = $this->submittersWithSubmissions()->pluck('uuid')->toArray();
+        $unique = array_values(array_unique($requested));
+        $known = $this->submittersWithSubmissions()->pluck('ident', 'curie');
+        $valid = collect($unique)
+            ->filter(fn ($curie) => $known->has($curie))
+            ->map(fn ($curie) => $known->get($curie))
+            ->values()
+            ->all();
+
+        if (count($parts) !== count($requested) || count($requested) !== count($unique) || count($unique) !== count($valid)) {
+            $this->invalidUrlFiltersIgnored = true;
+        }
+
+        return empty($valid) ? null : $valid;
+    }
+
+    /**
+     * Normalize the bracketed legacy ident list and canonicalize it on output.
+     */
+    private function normalizeLegacySubmitterFilter($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        if (!is_array($value)) {
+            $this->invalidUrlFiltersIgnored = true;
+            return null;
+        }
+
+        $requested = [];
+
+        foreach ($value as $ident) {
+            if (!is_scalar($ident)) {
+                $this->invalidUrlFiltersIgnored = true;
+                continue;
+            }
+
+            $trimmed = trim((string) $ident);
+
+            if ($trimmed === '') {
+                $this->invalidUrlFiltersIgnored = true;
+                continue;
+            }
+
+            if ($trimmed !== (string) $ident || in_array($trimmed, $requested, true)) {
+                $this->invalidUrlFiltersIgnored = true;
+            }
+
+            $requested[] = $trimmed;
+        }
+
+        $requested = array_values(array_unique($requested));
+        $known = $this->submittersWithSubmissions()->pluck('ident')->all();
         $valid = array_values(array_intersect($requested, $known));
+
+        if (count($valid) !== count($requested)) {
+            $this->invalidUrlFiltersIgnored = true;
+        }
 
         return empty($valid) ? null : $valid;
     }
@@ -174,14 +243,18 @@ class Listing extends Component
     private function syncSubmitterFilter()
     {
         $selected = $this->curations_from_submitters ?? [];
-        $total = $this->submittersWithSubmissions()->count();
+        $submitters = $this->submittersWithSubmissions();
+        $total = $submitters->count();
 
         if (count($selected) === $total) {
             $this->submitterFilter = '';
         } elseif (empty($selected)) {
             $this->submitterFilter = self::SUBMITTERS_NONE;
         } else {
-            $this->submitterFilter = implode(',', $selected);
+            $this->submitterFilter = $submitters
+                ->filter(fn ($submitter) => in_array($submitter->ident, $selected, true))
+                ->pluck('curie')
+                ->implode(',');
         }
     }
 
@@ -203,7 +276,7 @@ class Listing extends Component
             return true;
         }
 
-        foreach ($this->classificationFilters as $filter) {
+        foreach (Classification::filterProperties() as $filter) {
             if ($this->$filter !== '' && !is_null($this->$filter) && (int) $this->$filter !== 1) {
                 return true;
             }
@@ -245,7 +318,7 @@ class Listing extends Component
         } else {
             $result = array_merge($array, $value);
         }
-        $this->curations_from_submitters = array_unique($result);
+        $this->curations_from_submitters = array_values(array_unique($result));
     }
 
     /**
@@ -270,7 +343,7 @@ class Listing extends Component
     {
         $this->resetPage();
 
-        foreach ($this->classificationFilters as $filter) {
+        foreach (Classification::filterProperties() as $filter) {
             $this->$filter = $value;
         }
     }
@@ -282,9 +355,6 @@ class Listing extends Component
     public function selectAllSubmitters()
     {
         $this->resetPage();
-        // Queried rather than read from $this->submitters: that property is
-        // protected, so Livewire does not carry it across requests and it is null
-        // by the time an action runs.
         $this->curations_from_submitters = $this->submittersWithSubmissions()->pluck('uuid')->toArray();
         $this->filtering_by_submitter = false;
     }
@@ -298,7 +368,11 @@ class Listing extends Component
 
     private function submittersWithSubmissions()
     {
-        return Submitter::has('submissions')->orderBy('name')->get();
+        if (is_null($this->submitters)) {
+            $this->submitters = Submitter::has('submissions')->orderBy('name')->get();
+        }
+
+        return $this->submitters;
     }
 
 
@@ -332,54 +406,24 @@ class Listing extends Component
         // per toggle rather than all-or-nothing also matters for URLs that name
         // only some of them: ?definitive=0 must leave the other eight on rather
         // than stranding them at '' and silently disabling everything (#204).
-        foreach ($this->classificationFilters as $filter) {
-            if ($this->$filter === '' || is_null($this->$filter)) {
-                $this->$filter = 1;
-            }
-        }
+        $this->normalizeClassificationFilters();
 
-        $query = [
-            //'title'                         => $this->title,
-            //'hasDisease'                    => $this->hasDisease,
-            'num_curations_definitive'          => (int)$this->curations_definitive,
-            'action_curations_definitive'       => ($this->curations_definitive == 0 ? "=" : ">="),
-            'num_curations_strong'              => (int)$this->curations_strong,
-            'action_curations_strong'           => ($this->curations_strong == 0 ? "=" : ">="),
-            'num_curations_moderate'            => (int)$this->curations_moderate,
-            'action_curations_moderate'         => ($this->curations_moderate == 0 ? "=" : ">="),
-            'num_curations_supportive'          => (int)$this->curations_supportive,
-            'action_curations_supportive'       => ($this->curations_supportive == 0 ? "=" : ">="),
-            'num_curations_limited'             => (int)$this->curations_limited,
-            'action_curations_limited'          => ($this->curations_limited == 0 ? "=" : ">="),
-            'num_curations_disputed'            => (int)$this->curations_disputed,
-            'action_curations_disputed'         => ($this->curations_disputed == 0 ? "=" : ">="),
-            'num_curations_refuted'             => (int)$this->curations_refuted,
-            'action_curations_refuted'          => ($this->curations_refuted == 0 ? "=" : ">="),
-            'num_curations_animal'              => (int)$this->curations_animal,
-            'action_curations_animal'           => ($this->curations_animal == 0 ? "=" : ">="),
-            'num_curations_noknown'             => (int)$this->curations_noknown,
-            'action_curations_noknown'          => ($this->curations_noknown == 0 ? "=" : ">="),
-            //'or_curations_from_submitters'  => $this->curations_from_submitters ?? $curations_from_submitters,
-            //'count_submissions'             => $this->count_submissions,
-            //'count_unique_diseases'         => $this->count_unique_diseases,
-        ];
-        //dd($query);
         $totalGenesCount = Gene::has('submissions')->count();
-        $submitterIds = $this->curations_from_submitters
-            ? Submitter::whereIn('ident', $this->curations_from_submitters)->pluck('id')->toArray()
-            : [];
+        $submitterIds = $this->submitters
+            ->filter(fn ($submitter) => in_array($submitter->ident, $this->curations_from_submitters, true))
+            ->pluck('id')
+            ->all();
 
-        // Build array of enabled classification IDs based on filter toggles
-        $enabledClassifications = [];
-        if ($query['num_curations_definitive'] > 0) $enabledClassifications[] = 1;
-        if ($query['num_curations_strong'] > 0) $enabledClassifications[] = 2;
-        if ($query['num_curations_moderate'] > 0) $enabledClassifications[] = 3;
-        if ($query['num_curations_supportive'] > 0) $enabledClassifications[] = 4;
-        if ($query['num_curations_limited'] > 0) $enabledClassifications[] = 5;
-        if ($query['num_curations_disputed'] > 0) $enabledClassifications[] = 6;
-        if ($query['num_curations_refuted'] > 0) $enabledClassifications[] = 7;
-        if ($query['num_curations_animal'] > 0) $enabledClassifications[] = 8;
-        if ($query['num_curations_noknown'] > 0) $enabledClassifications[] = 9;
+        $enabledCuries = collect(Classification::VOCABULARY)
+            ->filter(fn ($metadata) => $this->{$metadata['property']} === '1')
+            ->keys()
+            ->all();
+
+        // IDs are still the submission foreign keys, but their meaning is
+        // resolved from stable CURIEs for this database at query time.
+        $enabledClassifications = Classification::whereIn('curie', $enabledCuries)
+            ->pluck('id')
+            ->all();
 
         // Normalize here rather than in mount() or updating(), so $this->title
         // keeps whatever the user actually typed or pasted and the filter box

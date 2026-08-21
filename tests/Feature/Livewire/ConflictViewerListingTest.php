@@ -262,6 +262,47 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
+    public function gene_and_disease_filters_normalize_pasted_whitespace_but_preserve_the_bound_value()
+    {
+        $this->oneRowPerTier();
+
+        $gene = "\u{00A0}BRCA1\u{00A0}";
+        $component = Livewire::test(Listing::class)->set('gene', $gene);
+
+        $component->assertSee('BRCA1')->assertDontSee('AGL')->assertDontSee('TTN');
+        $this->assertSame($gene, $component->get('gene'));
+
+        $disease = "  glycogen\u{00A0}storage   disease III  ";
+        $component = Livewire::test(Listing::class)->set('disease', $disease);
+
+        $component->assertSee('AGL')->assertDontSee('BRCA1')->assertDontSee('TTN');
+        $this->assertSame($disease, $component->get('disease'));
+    }
+
+    /** @test */
+    public function malformed_and_non_positive_pages_use_the_same_canonical_first_page()
+    {
+        $this->oneRowPerTier();
+
+        foreach ([0, -3] as $invalidPage) {
+            $component = Livewire::test(Listing::class)->set('page', $invalidPage);
+
+            $this->assertSame(1, $component->get('page'));
+            $this->assertSame(1, $component->viewData('conflicts')->currentPage());
+        }
+    }
+
+    /** @test */
+    public function malformed_page_query_returns_200_on_page_one()
+    {
+        $this->oneRowPerTier();
+
+        $this->get('/conflict-viewer?page=abc')
+            ->assertOk()
+            ->assertSee('AGL');
+    }
+
+    /** @test */
     public function a_submitter_option_stays_listed_while_it_is_hidden()
     {
         $this->oneRowPerTier();

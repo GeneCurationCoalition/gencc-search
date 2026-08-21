@@ -1,4 +1,12 @@
 <div class="">
+    @if($invalidUrlFiltersIgnored)
+        <div role="alert" class="flex items-center justify-between bg-yellow-100 border border-yellow-400 text-yellow-900 rounded px-4 py-2 mb-3 text-sm">
+            <span>Invalid URL filters were ignored.</span>
+            <a href="{{ route('genes') }}" class="font-semibold hover:underline whitespace-no-wrap">
+                Reset filters
+            </a>
+        </div>
+    @endif
     @if($this->hasActiveFilters)
         {{-- Filters now survive in the URL, so a bookmarked or shared link can
              arrive pre-filtered. Say so plainly rather than letting the user
