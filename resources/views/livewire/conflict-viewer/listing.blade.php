@@ -41,21 +41,21 @@
             <div class="relative inline-block text-left w-full " x-data="{ open: false }">
                 <div @click="open = true">
                     <button type="button" class=" text-left inline-flex w-full border border-gray-300 px-4 py-2 bg-white leading-5 text-gray-700 input-text hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150" aria-haspopup="true" aria-expanded="true">
-                        Dissenting submitters
+                        Submitters
                         <span class="rounded-full text-xs py-1 px-2 leading-tight bg-gray-300">
-                        @if(count($hidden_dissenters))
-                            {{ count($dissenter_options) - count($hidden_dissenters) }} of
+                        @if(count($hidden_submitters))
+                            {{ count($submitter_options) - count($hidden_submitters) }} of
                         @endif
-                        {{ count($dissenter_options) }}</span>
+                        {{ count($submitter_options) }}</span>
                         <i class="fas fa-angle-down ml-1"></i>
                     </button>
                 </div>
                 <div x-show="open" @click.away="open = false" class="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100" style="display: none;">
                     <div class="py-1" role="menu" aria-orientation="vertical">
-                        @foreach ($dissenter_options as $option)
-                            <button type="button" wire:click="toggleDissenter('{{ $option['slug'] }}')"
+                        @foreach ($submitter_options as $option)
+                            <button type="button" wire:click="toggleSubmitter('{{ $option['slug'] }}')"
                                     class="whitespace-no-wrap w-full text-left block px-4 py-2 text-sm leading-5 {{ $option['count'] === 0 ? 'text-gray-400' : 'text-gray-700' }} hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900" role="menuitem">
-                                    @if(in_array($option['slug'], $hidden_dissenters))
+                                    @if(in_array($option['slug'], $hidden_submitters))
                                         <i class="far fa-circle"></i>
                                     @else
                                         <i class="fas fa-check-circle"></i>
@@ -66,24 +66,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="mb-3">
-        @foreach ($tier_labels as $tier => $label)
-            @if(in_array($tier, $hidden_tiers))
-                <button type="button" wire:click="toggleTier('{{ $tier }}')"
-                        class="mb-1 mr-1 inline-block border rounded-full px-3 py-1 text-sm leading-tight border-gray-300 bg-gray-200 text-gray-500 hover:bg-gray-300">
-                    <i class="far fa-circle"></i>
-                    {{ $label }} ({{ number_format($tier_counts[$tier]) }})
-                </button>
-            @else
-                <button type="button" wire:click="toggleTier('{{ $tier }}')"
-                        class="mb-1 mr-1 inline-block border rounded-full px-3 py-1 text-sm leading-tight border-blue-800 bg-white text-blue-800 font-bold hover:bg-gray-100">
-                    <i class="fas fa-check-circle"></i>
-                    {{ $label }} ({{ number_format($tier_counts[$tier]) }})
-                </button>
-            @endif
-        @endforeach
     </div>
 
     @if($filter_enabled)
@@ -112,10 +94,10 @@
                 <button type="button" class="hover:underline" wire:click="sortBy('moi')">MOI {!! $sortCaret('moi') !!}</button>
             </div>
             <div class="col-span-2">
-                <span>Strong Evidence</span>
+                <span>D/S/M <i class="far fa-question-circle text-gray-400" title="D/S/M: Definitive, Strong, Moderate" data-toggle="tooltip" data-placement="top"></i></span>
             </div>
             <div class="col-span-2">
-                <span>Other Evidence</span>
+                <span>L/P/R/N <i class="far fa-question-circle text-gray-400" title="L/P/R/N: Limited, Disputed, Refuted, No Known Disease Relationship (P denotes Disputed)" data-toggle="tooltip" data-placement="top"></i></span>
             </div>
             <div class="col-span-1 pr-3 text-right">
                 <button type="button" class="hover:underline" wire:click="sortBy('total_count')">Total {!! $sortCaret('total_count') !!}</button>

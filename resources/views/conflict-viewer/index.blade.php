@@ -11,8 +11,9 @@
 @section('content')
 <p class="mb-4 text-gray-600">
     Each row below is a gene, disease and mode-of-inheritance assertion where at least one submitter reported
-    strong evidence (Definitive, Strong or Moderate) and at least one reported something weaker. Only the current,
-    published version of each submission is counted.
+    Definitive, Strong or Moderate and at least one reported Limited, Disputed, Refuted or No Known Disease
+    Relationship. Supportive and Animal Model Only submissions are excluded from this conflict logic. Only the
+    current, published version of each submission is counted.
 </p>
 
 @livewire('conflict-viewer.listing')

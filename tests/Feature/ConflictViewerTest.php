@@ -106,28 +106,44 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function contradictory_assertions_from_one_submitter_are_a_conflict()
+    public function every_other_side_classification_can_conflict_with_dsm_from_the_same_submitter()
     {
-        $gene = Gene::factory()->create();
-        $disease = Disease::factory()->create();
-        $moi = Inheritance::factory()->create();
         $submitter = Submitter::factory()->create(['name' => 'Ambry Genetics']);
+        $pairs = [
+            ['Definitive', 'Limited'],
+            ['Strong', 'Disputed'],
+            ['Moderate', 'Refuted'],
+            ['Definitive', 'No Known Disease Relationship'],
+        ];
 
-        foreach (['Definitive', 'Limited'] as $name) {
-            $this->submission([
-                'gene_id' => $gene->id,
-                'disease_id' => $disease->id,
-                'inheritance_id' => $moi->id,
-                'classification_id' => $this->classification($name, 10)->id,
+        foreach ($pairs as $index => [$strong, $other]) {
+            $base = [
+                'gene_id' => Gene::factory()->create(['symbol' => 'GENE' . $index])->id,
+                'disease_id' => Disease::factory()->create()->id,
+                'inheritance_id' => Inheritance::factory()->create()->id,
                 'submitter_id' => $submitter->id,
-            ]);
+            ];
+
+            foreach ([$strong, $other] as $name) {
+                $this->submission($base + [
+                    'classification_id' => $this->classification($name, 10)->id,
+                ]);
+            }
         }
 
-        $row = ConflictFinder::conflicts()->first();
+        $conflicts = ConflictFinder::conflicts();
 
-        $this->assertNotNull($row);
-        $this->assertArrayHasKey('Ambry Genetics', $row['strong']);
-        $this->assertArrayHasKey('Ambry Genetics', $row['other']);
+        $this->assertCount(4, $conflicts);
+
+        foreach ($conflicts as $row) {
+            $this->assertArrayHasKey('Ambry Genetics', $row['strong']);
+            $this->assertArrayHasKey('Ambry Genetics', $row['other']);
+        }
+
+        $this->assertEqualsCanonicalizing(
+            ['Limited', 'Disputed', 'Refuted', 'No Known Disease Relationship'],
+            $conflicts->flatMap(fn ($row) => array_column($row['other']['Ambry Genetics'], 'label'))->all()
+        );
     }
 
     /** @test */
@@ -171,32 +187,24 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function moderate_still_counts_as_strong_evidence()
+    public function supportive_and_animal_model_only_do_not_create_conflicts_with_dsm()
     {
-        $gene    = Gene::factory()->create();
-        $disease = Disease::factory()->create();
-        $moi     = Inheritance::factory()->create();
+        foreach ([['Definitive', 'Supportive'], ['Moderate', 'Animal Model Only']] as [$strong, $excluded]) {
+            $base = [
+                'gene_id' => Gene::factory()->create()->id,
+                'disease_id' => Disease::factory()->create()->id,
+                'inheritance_id' => Inheritance::factory()->create()->id,
+            ];
 
-        $this->submission([
-            'gene_id'           => $gene->id,
-            'disease_id'        => $disease->id,
-            'inheritance_id'    => $moi->id,
-            'classification_id' => $this->classification('Moderate', 30)->id,
-            'submitter_id'      => Submitter::factory()->create()->id,
-        ]);
-        $this->submission([
-            'gene_id'           => $gene->id,
-            'disease_id'        => $disease->id,
-            'inheritance_id'    => $moi->id,
-            'classification_id' => $this->classification('Supportive', 40)->id,
-            'submitter_id'      => Submitter::factory()->create()->id,
-        ]);
+            foreach ([$strong, $excluded] as $name) {
+                $this->submission($base + [
+                    'classification_id' => $this->classification($name, 10)->id,
+                    'submitter_id' => Submitter::factory()->create()->id,
+                ]);
+            }
+        }
 
-        $conflicts = ConflictFinder::conflicts();
-
-        $this->assertCount(1, $conflicts);
-        $this->assertSame(1, $conflicts->first()['strong_count']);
-        $this->assertSame(1, $conflicts->first()['other_count']);
+        $this->assertCount(0, ConflictFinder::conflicts());
     }
 
     /** @test */
@@ -266,6 +274,7 @@ class ConflictViewerTest extends TestCase
         $response->assertViewIs('conflict-viewer.index');
         $response->assertViewHas('page_meta');
         $response->assertSee('conflicting gene');
+        $response->assertSee('Supportive and Animal Model Only submissions are excluded from this conflict logic.');
     }
 
     /** @test */
@@ -299,7 +308,10 @@ class ConflictViewerTest extends TestCase
             ->set('gene', '')
             ->set('disease', 'GLYCOGEN')   // case-insensitive
             ->assertSee('AGL')
-            ->assertDontSee('breast cancer');
+            ->assertDontSee('breast cancer')
+            ->set('disease', 'breast')      // normalized substring matching
+            ->assertSee('BRCA1')
+            ->assertDontSee('glycogen storage disease III');
     }
 
     /** @test */
@@ -329,20 +341,7 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function severity_tiers_are_derived_from_explicit_curie_buckets()
-    {
-        $this->assertSame(ConflictFinder::TIER_SUPPORTIVE, ConflictFinder::tierFor('GENCC:100009'));
-        $this->assertSame(ConflictFinder::TIER_LIMITED, ConflictFinder::tierFor('GENCC:100004'));
-
-        foreach (['GENCC:100005', 'GENCC:100007', 'GENCC:100006', 'GENCC:100008'] as $curie) {
-            $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, ConflictFinder::tierFor($curie));
-        }
-
-        $this->assertNull(ConflictFinder::tierFor('GENCC:199999'));
-    }
-
-    /** @test */
-    public function curies_control_conflict_membership_and_severity_when_database_orders_are_permuted()
+    public function curies_control_conflict_membership_when_database_orders_are_permuted()
     {
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -359,7 +358,7 @@ class ConflictViewerTest extends TestCase
             'submitter_id' => Submitter::factory()->create(['name' => 'Strong Lab'])->id,
         ]);
         $this->submission($base + [
-            'classification_id' => $this->classification('Animal Model Only', -10)->id,
+            'classification_id' => $this->classification('Refuted', -10)->id,
             'submitter_id' => Submitter::factory()->create(['name' => 'Other Lab'])->id,
         ]);
 
@@ -367,7 +366,6 @@ class ConflictViewerTest extends TestCase
 
         $this->assertSame(['Strong Lab'], array_keys($row['strong']));
         $this->assertSame(['Other Lab'], array_keys($row['other']));
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, $row['severity_tier']);
     }
 
     /** @test */
@@ -431,7 +429,46 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function folded_rows_carry_a_severity_tier_and_the_dissenting_submitter_slugs()
+    public function excluded_submissions_are_omitted_from_rows_totals_and_submitter_options()
+    {
+        $base = [
+            'gene_id' => Gene::factory()->create()->id,
+            'disease_id' => Disease::factory()->create()->id,
+            'inheritance_id' => Inheritance::factory()->create()->id,
+        ];
+        $submissions = [
+            ['Definitive', 'ClinGen'],
+            ['Limited', 'Orphanet'],
+            ['Supportive', 'Supportive Lab'],
+            ['Animal Model Only', 'Animal Lab'],
+        ];
+
+        foreach ($submissions as [$classification, $submitter]) {
+            $this->submission($base + [
+                'classification_id' => $this->classification($classification, 10)->id,
+                'submitter_id' => Submitter::factory()->create(['name' => $submitter])->id,
+            ]);
+        }
+
+        $row = ConflictFinder::conflicts()->first();
+
+        $this->assertSame(1, $row['strong_count']);
+        $this->assertSame(1, $row['other_count']);
+        $this->assertSame(2, $row['total_count']);
+        $this->assertSame(['ClinGen'], array_keys($row['strong']));
+        $this->assertSame(['Orphanet'], array_keys($row['other']));
+        $this->assertStringNotContainsString('Supportive', json_encode($row));
+        $this->assertStringNotContainsString('Animal', json_encode($row));
+
+        $options = Livewire::test(\App\Http\Livewire\ConflictViewer\Listing::class)
+            ->viewData('submitter_options');
+
+        $this->assertSame(['orphanet'], array_column($options, 'slug'));
+        $this->assertSame([1], array_column($options, 'count'));
+    }
+
+    /** @test */
+    public function folded_rows_carry_the_other_side_submitter_slugs()
     {
         $gene    = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -445,7 +482,7 @@ class ConflictViewerTest extends TestCase
             'submitter_id'      => Submitter::factory()->create(['name' => 'ClinGen'])->id,
         ]);
 
-        // Two dissenters, one of them asserting twice — it must appear once.
+        // Two other-side submitters, one asserting twice — it must appear once.
         $limited = $this->classification('Limited', 50);
         $ambry   = Submitter::factory()->create(['name' => 'Ambry Genetics'])->id;
 
@@ -469,16 +506,13 @@ class ConflictViewerTest extends TestCase
 
         $row = ConflictFinder::conflicts()->first();
 
-        // Weakest present is Disputed Evidence (60).
-        $this->assertSame(ConflictFinder::TIER_CONTRADICTORY, $row['severity_tier']);
-
         $this->assertSame([
             'ambry-genetics'                     => 'Ambry Genetics',
             'labcorp-genetics-formerly-invitae'  => 'Labcorp Genetics (formerly Invitae)',
-        ], $row['other_slugs']);
+        ], $row['submitter_slugs']);
 
-        // The strong-side submitter is not a dissenter.
-        $this->assertArrayNotHasKey('clingen', $row['other_slugs']);
+        // The strong-side submitter is not included in the submitter facet.
+        $this->assertArrayNotHasKey('clingen', $row['submitter_slugs']);
     }
 
     /** @test */
@@ -534,7 +568,7 @@ class ConflictViewerTest extends TestCase
             'submitter_id'      => Submitter::factory()->create(['name' => 'ClinGen'])->id,
         ]);
 
-        // One dissenter asserting three different weak classifications, inserted
+        // One other-side submitter asserting four classifications, inserted
         // weakest-first.
         $ambry = Submitter::factory()->create(['name' => 'Ambry Genetics'])->id;
 
@@ -551,7 +585,7 @@ class ConflictViewerTest extends TestCase
         $row = ConflictFinder::conflicts()->first();
 
         $this->assertSame(
-            ['Limited', 'Disputed Evidence', 'Animal Model Only', 'Refuted Evidence'],
+            ['Limited', 'Disputed Evidence', 'Refuted Evidence'],
             array_column($row['other']['Ambry Genetics'], 'label')
         );
     }

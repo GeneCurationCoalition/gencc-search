@@ -23,19 +23,8 @@ class Listing extends Component
     public $sortField     = 'total_count';
     public $sortDirection = 'desc';
 
-    /**
-     * Comma-separated severity tier keys to HIDE. Empty means every tier is shown.
-     *
-     * Exclusions rather than inclusions so the all-on default serialises to '',
-     * which $queryString then omits from the URL entirely. It also mirrors the
-     * $filter_set idiom in App\Http\Livewire\Gene\ListingByClassification.
-     *
-     * @var string
-     */
-    public $hideTiers = '';
-
-    /** Comma-separated dissenting-submitter slugs to HIDE. Empty means every submitter is shown. */
-    public $hideDissenters = '';
+    /** Comma-separated submitter slugs to HIDE. Empty means every submitter is shown. */
+    public $hideSubmitters = '';
 
     /** Whether malformed or unknown URL exclusions were discarded. */
     public $invalidUrlFiltersIgnored = false;
@@ -44,9 +33,9 @@ class Listing extends Component
      * Filter state is shareable. Every entry excepts its default, so a wholly
      * default view has a bare /conflict-viewer URL with no query string at all.
      *
-     * Kept as CSV strings rather than array props because Livewire compares
+     * Kept as a CSV string rather than an array prop because Livewire compares
      * against 'except' with === (SupportBrowserHistory), which on arrays is
-     * key-order sensitive, and array props serialise as hideTiers[0]=supportive.
+     * key-order sensitive.
      *
      * WithPagination contributes 'page' via queryStringWithPagination().
      *
@@ -55,8 +44,7 @@ class Listing extends Component
     protected $queryString = [
         'gene'           => ['except' => ''],
         'disease'        => ['except' => ''],
-        'hideTiers'      => ['except' => ''],
-        'hideDissenters' => ['except' => ''],
+        'hideSubmitters' => ['except' => ''],
         'sortField'      => ['except' => 'total_count'],
         'sortDirection'  => ['except' => 'desc'],
     ];
@@ -71,10 +59,10 @@ class Listing extends Component
      *
      * strong_count and other_count were deliberately left out: they sort on
      * something other than what their cells render (submission counts against
-     * per-submitter blocks). The facets replace them.
+     * per-submitter blocks). The facet replaces them.
      *
      * Evidence strength is not sortable either. Within a row it is already the
-     * order of the Strong and Other cells (see ConflictFinder::orderSide()), and
+     * order of the D/S/M and L/P/R/N cells (see ConflictFinder::orderSide()), and
      * across rows it takes too few distinct values to be a useful column sort.
      *
      * @var array
@@ -123,37 +111,18 @@ class Listing extends Component
     }
 
     /**
-     * Show or hide a severity tier.
-     *
-     * resetPage() is called here rather than left to updating(), which only fires
-     * for wire:model writes and not for wire:click method calls.
-     *
-     * @param  string  $tier
-     * @return void
-     */
-    public function toggleTier($tier)
-    {
-        if (! is_string($tier) || ! array_key_exists($tier, ConflictFinder::TIER_LABELS)) {
-            return;
-        }
-
-        $this->hideTiers = $this->toggleCsv($this->hideTiers, $tier);
-        $this->resetPage();
-    }
-
-    /**
-     * Show or hide a dissenting submitter.
+     * Show or hide a submitter.
      *
      * @param  string  $slug
      * @return void
      */
-    public function toggleDissenter($slug)
+    public function toggleSubmitter($slug)
     {
-        if (! is_string($slug) || ! in_array($slug, $this->knownDissenterSlugs(ConflictFinder::conflicts()), true)) {
+        if (! is_string($slug) || ! in_array($slug, $this->knownSubmitterSlugs(ConflictFinder::conflicts()), true)) {
             return;
         }
 
-        $this->hideDissenters = $this->toggleCsv($this->hideDissenters, $slug);
+        $this->hideSubmitters = $this->toggleCsv($this->hideSubmitters, $slug);
         $this->resetPage();
     }
 
@@ -166,8 +135,7 @@ class Listing extends Component
     {
         $this->gene           = '';
         $this->disease        = '';
-        $this->hideTiers      = '';
-        $this->hideDissenters = '';
+        $this->hideSubmitters = '';
         $this->invalidUrlFiltersIgnored = false;
 
         $this->resetPage();
@@ -216,17 +184,13 @@ class Listing extends Component
     }
 
     /**
-     * Canonicalize both URL-facing exclusion lists and discard invalid entries.
+     * Canonicalize the URL-facing exclusion list and discard invalid entries.
      */
     protected function normalizeExclusionFilters(Collection $all): void
     {
-        $this->hideTiers = $this->normalizeCsv(
-            $this->hideTiers,
-            array_keys(ConflictFinder::TIER_LABELS)
-        );
-        $this->hideDissenters = $this->normalizeCsv(
-            $this->hideDissenters,
-            $this->knownDissenterSlugs($all)
+        $this->hideSubmitters = $this->normalizeCsv(
+            $this->hideSubmitters,
+            $this->knownSubmitterSlugs($all)
         );
     }
 
@@ -269,13 +233,13 @@ class Listing extends Component
         return implode(',', $valid);
     }
 
-    /** Return every dissenter slug present in the unfiltered conflict set. */
-    protected function knownDissenterSlugs(Collection $all): array
+    /** Return every filterable submitter slug present in the unfiltered conflict set. */
+    protected function knownSubmitterSlugs(Collection $all): array
     {
         $slugs = [];
 
         foreach ($all as $row) {
-            $slugs = array_merge($slugs, array_keys($row['other_slugs']));
+            $slugs = array_merge($slugs, array_keys($row['submitter_slugs']));
         }
 
         $slugs = array_values(array_unique($slugs));
@@ -307,41 +271,25 @@ class Listing extends Component
     }
 
     /**
-     * Drop rows whose severity tier is hidden.
-     *
-     * @param  \Illuminate\Support\Collection  $rows
-     * @param  array  $hidden
-     * @return \Illuminate\Support\Collection
-     */
-    protected function applyTiers(Collection $rows, array $hidden): Collection
-    {
-        if (empty($hidden)) {
-            return $rows;
-        }
-
-        return $rows->reject(fn ($row) => in_array($row['severity_tier'], $hidden, true));
-    }
-
-    /**
-     * Keep a row when ANY still-visible submitter dissents on it.
+     * Keep a row when ANY other-side submitter is still visible.
      *
      * OR semantics, so hiding one submitter only removes the rows where that
-     * submitter is the *sole* dissenter. Rows where it dissents alongside a
-     * visible submitter are retained, and its pill still renders in the cell —
+     * submitter is the only other-side submitter. Rows with another visible
+     * submitter are retained, and the hidden submitter's pill still renders —
      * the facet filters rows, not cells.
      *
      * @param  \Illuminate\Support\Collection  $rows
      * @param  array  $hidden
      * @return \Illuminate\Support\Collection
      */
-    protected function applyDissenters(Collection $rows, array $hidden): Collection
+    protected function applySubmitters(Collection $rows, array $hidden): Collection
     {
         if (empty($hidden)) {
             return $rows;
         }
 
         return $rows->filter(function ($row) use ($hidden) {
-            foreach (array_keys($row['other_slugs']) as $slug) {
+            foreach (array_keys($row['submitter_slugs']) as $slug) {
                 if (! in_array($slug, $hidden, true)) {
                     return true;
                 }
@@ -352,36 +300,17 @@ class Listing extends Component
     }
 
     /**
-     * Residual conflict count per severity tier, always keyed in TIER_LABELS order.
+     * Residual conflict count per filterable submitter, keyed by slug.
      *
      * @param  \Illuminate\Support\Collection  $rows
      * @return array
      */
-    protected function countTiers(Collection $rows): array
-    {
-        $counted = $rows->countBy('severity_tier');
-
-        $counts = [];
-
-        foreach (array_keys(ConflictFinder::TIER_LABELS) as $tier) {
-            $counts[$tier] = (int) $counted->get($tier, 0);
-        }
-
-        return $counts;
-    }
-
-    /**
-     * Residual conflict count per dissenting submitter, keyed by slug.
-     *
-     * @param  \Illuminate\Support\Collection  $rows
-     * @return array
-     */
-    protected function countDissenters(Collection $rows): array
+    protected function countSubmitters(Collection $rows): array
     {
         $counts = [];
 
         foreach ($rows as $row) {
-            foreach (array_keys($row['other_slugs']) as $slug) {
+            foreach (array_keys($row['submitter_slugs']) as $slug) {
                 $counts[$slug] = ($counts[$slug] ?? 0) + 1;
             }
         }
@@ -390,22 +319,22 @@ class Listing extends Component
     }
 
     /**
-     * The dissenting-submitter facet options.
+     * The submitter facet options.
      *
      * Option *existence* comes from the unfiltered set so an option never
-     * disappears mid-interaction and become unrecoverable; only the counts move,
+     * disappears mid-interaction and becomes unrecoverable; only the counts move,
      * and a zero count renders as 0. Sorted by count descending, then by name.
      *
      * @param  \Illuminate\Support\Collection  $all
      * @param  array  $counts
      * @return array
      */
-    protected function dissenterOptions(Collection $all, array $counts): array
+    protected function submitterOptions(Collection $all, array $counts): array
     {
         $names = [];
 
         foreach ($all as $row) {
-            foreach ($row['other_slugs'] as $slug => $name) {
+            foreach ($row['submitter_slugs'] as $slug => $name) {
                 $names[$slug] = $name;
             }
         }
@@ -433,16 +362,14 @@ class Listing extends Component
         $this->normalizeExclusionFilters($all);
         $base = $this->applyTextFilters($all);
 
-        $hiddenTiers      = $this->csvToArray($this->hideTiers);
-        $hiddenDissenters = $this->csvToArray($this->hideDissenters);
+        $hiddenSubmitters = $this->csvToArray($this->hideSubmitters);
 
-        // Residual counts: each facet's counts ignore its OWN exclusions but
-        // respect every other active filter.
-        $tierCounts       = $this->countTiers($this->applyDissenters($base, $hiddenDissenters));
-        $dissenterCounts  = $this->countDissenters($this->applyTiers($base, $hiddenTiers));
-        $dissenterOptions = $this->dissenterOptions($all, $dissenterCounts);
+        // The facet's residual counts ignore its own exclusions but respect the
+        // active text filters.
+        $submitterCounts  = $this->countSubmitters($base);
+        $submitterOptions = $this->submitterOptions($all, $submitterCounts);
 
-        $rows = $this->applyDissenters($this->applyTiers($base, $hiddenTiers), $hiddenDissenters);
+        $rows = $this->applySubmitters($base, $hiddenSubmitters);
 
         // A URL can carry a sortField that is no longer sortable; fall back quietly.
         $field = in_array($this->sortField, $this->sortableFields, true) ? $this->sortField : 'total_count';
@@ -462,16 +389,13 @@ class Listing extends Component
             ['path' => Paginator::resolveCurrentPath()]
         );
 
-        $activeFilters = $this->activeFilterLabels($hiddenTiers, $hiddenDissenters, $dissenterOptions);
+        $activeFilters = $this->activeFilterLabels($hiddenSubmitters, $submitterOptions);
 
         return view('livewire.conflict-viewer.listing', [
             'conflicts'         => $conflicts,
             'total_unfiltered'  => $all->count(),
-            'tier_labels'       => ConflictFinder::TIER_LABELS,
-            'tier_counts'       => $tierCounts,
-            'hidden_tiers'      => $hiddenTiers,
-            'dissenter_options' => $dissenterOptions,
-            'hidden_dissenters' => $hiddenDissenters,
+            'submitter_options' => $submitterOptions,
+            'hidden_submitters' => $hiddenSubmitters,
             'active_filters'    => $activeFilters,
         ]);
     }
@@ -501,12 +425,11 @@ class Listing extends Component
     /**
      * Human-readable descriptions of the active filters, for the summary line.
      *
-     * @param  array  $hiddenTiers
-     * @param  array  $hiddenDissenters
-     * @param  array  $dissenterOptions
+     * @param  array  $hiddenSubmitters
+     * @param  array  $submitterOptions
      * @return array
      */
-    protected function activeFilterLabels(array $hiddenTiers, array $hiddenDissenters, array $dissenterOptions): array
+    protected function activeFilterLabels(array $hiddenSubmitters, array $submitterOptions): array
     {
         $labels = [];
 
@@ -518,12 +441,8 @@ class Listing extends Component
             $labels[] = 'disease matches “' . $this->disease . '”';
         }
 
-        if (! empty($hiddenTiers)) {
-            $labels[] = count($hiddenTiers) . ' of ' . count(ConflictFinder::TIER_LABELS) . ' severity tiers hidden';
-        }
-
-        if (! empty($hiddenDissenters)) {
-            $labels[] = count($hiddenDissenters) . ' of ' . count($dissenterOptions) . ' submitters hidden';
+        if (! empty($hiddenSubmitters)) {
+            $labels[] = count($hiddenSubmitters) . ' of ' . count($submitterOptions) . ' submitters hidden';
         }
 
         return $labels;

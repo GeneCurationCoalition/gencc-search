@@ -14,23 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-/**
- * Facet behaviour for the conflict viewer listing.
- *
- * The fixtures here are synthetic and small. The corresponding check against the
- * real data, on snapshot gencc_sub_20260720-050000, is:
- *
- *   - default view: 2,898 rows
- *   - hiding only the supportive tier:  1,094 rows
- *   - hiding only Orphanet:             1,094 rows
- *
- * The same number by two routes, because Orphanet is the sole dissenter on exactly
- * the 1,804 supportive-tier rows. That equality is a property of this snapshot, NOT
- * an invariant: if a future snapshot has any supportive-tier row with a non-Orphanet
- * dissenter, the two numbers diverge and that is correct, not a regression. Of the
- * 1,094 surviving rows with Orphanet hidden, 209 still show an Orphanet pill because
- * a second, visible submitter also dissents there.
- */
+/** Facet, filtering, sorting, and pagination behavior for the conflict viewer. */
 class ConflictViewerListingTest extends TestCase
 {
     use RefreshDatabase;
@@ -47,7 +31,6 @@ class ConflictViewerListingTest extends TestCase
     {
         $curies = [
             'Definitive' => 'GENCC:100001',
-            'Supportive' => 'GENCC:100009',
             'Limited' => 'GENCC:100004',
             'Refuted Evidence' => 'GENCC:100006',
         ];
@@ -71,14 +54,14 @@ class ConflictViewerListingTest extends TestCase
 
     /**
      * Build one conflicting triple: a Definitive from ClinGen, plus one weak
-     * assertion per entry in $dissenters (submitter name => [name, order]).
+     * assertion per entry in $submitters (submitter name => [name, order]).
      *
      * @param  string  $symbol
      * @param  string  $diseaseName
-     * @param  array  $dissenters
+     * @param  array  $submitters
      * @return void
      */
-    protected function conflict(string $symbol, string $diseaseName, array $dissenters)
+    protected function conflict(string $symbol, string $diseaseName, array $submitters)
     {
         $gene    = Gene::factory()->create(['symbol' => $symbol]);
         $disease = Disease::factory()->create(['name' => $diseaseName]);
@@ -97,7 +80,7 @@ class ConflictViewerListingTest extends TestCase
             'submitter_id'      => $this->submitter('ClinGen')->id,
         ]);
 
-        foreach ($dissenters as $submitterName => [$classificationName, $order]) {
+        foreach ($submitters as $submitterName => [$classificationName, $order]) {
             Submission::factory()->create($base + [
                 'classification_id' => $this->classification($classificationName, $order)->id,
                 'submitter_id'      => $this->submitter($submitterName)->id,
@@ -105,70 +88,37 @@ class ConflictViewerListingTest extends TestCase
         }
     }
 
-    /** One row per tier, each with a single distinct dissenter. */
-    protected function oneRowPerTier()
+    /** Three eligible conflict rows, each with a single distinct other-side submitter. */
+    protected function conflictRows()
     {
-        $this->conflict('AGL', 'glycogen storage disease III', ['Orphanet' => ['Supportive', 40]]);
+        $this->conflict('AGL', 'glycogen storage disease III', ['Orphanet' => ['Limited', 50]]);
         $this->conflict('BRCA1', 'breast cancer', ['Ambry Genetics' => ['Limited', 50]]);
         $this->conflict('TTN', 'dilated cardiomyopathy', ['Illumina' => ['Refuted Evidence', 70]]);
     }
 
     /** @test */
-    public function hiding_a_tier_removes_exactly_those_rows_and_hiding_two_tiers_composes()
+    public function hiding_a_submitter_only_drops_rows_where_it_is_the_only_other_side_submitter()
     {
-        $this->oneRowPerTier();
-
-        Livewire::test(Listing::class)
-            ->assertSee('AGL')
-            ->assertSee('BRCA1')
-            ->assertSee('TTN')
-            ->set('hideTiers', 'supportive')
-            ->assertDontSee('AGL')
-            ->assertSee('BRCA1')
-            ->assertSee('TTN')
-            ->set('hideTiers', 'contradictory,supportive')
-            ->assertDontSee('AGL')
-            ->assertSee('BRCA1')
-            ->assertDontSee('TTN');
-    }
-
-    /** @test */
-    public function toggling_a_tier_adds_then_removes_it_from_the_exclusion_list()
-    {
-        Livewire::test(Listing::class)
-            ->assertSet('hideTiers', '')
-            ->call('toggleTier', 'supportive')
-            ->assertSet('hideTiers', 'supportive')
-            ->call('toggleTier', 'limited')
-            // Sorted, so the same selection always produces the same URL.
-            ->assertSet('hideTiers', 'limited,supportive')
-            ->call('toggleTier', 'supportive')
-            ->assertSet('hideTiers', 'limited');
-    }
-
-    /** @test */
-    public function hiding_a_submitter_only_drops_rows_where_it_is_the_sole_dissenter()
-    {
-        // ATM has two dissenters, KCNQ1 has only Orphanet.
+        // ATM has two other-side submitters; KCNQ1 has only Orphanet.
         $this->conflict('ATM', 'ataxia telangiectasia', [
-            'Orphanet'       => ['Supportive', 40],
+            'Orphanet'       => ['Refuted Evidence', 70],
             'Ambry Genetics' => ['Limited', 50],
         ]);
-        $this->conflict('KCNQ1', 'long QT syndrome', ['Orphanet' => ['Supportive', 40]]);
+        $this->conflict('KCNQ1', 'long QT syndrome', ['Orphanet' => ['Limited', 50]]);
 
         Livewire::test(Listing::class)
             ->assertSee('ATM')
             ->assertSee('KCNQ1')
-            ->set('hideDissenters', 'orphanet')
+            ->set('hideSubmitters', 'orphanet')
             // Ambry still dissents on ATM, so ATM survives...
             ->assertSee('ATM')
             // ...and Orphanet's pill is still rendered there: the facet filters
             // rows, not cells.
             ->assertSee('Orphanet')
-            // KCNQ1 had no other dissenter.
+            // KCNQ1 had no other submitter in the facet.
             ->assertDontSee('KCNQ1')
-            // Hiding both dissenters drops ATM as well.
-            ->set('hideDissenters', 'ambry-genetics,orphanet')
+            // Hiding both submitters drops ATM as well.
+            ->set('hideSubmitters', 'ambry-genetics,orphanet')
             ->assertDontSee('ATM')
             ->assertDontSee('KCNQ1');
     }
@@ -189,106 +139,70 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
-    public function hiding_every_tier_renders_the_empty_state_rather_than_erroring()
+    public function the_simplified_headers_tooltips_and_submitter_label_render()
     {
-        $this->oneRowPerTier();
-
         Livewire::test(Listing::class)
-            ->set('hideTiers', 'supportive,limited,contradictory')
-            ->assertOk()
-            ->assertSee('alert alert-info', false)
-            ->assertDontSee('AGL');
+            ->assertSee('D/S/M')
+            ->assertSee('title="D/S/M: Definitive, Strong, Moderate"', false)
+            ->assertSee('L/P/R/N')
+            ->assertSee('title="L/P/R/N: Limited, Disputed, Refuted, No Known Disease Relationship (P denotes Disputed)"', false)
+            ->assertSee('Submitters')
+            ->assertDontSee('Dissenting submitters')
+            ->assertDontSee('Strong Evidence')
+            ->assertDontSee('Other Evidence')
+            ->assertDontSee('toggleTier', false)
+            ->assertDontSee('Strong evidence vs');
     }
 
     /** @test */
     public function hiding_every_submitter_renders_the_empty_state_rather_than_erroring()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
-            ->set('hideDissenters', 'orphanet,ambry-genetics,illumina')
+            ->set('hideSubmitters', 'orphanet,ambry-genetics,illumina')
             ->assertOk()
             ->assertSee('alert alert-info', false)
             ->assertDontSee('AGL');
     }
 
     /** @test */
-    public function tier_counts_respond_to_hidden_submitters_but_ignore_hidden_tiers()
+    public function submitter_counts_ignore_hidden_submitters()
     {
-        $this->oneRowPerTier();
-
-        $component = Livewire::test(Listing::class);
-
-        $this->assertSame(
-            ['supportive' => 1, 'limited' => 1, 'contradictory' => 1],
-            $component->viewData('tier_counts')
-        );
-
-        // A facet never filters itself: hiding the supportive tier must not zero
-        // its own count, or the user could not tell what re-enabling it would do.
-        $component->set('hideTiers', 'supportive');
-        $this->assertSame(
-            ['supportive' => 1, 'limited' => 1, 'contradictory' => 1],
-            $component->viewData('tier_counts')
-        );
-
-        // Hiding Orphanet removes the only supportive-tier row.
-        $component->set('hideTiers', '')->set('hideDissenters', 'orphanet');
-        $this->assertSame(
-            ['supportive' => 0, 'limited' => 1, 'contradictory' => 1],
-            $component->viewData('tier_counts')
-        );
-    }
-
-    /** @test */
-    public function submitter_counts_respond_to_hidden_tiers_but_ignore_hidden_submitters()
-    {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         $component = Livewire::test(Listing::class);
 
         $this->assertSame(
             ['ambry-genetics' => 1, 'illumina' => 1, 'orphanet' => 1],
-            $this->countsBySlug($component->viewData('dissenter_options'))
+            $this->countsBySlug($component->viewData('submitter_options'))
         );
 
-        // Hiding a submitter does not change its own count...
-        $component->set('hideDissenters', 'orphanet');
+        // A facet never filters its own residual counts.
+        $component->set('hideSubmitters', 'orphanet');
         $this->assertSame(
             ['ambry-genetics' => 1, 'illumina' => 1, 'orphanet' => 1],
-            $this->countsBySlug($component->viewData('dissenter_options'))
-        );
-
-        // ...but hiding a tier does.
-        $component->set('hideDissenters', '')->set('hideTiers', 'supportive');
-        $this->assertSame(
-            ['ambry-genetics' => 1, 'illumina' => 1, 'orphanet' => 0],
-            $this->countsBySlug($component->viewData('dissenter_options'))
+            $this->countsBySlug($component->viewData('submitter_options'))
         );
     }
 
     /** @test */
-    public function both_facet_counts_respect_the_text_filters()
+    public function submitter_counts_respect_the_text_filters()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         $component = Livewire::test(Listing::class)->set('gene', 'BRCA');
 
         $this->assertSame(
-            ['supportive' => 0, 'limited' => 1, 'contradictory' => 0],
-            $component->viewData('tier_counts')
-        );
-
-        $this->assertSame(
             ['ambry-genetics' => 1, 'illumina' => 0, 'orphanet' => 0],
-            $this->countsBySlug($component->viewData('dissenter_options'))
+            $this->countsBySlug($component->viewData('submitter_options'))
         );
     }
 
     /** @test */
     public function gene_and_disease_filters_normalize_pasted_whitespace_but_preserve_the_bound_value()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         $gene = "\u{00A0}BRCA1\u{00A0}";
         $component = Livewire::test(Listing::class)->set('gene', $gene);
@@ -301,12 +215,17 @@ class ConflictViewerListingTest extends TestCase
 
         $component->assertSee('AGL')->assertDontSee('BRCA1')->assertDontSee('TTN');
         $this->assertSame($disease, $component->get('disease'));
+
+        $component->set('disease', 'breast')
+            ->assertSee('BRCA1')
+            ->assertDontSee('AGL')
+            ->assertDontSee('TTN');
     }
 
     /** @test */
     public function malformed_and_non_positive_pages_use_the_same_canonical_first_page()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         foreach ([0, -3] as $invalidPage) {
             $component = Livewire::test(Listing::class)->set('page', $invalidPage);
@@ -319,7 +238,7 @@ class ConflictViewerListingTest extends TestCase
     /** @test */
     public function malformed_page_query_returns_200_on_page_one()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         $this->get('/conflict-viewer?page=abc')
             ->assertOk()
@@ -329,13 +248,13 @@ class ConflictViewerListingTest extends TestCase
     /** @test */
     public function a_submitter_option_stays_listed_while_it_is_hidden()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         // Options come from the unfiltered set, so an unchecked submitter is
         // always re-checkable rather than vanishing from the dropdown.
         $options = Livewire::test(Listing::class)
-            ->set('hideDissenters', 'orphanet,ambry-genetics,illumina')
-            ->viewData('dissenter_options');
+            ->set('hideSubmitters', 'orphanet,ambry-genetics,illumina')
+            ->viewData('submitter_options');
 
         $slugs = collect($options)->pluck('slug')->sort()->values()->all();
 
@@ -343,39 +262,32 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
-    public function toggling_a_facet_resets_pagination_to_the_first_page()
+    public function toggling_a_submitter_resets_pagination_to_the_first_page()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         // updating() does not fire for wire:click methods, so each toggle has to
         // reset the page itself.
         Livewire::test(Listing::class)
             ->set('page', 3)
-            ->call('toggleTier', 'supportive')
-            ->assertSet('page', 1);
-
-        Livewire::test(Listing::class)
-            ->set('page', 3)
-            ->call('toggleDissenter', 'orphanet')
+            ->call('toggleSubmitter', 'orphanet')
             ->assertSet('page', 1);
     }
 
     /** @test */
     public function clearing_filters_resets_every_filter_and_the_page()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
             ->set('gene', 'BRCA')
             ->set('disease', 'breast')
-            ->set('hideTiers', 'supportive')
-            ->set('hideDissenters', 'orphanet')
+            ->set('hideSubmitters', 'orphanet')
             ->set('page', 2)
             ->call('clearFilters')
             ->assertSet('gene', '')
             ->assertSet('disease', '')
-            ->assertSet('hideTiers', '')
-            ->assertSet('hideDissenters', '')
+            ->assertSet('hideSubmitters', '')
             ->assertSet('page', 1)
             ->assertSee('AGL')
             ->assertSee('BRCA1')
@@ -400,19 +312,13 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
-    public function filter_state_is_seeded_from_the_query_string_on_a_full_page_load()
+    public function submitter_state_is_seeded_from_the_query_string()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         // Livewire::test cannot seed $queryString in v2 (withQueryParams is v3),
         // so this covers the URL round-trip end to end through a real request.
-        $this->get('/conflict-viewer?hideTiers=supportive')
-            ->assertStatus(200)
-            ->assertDontSee('AGL')
-            ->assertSee('BRCA1')
-            ->assertSee('TTN');
-
-        $this->get('/conflict-viewer?hideDissenters=orphanet')
+        $this->get('/conflict-viewer?hideSubmitters=orphanet')
             ->assertStatus(200)
             ->assertDontSee('AGL')
             ->assertSee('BRCA1');
@@ -421,47 +327,41 @@ class ConflictViewerListingTest extends TestCase
     /** @test */
     public function array_valued_exclusions_return_200_warn_and_use_the_unfiltered_default()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
-        foreach (['hideTiers', 'hideDissenters'] as $filter) {
-            $this->get('/conflict-viewer?' . http_build_query([$filter => ['supportive']]))
-                ->assertOk()
-                ->assertSee('Invalid URL filters were ignored.')
-                ->assertSee('role="alert"', false)
-                ->assertSee('href="' . route('conflict-viewer') . '"', false)
-                ->assertSee('AGL')
-                ->assertSee('BRCA1')
-                ->assertSee('TTN');
-        }
+        $this->get('/conflict-viewer?' . http_build_query(['hideSubmitters' => ['orphanet']]))
+            ->assertOk()
+            ->assertSee('Invalid URL filters were ignored.')
+            ->assertSee('role="alert"', false)
+            ->assertSee('href="' . route('conflict-viewer') . '"', false)
+            ->assertSee('AGL')
+            ->assertSee('BRCA1')
+            ->assertSee('TTN');
     }
 
     /** @test */
     public function exclusions_are_trimmed_deduplicated_intersected_and_canonicalized()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
-            ->set('hideTiers', ' supportive,limited,supportive,unknown ')
-            ->assertSet('hideTiers', 'limited,supportive')
+            ->set('hideSubmitters', ' orphanet,orphanet,missing ')
+            ->assertSet('hideSubmitters', 'orphanet')
             ->assertSee('Invalid URL filters were ignored.')
             ->assertDontSee('AGL')
-            ->assertDontSee('BRCA1')
+            ->assertSee('BRCA1')
             ->assertSee('TTN')
-            ->set('hideDissenters', ' orphanet,orphanet,missing ')
-            ->assertSet('hideDissenters', 'orphanet')
             ->assertDontSee('-1 of');
     }
 
     /** @test */
     public function invalid_only_exclusions_become_the_unfiltered_default()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
-            ->set('hideTiers', 'unknown')
-            ->assertSet('hideTiers', '')
-            ->set('hideDissenters', 'missing')
-            ->assertSet('hideDissenters', '')
+            ->set('hideSubmitters', 'missing')
+            ->assertSet('hideSubmitters', '')
             ->assertSee('Invalid URL filters were ignored.')
             ->assertSee('AGL')
             ->assertSee('BRCA1')
@@ -471,26 +371,23 @@ class ConflictViewerListingTest extends TestCase
     /** @test */
     public function valid_exclusions_are_sorted_without_a_warning()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
-            ->set('hideTiers', 'supportive,limited')
-            ->assertSet('hideTiers', 'limited,supportive')
+            ->set('hideSubmitters', 'orphanet,ambry-genetics')
+            ->assertSet('hideSubmitters', 'ambry-genetics,orphanet')
             ->assertDontSee('Invalid URL filters were ignored.');
     }
 
     /** @test */
     public function toggle_actions_reject_unknown_and_non_scalar_values()
     {
-        $this->oneRowPerTier();
+        $this->conflictRows();
 
         Livewire::test(Listing::class)
-            ->call('toggleTier', 'unknown')
-            ->call('toggleTier', ['supportive'])
-            ->assertSet('hideTiers', '')
-            ->call('toggleDissenter', 'missing')
-            ->call('toggleDissenter', ['orphanet'])
-            ->assertSet('hideDissenters', '');
+            ->call('toggleSubmitter', 'missing')
+            ->call('toggleSubmitter', ['orphanet'])
+            ->assertSet('hideSubmitters', '');
     }
 
     /**

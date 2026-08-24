@@ -168,20 +168,19 @@ class ClassificationModelTest extends TestCase
     }
 
     /** @test */
-    public function conflict_buckets_are_explicitly_mapped_by_curie()
+    public function conflict_sides_are_explicitly_mapped_by_curie()
     {
         foreach (['GENCC:100001', 'GENCC:100002', 'GENCC:100003'] as $curie) {
-            $this->assertSame('strong', Classification::conflictBucket($curie));
+            $this->assertSame('strong', Classification::conflictSide($curie));
         }
 
-        $this->assertSame('supportive', Classification::conflictBucket('GENCC:100009'));
-        $this->assertSame('limited', Classification::conflictBucket('GENCC:100004'));
-
-        foreach (['GENCC:100005', 'GENCC:100007', 'GENCC:100006', 'GENCC:100008'] as $curie) {
-            $this->assertSame('contradictory', Classification::conflictBucket($curie));
+        foreach (['GENCC:100004', 'GENCC:100005', 'GENCC:100006', 'GENCC:100008'] as $curie) {
+            $this->assertSame('other', Classification::conflictSide($curie));
         }
 
-        $this->assertNull(Classification::conflictBucket('GENCC:199999'));
+        foreach (['GENCC:100009', 'GENCC:100007', 'GENCC:199999'] as $curie) {
+            $this->assertNull(Classification::conflictSide($curie));
+        }
     }
 
     /** @test */

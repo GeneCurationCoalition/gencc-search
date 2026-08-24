@@ -18,7 +18,8 @@ class Classification extends Model
      *
      * CURIEs, unlike database IDs, retain their meaning when rows are imported
      * in a different order. Keep filtering, presentation, URL generation, and
-     * strongest-bucket ranking together here so those concerns cannot drift.
+     * canonical ranking and conflict participation together here so those
+     * concerns cannot drift.
      */
     const VOCABULARY = [
         'GENCC:100001' => [
@@ -28,7 +29,7 @@ class Classification extends Model
             'slug' => 'definitive',
             'css_class' => 'gencc-definitive',
             'priority' => 1,
-            'conflict_bucket' => 'strong',
+            'conflict_side' => 'strong',
         ],
         'GENCC:100002' => [
             'title' => 'Strong',
@@ -37,7 +38,7 @@ class Classification extends Model
             'slug' => 'strong',
             'css_class' => 'gencc-strong',
             'priority' => 2,
-            'conflict_bucket' => 'strong',
+            'conflict_side' => 'strong',
         ],
         'GENCC:100003' => [
             'title' => 'Moderate',
@@ -46,7 +47,7 @@ class Classification extends Model
             'slug' => 'moderate',
             'css_class' => 'gencc-moderate',
             'priority' => 3,
-            'conflict_bucket' => 'strong',
+            'conflict_side' => 'strong',
         ],
         'GENCC:100009' => [
             'title' => 'Supportive',
@@ -55,7 +56,7 @@ class Classification extends Model
             'slug' => 'supportive',
             'css_class' => 'gencc-supportive',
             'priority' => 4,
-            'conflict_bucket' => 'supportive',
+            'conflict_side' => null,
         ],
         'GENCC:100004' => [
             'title' => 'Limited',
@@ -64,7 +65,7 @@ class Classification extends Model
             'slug' => 'limited',
             'css_class' => 'gencc-limited',
             'priority' => 5,
-            'conflict_bucket' => 'limited',
+            'conflict_side' => 'other',
         ],
         'GENCC:100005' => [
             'title' => 'Disputed Evidence',
@@ -73,7 +74,7 @@ class Classification extends Model
             'slug' => 'disputed',
             'css_class' => 'gencc-disputedevidence',
             'priority' => 6,
-            'conflict_bucket' => 'contradictory',
+            'conflict_side' => 'other',
         ],
         'GENCC:100007' => [
             'title' => 'Animal Model Only',
@@ -82,7 +83,7 @@ class Classification extends Model
             'slug' => 'animal-model-only',
             'css_class' => 'gencc-animalmodelonly',
             'priority' => 7,
-            'conflict_bucket' => 'contradictory',
+            'conflict_side' => null,
         ],
         'GENCC:100006' => [
             'title' => 'Refuted Evidence',
@@ -91,7 +92,7 @@ class Classification extends Model
             'slug' => 'refuted',
             'css_class' => 'gencc-refutedevidence',
             'priority' => 8,
-            'conflict_bucket' => 'contradictory',
+            'conflict_side' => 'other',
         ],
         'GENCC:100008' => [
             'title' => 'No Known Disease Relationship',
@@ -100,7 +101,7 @@ class Classification extends Model
             'slug' => 'no-known',
             'css_class' => 'gencc-noknowndiseaserelationship',
             'priority' => 9,
-            'conflict_bucket' => 'contradictory',
+            'conflict_side' => 'other',
         ],
     ];
 
@@ -126,11 +127,11 @@ class Classification extends Model
     }
 
     /**
-     * Return the conflict-viewer bucket for a known classification CURIE.
+     * Return the conflict-viewer side for a participating classification CURIE.
      */
-    public static function conflictBucket(string $curie): ?string
+    public static function conflictSide(string $curie): ?string
     {
-        return self::VOCABULARY[$curie]['conflict_bucket'] ?? null;
+        return self::VOCABULARY[$curie]['conflict_side'] ?? null;
     }
 
     /** Return the canonical display priority for a known CURIE. */

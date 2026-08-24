@@ -13,9 +13,10 @@ use Illuminate\Support\Str;
  * Finds gene + disease + mode-of-inheritance groups where curating groups disagree.
  *
  * A group is "conflicting" when at least one live, published submission has a
- * classification in the vocabulary's strong bucket and at least one has a known
- * classification in another conflict bucket. Database IDs and order values do
- * not carry classification meaning.
+ * classification on the vocabulary's strong side (Definitive, Strong, or
+ * Moderate) and at least one is on the other side (Limited, Disputed, Refuted,
+ * or No Known Disease Relationship). Database IDs and order values do not carry
+ * classification meaning.
  */
 class ConflictFinder
 {
@@ -28,43 +29,10 @@ class ConflictFinder
      * that array changes, run `php artisan conflicts:clear-cache` after deploying,
      * or wait out CACHE_HOURS.
      */
-    const CACHE_KEY = 'conflict-viewer.triples.v3';
-
-    const TIER_SUPPORTIVE    = 'supportive';
-    const TIER_LIMITED       = 'limited';
-    const TIER_CONTRADICTORY = 'contradictory';
-
-    /**
-     * Severity tiers in strength order, strongest-conflict-last. Drives facet display order.
-     *
-     * The labels name the classifications involved rather than editorialising about
-     * them — a Supportive-only submitter cannot express agreement with a Definitive,
-     * so "vs Supportive" is a statement about vocabularies, not about disagreement.
-     *
-     * @var array
-     */
-    const TIER_LABELS = [
-        self::TIER_SUPPORTIVE    => 'Strong evidence vs Supportive',
-        self::TIER_LIMITED       => 'Strong evidence vs Limited',
-        self::TIER_CONTRADICTORY => 'Strong evidence vs Contradictory',
-    ];
+    const CACHE_KEY = 'conflict-viewer.triples.v5';
 
     /** How long the computed conflict set stays cached. */
     const CACHE_HOURS = 6;
-
-    /**
-     * The severity tier for a known classification CURIE.
-     *
-     * Public and static so it can be exercised without building fixture rows.
-     *
-     * @return string|null
-     */
-    public static function tierFor(string $curie): ?string
-    {
-        $bucket = Classification::conflictBucket($curie);
-
-        return in_array($bucket, array_keys(self::TIER_LABELS), true) ? $bucket : null;
-    }
 
     /**
      * The conflicting gene/disease/MOI groups, sorted by submission count descending.
@@ -92,7 +60,7 @@ class ConflictFinder
 
     /**
      * Fold every live, published submission into gene/disease/MOI groups and keep
-     * the ones that hold both strong and weaker assertions.
+     * the ones that hold both D/S/M and L/P/R/N assertions.
      *
      * Uses the query builder rather than Eloquent: App\Submission eager-loads six
      * relations via $with, which makes a 30k-row fetch unusable.
@@ -129,10 +97,12 @@ class ConflictFinder
 
         foreach ($rows as $row) {
             $metadata = Classification::VOCABULARY[$row->classification_curie] ?? null;
+            $side = $metadata['conflict_side'] ?? null;
 
-            // Placeholder and future terms have no conflict semantics until they
-            // are explicitly added to the application vocabulary.
-            if ($metadata === null) {
+            // Supportive, Animal Model Only, placeholders, and future terms do
+            // not participate unless the vocabulary explicitly assigns one of
+            // the two recognized conflict sides.
+            if (! in_array($side, ['strong', 'other'], true)) {
                 continue;
             }
 
@@ -148,20 +118,14 @@ class ConflictFinder
                     'moi'           => $row->moi ?: 'Unknown',
                     'strong'        => [],
                     'other'         => [],
-                    'other_slugs'   => [],
+                    'submitter_slugs' => [],
                     'strong_count'  => 0,
                     'other_count'   => 0,
                     'total_count'   => 0,
-                    // Retained for cache/result shape compatibility. This is now
-                    // the weakest canonical vocabulary priority, not a DB order.
-                    'max_order'     => $metadata['priority'],
-                    'severity_tier' => null,
                 ];
             }
 
-            $group    = &$groups[$key];
-            $bucket   = $metadata['conflict_bucket'];
-            $side     = $bucket === 'strong' ? 'strong' : 'other';
+            $group = &$groups[$key];
             $submitter = $row->submitter ?: 'Unknown';
 
             // Submitter => classification CURIE => presentation metadata, so a submitter
@@ -177,19 +141,11 @@ class ConflictFinder
             $group[$side . '_count']++;
             $group['total_count']++;
 
-            // Slug => name for the dissenting submitters. The slug is the facet key:
+            // Slug => name for the other-side submitters. The slug is the facet key:
             // submitters.ident is a UUID, which would be unreadable in a shared URL
             // and is not stable across database reloads.
             if ($side === 'other') {
-                $group['other_slugs'][Str::slug($submitter)] = $submitter;
-                if ($group['severity_tier'] === null
-                    || $metadata['priority'] > $group['max_order']) {
-                    $group['severity_tier'] = $bucket;
-                }
-            }
-
-            if ($metadata['priority'] > $group['max_order']) {
-                $group['max_order'] = $metadata['priority'];
+                $group['submitter_slugs'][Str::slug($submitter)] = $submitter;
             }
 
             unset($group);
