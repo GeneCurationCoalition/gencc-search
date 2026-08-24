@@ -144,7 +144,7 @@
                         <div class="mb-1">
                             <div class="list-text-desc">{{ $submitter }}</div>
                             @foreach ($classifications as $classification)
-                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap gencc-{{ Str::slug($classification, '') }} ">{{ $classification }}</span>
+                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap {{ $classification['css_class'] }} ">{{ $classification['label'] }}</span>
                             @endforeach
                         </div>
                     @endforeach
@@ -155,7 +155,7 @@
                         <div class="mb-1">
                             <div class="list-text-desc">{{ $submitter }}</div>
                             @foreach ($classifications as $classification)
-                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap gencc-{{ Str::slug($classification, '') }} ">{{ $classification }}</span>
+                                <span class=" mb-1 inline-block border rounded-full py-1/2 px-3 text-center text-white whitespace-no-wrap {{ $classification['css_class'] }} ">{{ $classification['label'] }}</span>
                             @endforeach
                         </div>
                     @endforeach

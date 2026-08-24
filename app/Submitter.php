@@ -74,7 +74,7 @@ class Submitter extends Model
     {
         return [
             'total' => 0,
-            'classificationCounts' => static::emptyClassificationCounts(),
+            'classificationCountsByCurie' => static::emptyClassificationCountsByCurie(),
             'displayCounts' => static::emptyDisplayCounts(),
         ];
     }
@@ -101,7 +101,7 @@ class Submitter extends Model
             return null;
         }
 
-        $classificationCounts = collect();
+        $classificationCountsByCurie = collect();
         $displayCounts = static::emptyDisplayCounts();
         $byClassification = $counts['by_classification'];
         $total = (int) $counts['total'];
@@ -109,9 +109,6 @@ class Submitter extends Model
         if ($total > 0 && empty($byClassification)) {
             return null;
         }
-
-        $classificationIds = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
-            ->pluck('id', 'curie');
 
         foreach (Classification::VOCABULARY as $curie => $metadata) {
             $type = str_replace('curations_', '', $metadata['property']);
@@ -128,36 +125,31 @@ class Submitter extends Model
                 }
             }
 
-            $classificationId = $classificationIds->get(
-                $curie,
-                static::curationClassificationMap()[$type]
-            );
-            $classificationCounts->put($classificationId, $count);
+            $classificationCountsByCurie->put($curie, $count);
             $displayCounts[$type] = $count;
         }
 
         return [
             'total' => $total,
-            'classificationCounts' => $classificationCounts,
+            'classificationCountsByCurie' => $classificationCountsByCurie,
             'displayCounts' => $displayCounts,
         ];
     }
 
     protected static function emptyDisplayCounts()
     {
-        return collect(static::curationClassificationMap())
-            ->mapWithKeys(function ($classificationId, $type) {
+        return collect(Classification::VOCABULARY)
+            ->mapWithKeys(function ($metadata) {
+                $type = str_replace('curations_', '', $metadata['property']);
+
                 return [$type => 0];
             })
             ->all();
     }
 
-    protected static function emptyClassificationCounts()
+    protected static function emptyClassificationCountsByCurie()
     {
-        return collect(static::curationClassificationMap())
-            ->mapWithKeys(function ($classificationId) {
-                return [$classificationId => 0];
-            });
+        return collect(array_fill_keys(array_keys(Classification::VOCABULARY), 0));
     }
 
     /**

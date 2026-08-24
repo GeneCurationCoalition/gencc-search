@@ -28,7 +28,7 @@ class ConflictFinder
      * that array changes, run `php artisan conflicts:clear-cache` after deploying,
      * or wait out CACHE_HOURS.
      */
-    const CACHE_KEY = 'conflict-viewer.triples.v2';
+    const CACHE_KEY = 'conflict-viewer.triples.v3';
 
     const TIER_SUPPORTIVE    = 'supportive';
     const TIER_LIMITED       = 'limited';
@@ -164,11 +164,16 @@ class ConflictFinder
             $side     = $bucket === 'strong' ? 'strong' : 'other';
             $submitter = $row->submitter ?: 'Unknown';
 
-            // Submitter => classification name => vocabulary priority, so a submitter
+            // Submitter => classification CURIE => presentation metadata, so a submitter
             // appears once per side. The priority is carried so orderSide()
             // can rank both the submitters and each submitter's own pills by strength;
-            // it is replaced by a plain list of names before the group is returned.
-            $group[$side][$submitter][$row->classification] = $metadata['priority'];
+            // the stable CURIE prevents mutable display names from defining identity.
+            $group[$side][$submitter][$row->classification_curie] = [
+                'curie'     => $row->classification_curie,
+                'label'     => $row->classification,
+                'css_class' => $metadata['css_class'],
+                'priority'  => $metadata['priority'],
+            ];
             $group[$side . '_count']++;
             $group['total_count']++;
 
@@ -215,9 +220,8 @@ class ConflictFinder
      * the order fell out of `submissions.id` — stable in practice but arbitrary,
      * and free to change whenever a submitter reloads its data.
      *
-     * Takes submitter => [classification name => vocabulary priority] and
-     * returns submitter => [classification name, ...], which is the shape Blade
-     * iterates.
+     * Takes submitter => [classification CURIE => metadata] and returns
+     * submitter => [metadata, ...], which is the shape Blade iterates.
      *
      * @param  array  $side
      * @return array
@@ -228,12 +232,12 @@ class ConflictFinder
 
         foreach ($side as $submitter => $classifications) {
             // Ascending vocabulary priority == canonical display order.
-            asort($classifications);
+            uasort($classifications, fn ($a, $b) => $a['priority'] <=> $b['priority']);
 
             $submitters[] = [
                 'name'            => $submitter,
-                'strongest_order' => (int) reset($classifications),
-                'classifications' => array_keys($classifications),
+                'strongest_order' => (int) reset($classifications)['priority'],
+                'classifications' => array_values($classifications),
             ];
         }
 

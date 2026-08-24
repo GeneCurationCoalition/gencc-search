@@ -202,8 +202,8 @@ class MemberFeatureTest extends TestCase
         $response->assertStatus(200);
         $this->assertFalse($response->viewData('submitter')->relationLoaded('submissions'));
         $this->assertSame(99, $response->viewData('submitterSubmissionsCount'));
-        $this->assertSame(7, (int) $response->viewData('classificationCounts')->get($definitive->id));
-        $this->assertSame(5, (int) $response->viewData('classificationCounts')->get($strong->id));
+        $this->assertSame(7, (int) $response->viewData('classificationCountsByCurie')->get($definitive->curie));
+        $this->assertSame(5, (int) $response->viewData('classificationCountsByCurie')->get($strong->curie));
     }
 
     /** @test */

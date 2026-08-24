@@ -99,8 +99,35 @@ class ConflictViewerTest extends TestCase
         $this->assertSame(2, $row['total_count']);
         $this->assertArrayHasKey('ClinGen', $row['strong']);
         $this->assertArrayHasKey('Orphanet', $row['other']);
-        $this->assertSame(['Definitive'], $row['strong']['ClinGen']);
-        $this->assertSame(['Limited'], $row['other']['Orphanet']);
+        $this->assertSame(['Definitive'], array_column($row['strong']['ClinGen'], 'label'));
+        $this->assertSame(['Limited'], array_column($row['other']['Orphanet'], 'label'));
+        $this->assertSame(['GENCC:100001'], array_column($row['strong']['ClinGen'], 'curie'));
+        $this->assertSame(['gencc-limited'], array_column($row['other']['Orphanet'], 'css_class'));
+    }
+
+    /** @test */
+    public function contradictory_assertions_from_one_submitter_are_a_conflict()
+    {
+        $gene = Gene::factory()->create();
+        $disease = Disease::factory()->create();
+        $moi = Inheritance::factory()->create();
+        $submitter = Submitter::factory()->create(['name' => 'Ambry Genetics']);
+
+        foreach (['Definitive', 'Limited'] as $name) {
+            $this->submission([
+                'gene_id' => $gene->id,
+                'disease_id' => $disease->id,
+                'inheritance_id' => $moi->id,
+                'classification_id' => $this->classification($name, 10)->id,
+                'submitter_id' => $submitter->id,
+            ]);
+        }
+
+        $row = ConflictFinder::conflicts()->first();
+
+        $this->assertNotNull($row);
+        $this->assertArrayHasKey('Ambry Genetics', $row['strong']);
+        $this->assertArrayHasKey('Ambry Genetics', $row['other']);
     }
 
     /** @test */
@@ -525,7 +552,7 @@ class ConflictViewerTest extends TestCase
 
         $this->assertSame(
             ['Limited', 'Disputed Evidence', 'Animal Model Only', 'Refuted Evidence'],
-            $row['other']['Ambry Genetics']
+            array_column($row['other']['Ambry Genetics'], 'label')
         );
     }
 

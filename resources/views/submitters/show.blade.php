@@ -69,7 +69,7 @@
     @foreach ($classifications as $item)
     @if($item->curie != "GENCC:000000")
       @php
-        $classificationCount = (int) $classificationCounts->get($item->id, 0);
+        $classificationCount = (int) $classificationCountsByCurie->get($item->curie, 0);
         $classificationPercent = $submitterSubmissionsCount > 0
             ? ($classificationCount / $submitterSubmissionsCount) * 100
             : 0;

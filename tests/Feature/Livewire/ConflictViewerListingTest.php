@@ -174,6 +174,21 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
+    public function conflict_pill_colors_are_derived_from_curies_when_database_names_change()
+    {
+        $classification = $this->classification('Limited', 50);
+        $classification->name = 'Limited display label';
+        $classification->save();
+        $this->conflict('BRCA1', 'breast cancer', [
+            'Ambry Genetics' => ['Limited', 50],
+        ]);
+
+        Livewire::test(Listing::class)
+            ->assertSee('Limited display label')
+            ->assertSee('gencc-limited', false);
+    }
+
+    /** @test */
     public function hiding_every_tier_renders_the_empty_state_rather_than_erroring()
     {
         $this->oneRowPerTier();
