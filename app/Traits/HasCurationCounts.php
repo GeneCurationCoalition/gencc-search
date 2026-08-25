@@ -52,9 +52,8 @@ trait HasCurationCounts
      *
      * Checks in order:
      * 1. Release JSON counts.by_classification entries
-     * 2. Legacy JSON count keys
-     * 3. Individual curations_{type} attribute
-     * 4. Loaded or queryable submissions relationship
+     * 2. Flat JSON count keys
+     * 3. Loaded or queryable submissions relationship
      *
      * @param string $type The curation type (e.g., 'definitive', 'strong')
      * @return int
@@ -75,12 +74,8 @@ trait HasCurationCounts
             return (int) $this->counts[$column];
         }
 
-        if (!empty($this->counts[$type])) {
+        if (array_key_exists($type, $this->counts ?? [])) {
             return (int) $this->counts[$type];
-        }
-
-        if (isset($this->attributes[$column])) {
-            return (int) $this->attributes[$column];
         }
 
         // Compute from relationship if available
@@ -99,12 +94,12 @@ trait HasCurationCounts
      */
     protected function getNullCurationCount(): int
     {
-        if (isset($this->attributes['curations_nul'])) {
-            return (int) $this->attributes['curations_nul'];
+        if (array_key_exists('curations_nul', $this->counts ?? [])) {
+            return (int) $this->counts['curations_nul'];
         }
 
-        if (!empty($this->counts['nul'])) {
-            return $this->counts['nul'];
+        if (array_key_exists('nul', $this->counts ?? [])) {
+            return (int) $this->counts['nul'];
         }
 
         return $this->relationLoaded('submissions')

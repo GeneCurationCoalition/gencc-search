@@ -17,14 +17,16 @@ class Submitter extends Model
 
     /**
      * The attributes that should be cast to native types.
-     * Note: gencc-sub uses individual columns instead of JSON for counts.
+     * gencc-sub stores aggregate counts in the counts JSON column.
      *
      * @var array
      */
     protected $casts = [
         'downloadable' => 'boolean',
-        'member' => 'boolean',
+        'allow_submissions' => 'boolean',
         'counts' => 'array',
+        'activity' => 'array',
+        'contacts' => 'array',
     ];
 
     public function scopeCurie($query, $id)
@@ -197,6 +199,12 @@ class Submitter extends Model
         return $this->attributes['ident'] ?? null;
     }
 
+    /** Legacy presentation alias for the canonical allow_submissions flag. */
+    public function getMemberAttribute()
+    {
+        return (bool) ($this->attributes['allow_submissions'] ?? false);
+    }
+
     /**
      * Get text_descriptions attribute (returns 'description' column).
      */
@@ -317,11 +325,8 @@ class Submitter extends Model
         if (isset($this->counts['count_submissions'])) {
             return (int) $this->counts['count_submissions'];
         }
-        if (!empty($this->counts['submissions'])) {
+        if (isset($this->counts['submissions'])) {
             return (int) $this->counts['submissions'];
-        }
-        if (isset($this->attributes['count_submissions'])) {
-            return (int) $this->attributes['count_submissions'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->count()
@@ -333,8 +338,11 @@ class Submitter extends Model
      */
     public function getCountUniqueGenesAttribute()
     {
-        if (!empty($this->counts['unique_genes'])) {
-            return $this->counts['unique_genes'];
+        if (isset($this->counts['count_unique_genes'])) {
+            return (int) $this->counts['count_unique_genes'];
+        }
+        if (isset($this->counts['unique_genes'])) {
+            return (int) $this->counts['unique_genes'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->pluck('gene_id')->unique()->count()
@@ -346,8 +354,11 @@ class Submitter extends Model
      */
     public function getCountUniqueDiseasesAttribute()
     {
-        if (!empty($this->counts['unique_diseases'])) {
-            return $this->counts['unique_diseases'];
+        if (isset($this->counts['count_unique_diseases'])) {
+            return (int) $this->counts['count_unique_diseases'];
+        }
+        if (isset($this->counts['unique_diseases'])) {
+            return (int) $this->counts['unique_diseases'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->pluck('disease_id')->unique()->count()
@@ -355,33 +366,10 @@ class Submitter extends Model
     }
 
     protected $fillable = [
-        'title',
-        'uuid',
-        'website',
-        'curie',
-        'path_logo',
-        'text_descriptions',
-        'text_assertions',
-        'text_contact',
-        'text_disclaimer',
-        'status',
-        'allow_submissions',
+        'ident', 'type', 'curie', 'name', 'description', 'logo',
+        'logo_contents', 'logo_mime_type', 'website', 'assertion', 'counts',
+        'activity', 'contacts', 'notes', 'status', 'allow_submissions',
         'downloadable',
-        'member',
-        'counts',
-        'count_submissions',
-        'count_unique_genes',
-        'count_unique_diseases',
-        'curations_definitive',
-        'curations_strong',
-        'curations_moderate',
-        'curations_limited',
-        'curations_disputed',
-        'curations_refuted',
-        'curations_animal',
-        'curations_noknown',
-        'curations_supportive',
-        'curations_nul'
     ];
 
 }

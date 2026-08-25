@@ -355,7 +355,7 @@ class Listing extends Component
     public function selectAllSubmitters()
     {
         $this->resetPage();
-        $this->curations_from_submitters = $this->submittersWithSubmissions()->pluck('uuid')->toArray();
+        $this->curations_from_submitters = $this->submittersWithSubmissions()->pluck('ident')->toArray();
         $this->filtering_by_submitter = false;
     }
 
@@ -386,7 +386,7 @@ class Listing extends Component
         // emptied selection alone — is_null, not empty(), so that "none" sticks
         // instead of snapping back to all (#203).
         if(is_null($this->curations_from_submitters)){
-            $curations_from_submitters = $this->submitters->pluck(['uuid']);
+            $curations_from_submitters = $this->submitters->pluck('ident');
             $this->curations_from_submitters = $curations_from_submitters->toArray();
         }
         if(count($this->submitters) == count($this->curations_from_submitters)) {

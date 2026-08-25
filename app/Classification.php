@@ -190,7 +190,13 @@ class Classification extends Model
 
     public function scopeSlug($query, $id)
     {
-        return $query->where('slug', '=', $id)->orderBy('updated_at', 'asc');
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            if ($metadata['slug'] === $id) {
+                return $query->where('curie', $curie)->orderBy('updated_at', 'asc');
+            }
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     // =========================================================================
@@ -276,17 +282,8 @@ class Classification extends Model
     }
 
     protected $fillable = [
-        'curie',
-        'uuid',
-        'title',
-        'description',
-        'abbreviation',
-        'hex_color',
-        'css_class',
-        'slug',
-        'order',
-        'href',
-        'info_text',
-        'status'
+        'ident', 'type', 'curie', 'name', 'description', 'abbreviation',
+        'informational', 'style_class', 'hex_color', 'css_class', 'slug',
+        'href', 'order', 'status',
     ];
 }

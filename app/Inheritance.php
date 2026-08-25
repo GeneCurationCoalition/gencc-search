@@ -49,14 +49,7 @@ class Inheritance extends Model
     }
 
     protected $fillable = [
-        'curie',
-        'uuid',
-        'title',
-        'description',
-        'abbreviation',
-        'hex_color',
-        'css_class',
-        'info_text',
-        'status'
+        'ident', 'type', 'curie', 'name', 'description', 'abbreviation',
+        'informational', 'style_class', 'hex_color', 'css_class', 'status',
     ];
 }
