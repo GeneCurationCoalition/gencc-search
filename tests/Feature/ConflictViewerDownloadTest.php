@@ -7,11 +7,14 @@ use App\Disease;
 use App\Exports\ConflictSubmissionExport;
 use App\Gene;
 use App\Inheritance;
+use App\Services\ConflictExportCache;
 use App\Services\ConflictFinder;
+use App\Services\DownloadQuota;
 use App\Submission;
 use App\Submitter;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
@@ -23,14 +26,34 @@ class ConflictViewerDownloadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->cleanupConflictExportCache();
+        Cache::flush();
         ConflictFinder::flush();
         Carbon::setTestNow('2026-08-24 12:00:00');
     }
 
     protected function tearDown(): void
     {
+        $this->cleanupConflictExportCache();
         Carbon::setTestNow();
         parent::tearDown();
+    }
+
+    protected function cleanupConflictExportCache(): void
+    {
+        $directory = storage_path('app/conflict-export-cache');
+        if (! is_dir($directory)) {
+            return;
+        }
+
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($items as $item) {
+            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+        }
+        rmdir($directory);
     }
 
     protected function classification(string $curie, string $name): Classification
@@ -75,6 +98,25 @@ class ConflictViewerDownloadTest extends TestCase
         return IOFactory::load($this->responsePath($response))
             ->getActiveSheet()
             ->toArray('', true, true, false);
+    }
+
+    protected function basicConflict(string $prefix = 'BASIC'): void
+    {
+        $base = [
+            'gene_id' => Gene::factory()->create(['symbol' => $prefix])->id,
+            'disease_id' => Disease::factory()->create(['name' => $prefix . ' disease'])->id,
+            'inheritance_id' => Inheritance::factory()->create()->id,
+            'submitter_id' => Submitter::factory()->create(['downloadable' => true])->id,
+        ];
+
+        $this->submission($base + [
+            'sid' => $prefix . '-D',
+            'classification_id' => $this->classification('GENCC:100001', 'Definitive')->id,
+        ]);
+        $this->submission($base + [
+            'sid' => $prefix . '-L',
+            'classification_id' => $this->classification('GENCC:100004', 'Limited')->id,
+        ]);
     }
 
     /** @test */
@@ -242,11 +284,16 @@ class ConflictViewerDownloadTest extends TestCase
         $this->submission($kept + ['sid' => 'DROP-L', 'classification_id' => $limited->id, 'submitter_id' => $revoked->id]);
 
         $this->assertCount(2, ConflictFinder::conflicts());
+        $before = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $beforeRows = $this->delimitedRows($before, ',');
+        $this->assertContains('DROP-L', array_column(array_slice($beforeRows, 1), 0));
         $revoked->update(['downloadable' => false]);
 
-        $rows = $this->delimitedRows($this->get('/conflict-viewer/download/csv')->assertOk(), ',');
+        $after = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $rows = $this->delimitedRows($after, ',');
 
         $this->assertSame(['KEEP-D', 'KEEP-L'], array_column(array_slice($rows, 1), 0));
+        $this->assertNotSame($before->headers->get('ETag'), $after->headers->get('ETag'));
     }
 
     /** @test */
@@ -267,11 +314,159 @@ class ConflictViewerDownloadTest extends TestCase
 
         $this->assertCount(1, ConflictFinder::conflicts());
         $this->assertCount(0, ConflictFinder::downloadableConflicts());
+        $before = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $this->assertCount(1, $this->delimitedRows($before, ','));
         $newlyAllowed->update(['downloadable' => true]);
 
-        $rows = $this->delimitedRows($this->get('/conflict-viewer/download/csv')->assertOk(), ',');
+        $after = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $rows = $this->delimitedRows($after, ',');
 
         $this->assertSame(['GRANT-D', 'GRANT-L'], array_column(array_slice($rows, 1), 0));
+        $this->assertNotSame($before->headers->get('ETag'), $after->headers->get('ETag'));
+    }
+
+    /** @test */
+    public function formats_share_the_conflict_bucket_but_release_is_independent()
+    {
+        $this->basicConflict();
+        config(['downloads.daily_quota' => 2]);
+
+        $this->get('/conflict-viewer/download/csv')->assertOk();
+        $this->get('/conflict-viewer/download/tsv')->assertOk();
+        $this->get('/conflict-viewer/download/xlsx')->assertStatus(429);
+
+        $this->assertTrue(app(DownloadQuota::class)->reserve(DownloadQuota::RELEASE, '127.0.0.1'));
+        $this->assertFalse(app(DownloadQuota::class)->reserve(DownloadQuota::CONFLICT_VIEWER, '127.0.0.1'));
+    }
+
+    /** @test */
+    public function conflict_quota_is_independent_per_ip()
+    {
+        $this->basicConflict();
+        config(['downloads.daily_quota' => 1]);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->get('/conflict-viewer/download/csv')->assertOk();
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.11'])
+            ->get('/conflict-viewer/download/csv')->assertOk();
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->get('/conflict-viewer/download/csv')->assertStatus(429);
+    }
+
+    /** @test */
+    public function cold_and_cached_head_and_etag_304_responses_are_quota_free()
+    {
+        $this->basicConflict();
+        config(['downloads.daily_quota' => 2]);
+
+        $coldHead = $this->call('HEAD', '/conflict-viewer/download/csv')->assertOk();
+        $etag = $coldHead->headers->get('ETag');
+        $coldHead->assertHeader('content-type', 'text/csv; charset=UTF-8')
+            ->assertHeader('content-disposition')
+            ->assertHeaderMissing('last-modified')
+            ->assertHeaderMissing('content-length');
+        $this->assertDirectoryDoesNotExist(storage_path('app/conflict-export-cache'));
+
+        $this->get('/conflict-viewer/download/csv', ['If-None-Match' => $etag])
+            ->assertStatus(304);
+        $this->assertDirectoryDoesNotExist(storage_path('app/conflict-export-cache'));
+
+        $full = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $cachedHead = $this->call('HEAD', '/conflict-viewer/download/csv')->assertOk();
+        $cachedHead->assertHeader('etag', $etag)
+            ->assertHeader('last-modified')
+            ->assertHeader('content-length', (string) filesize($this->responsePath($full)));
+
+        $this->get('/conflict-viewer/download/csv', [
+            'If-Modified-Since' => $cachedHead->headers->get('Last-Modified'),
+        ])->assertStatus(304);
+
+        $this->get('/conflict-viewer/download/csv')->assertOk();
+        $this->get('/conflict-viewer/download/csv')->assertStatus(429);
+    }
+
+    /** @test */
+    public function etags_are_conditional_and_format_specific_without_extra_quota_use()
+    {
+        $this->basicConflict();
+        config(['downloads.daily_quota' => 3]);
+        $etags = [];
+
+        foreach (['csv', 'tsv', 'xlsx'] as $format) {
+            $response = $this->get('/conflict-viewer/download/' . $format)->assertOk();
+            $etags[$format] = $response->headers->get('ETag');
+            $this->get('/conflict-viewer/download/' . $format, ['If-None-Match' => $etags[$format]])
+                ->assertStatus(304);
+        }
+
+        $this->assertCount(3, array_unique($etags));
+        $this->get('/conflict-viewer/download/csv')->assertStatus(429);
+    }
+
+    /** @test */
+    public function canonical_filters_reuse_cache_while_filters_and_formats_vary_it()
+    {
+        $this->basicConflict('CACHE');
+
+        $first = $this->get('/conflict-viewer/download/csv?gene=%C2%A0CACHE%C2%A0')->assertOk();
+        $second = $this->get('/conflict-viewer/download/csv?gene=CACHE')->assertOk();
+        $differentFilter = $this->get('/conflict-viewer/download/csv?gene=missing')->assertOk();
+        $differentFormat = $this->get('/conflict-viewer/download/tsv?gene=CACHE')->assertOk();
+
+        $this->assertSame($this->responsePath($first), $this->responsePath($second));
+        $this->assertSame($first->headers->get('ETag'), $second->headers->get('ETag'));
+        $this->assertNotSame($first->headers->get('ETag'), $differentFilter->headers->get('ETag'));
+        $this->assertNotSame($first->headers->get('ETag'), $differentFormat->headers->get('ETag'));
+    }
+
+    /** @test */
+    public function expired_variants_regenerate_and_abandoned_temporary_files_are_pruned()
+    {
+        $this->basicConflict('EXPIRE');
+        config(['downloads.conflict_export_cache_ttl' => 10]);
+
+        $first = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $etag = $first->headers->get('ETag');
+        $firstModified = $first->headers->get('Last-Modified');
+        $temporary = storage_path('app/conflict-export-cache/abandoned.tmp.test');
+        file_put_contents($temporary, 'partial');
+        touch($temporary, time() - 20);
+
+        Carbon::setTestNow(now()->addSeconds(11));
+        $second = $this->get('/conflict-viewer/download/csv')->assertOk();
+
+        $this->assertSame($etag, $second->headers->get('ETag'));
+        $this->assertNotSame($firstModified, $second->headers->get('Last-Modified'));
+        $this->assertFileDoesNotExist($temporary);
+        $this->assertCount(1, glob(storage_path('app/conflict-export-cache/*.meta.json')) ?: []);
+    }
+
+    /** @test */
+    public function quota_is_checked_before_generation_and_failed_generation_releases_it()
+    {
+        $this->basicConflict('FAIL');
+        $failing = new class extends ConflictExportCache {
+            public $calls = 0;
+
+            public function generate(array $identity, ConflictSubmissionExport $export): array
+            {
+                $this->calls++;
+                throw new \RuntimeException('simulated generation failure');
+            }
+        };
+        app()->instance(ConflictExportCache::class, $failing);
+        config(['downloads.daily_quota' => 0]);
+
+        $this->get('/conflict-viewer/download/csv')->assertStatus(429);
+        $this->assertSame(0, $failing->calls);
+
+        config(['downloads.daily_quota' => 1]);
+        $this->get('/conflict-viewer/download/csv')->assertStatus(503);
+        $this->assertSame(1, $failing->calls);
+
+        app()->forgetInstance(ConflictExportCache::class);
+        $this->get('/conflict-viewer/download/csv')->assertOk();
+        $this->get('/conflict-viewer/download/csv')->assertStatus(429);
     }
 
     /** @test */

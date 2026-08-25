@@ -61,11 +61,41 @@ class ConflictViewerFilters
         $rows = $this->applyTextFilters($rows, $state['gene'], $state['disease']);
         $rows = $this->applySubmitters($rows, $state['hiddenSubmitters']);
 
-        $rows = $state['sortDirection'] === 'asc'
-            ? $rows->sortBy($state['sortField'])
-            : $rows->sortByDesc($state['sortField']);
+        $rows = $rows->sort(function ($left, $right) use ($state) {
+            $primary = $this->compareField($left, $right, $state['sortField']);
+            if ($primary !== 0) {
+                return $state['sortDirection'] === 'asc' ? $primary : -$primary;
+            }
+
+            foreach ([
+                ['gene_symbol', 'gene_curie'],
+                ['disease_name', 'disease_curie'],
+                ['moi', 'moi_curie'],
+            ] as [$label, $curie]) {
+                $comparison = $this->compareText($left[$label] ?? '', $right[$label] ?? '')
+                    ?: $this->compareText($left[$curie] ?? '', $right[$curie] ?? '');
+
+                if ($comparison !== 0) {
+                    return $comparison;
+                }
+            }
+
+            return strcmp((string) ($left['key'] ?? ''), (string) ($right['key'] ?? ''));
+        });
 
         return $rows->values();
+    }
+
+    /** Stable cache-facing state; invalid markers and parsed helper values are omitted. */
+    public function canonicalState(array $state): array
+    {
+        return [
+            'gene' => $this->normalizedSearchTerm($state['gene'] ?? ''),
+            'disease' => $this->normalizedSearchTerm($state['disease'] ?? ''),
+            'hideSubmitters' => (string) ($state['hideSubmitters'] ?? ''),
+            'sortField' => (string) ($state['sortField'] ?? self::DEFAULT_SORT_FIELD),
+            'sortDirection' => (string) ($state['sortDirection'] ?? self::DEFAULT_SORT_DIRECTION),
+        ];
     }
 
     /** Apply only text filters, used for residual facet counts. */
@@ -241,5 +271,20 @@ class ConflictViewerFilters
         sort($valid);
 
         return [implode(',', $valid), $valid, $invalid];
+    }
+
+    private function compareField(array $left, array $right, string $field): int
+    {
+        if ($field === 'total_count') {
+            return (int) ($left[$field] ?? 0) <=> (int) ($right[$field] ?? 0);
+        }
+
+        return $this->compareText($left[$field] ?? '', $right[$field] ?? '');
+    }
+
+    private function compareText($left, $right): int
+    {
+        return strcasecmp((string) $left, (string) $right)
+            ?: strcmp((string) $left, (string) $right);
     }
 }

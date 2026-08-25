@@ -681,6 +681,18 @@ class DownloadFeatureTest extends TestCase
     }
 
     /** @test */
+    public function release_formats_and_versions_share_one_quota_bucket()
+    {
+        $this->seedCacheFixture('csv', 'legacy');
+        $this->seedCacheFixture('tsv', 'current');
+        config(['downloads.daily_quota' => 2]);
+
+        $this->get('/download/action/submissions-export-csv')->assertOk();
+        $this->get('/download/action/submissions-export-tsv?format=new')->assertOk();
+        $this->get('/download/action/submissions-export-csv')->assertStatus(429);
+    }
+
+    /** @test */
     public function download_304_does_not_count_against_quota()
     {
         $this->seedCacheFixture('csv');
