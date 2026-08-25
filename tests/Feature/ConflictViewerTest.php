@@ -277,6 +277,33 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
+    public function header_navigation_links_to_the_conflict_viewer_on_desktop_and_mobile()
+    {
+        $document = new \DOMDocument();
+        $document->loadHTML(view('partials.navs.header-nav')->render(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+        $links = $xpath->query('//a[normalize-space(.) = "Conflicts"]');
+
+        $this->assertCount(2, $links);
+        $this->assertSame(
+            1,
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " invisible ")]//a[normalize-space(.) = "Conflicts"]')->length
+        );
+        $this->assertSame(
+            1,
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " lg:hidden ")]//a[normalize-space(.) = "Conflicts"]')->length
+        );
+
+        foreach ($links as $link) {
+            $this->assertSame(route('conflict-viewer'), $link->getAttribute('href'));
+            $this->assertSame(
+                1,
+                $xpath->query('.//i[contains(concat(" ", normalize-space(@class), " "), " fas ") and contains(concat(" ", normalize-space(@class), " "), " fa-balance-scale-left ")]', $link)->length
+            );
+        }
+    }
+
+    /** @test */
     public function the_listing_component_filters_by_gene_and_disease()
     {
         $moi        = Inheritance::factory()->create();
