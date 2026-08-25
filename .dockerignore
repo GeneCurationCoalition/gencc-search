@@ -3,6 +3,7 @@
 /.vscode
 /.idea
 /.DS_Store
+/.agents
 
 /node_modules
 /vendor
