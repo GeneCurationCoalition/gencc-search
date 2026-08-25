@@ -50,13 +50,9 @@ Route::group(['prefix' => 'disease'], function () {
 Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');
-// Not linked from the navigation yet — reachable by URL only.
 Route::get('/conflict-viewer', 'ConflictViewerController@index')->name('conflict-viewer');
-Route::get('/conflict-viewer/download/{format}', 'ConflictViewerDownloadController')
-    ->where('format', 'csv|tsv|xlsx')
-    ->name('conflict-viewer-download');
 Route::get('/download', 'DownloadController@index')->name('download');
-// Download action routes — stateless file downloads, no session/cookie/CSRF needed.
+// File downloads are stateless and need no session, cookies, or CSRF middleware.
 $downloadMiddlewareExclusions = [
     \App\Http\Middleware\EncryptCookies::class,
     \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
@@ -65,6 +61,10 @@ $downloadMiddlewareExclusions = [
     \App\Http\Middleware\VerifyCsrfToken::class,
 ];
 
+Route::get('/conflict-viewer/download/{format}', 'ConflictViewerDownloadController')
+    ->where('format', 'csv|tsv|xlsx')
+    ->name('conflict-viewer-download')
+    ->withoutMiddleware($downloadMiddlewareExclusions);
 Route::get('/download/action/submissions-export-xlsx', 'DownloadController@export_XLSX')
     ->name('submissions-export-xlsx')
     ->withoutMiddleware($downloadMiddlewareExclusions);

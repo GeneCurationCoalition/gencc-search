@@ -12,11 +12,11 @@ use Illuminate\Support\Str;
 /**
  * Finds gene + disease + mode-of-inheritance groups where curating groups disagree.
  *
- * A group is "conflicting" when at least one live, published submission has a
- * classification on the vocabulary's strong side (Definitive, Strong, or
- * Moderate) and at least one is on the other side (Limited, Disputed, Refuted,
- * or No Known Disease Relationship). Database IDs and order values do not carry
- * classification meaning.
+ * A group is "conflicting" when at least one live, published, non-deleted
+ * submission has a classification on the vocabulary's strong side (Definitive,
+ * Strong, or Moderate) and at least one is on the other side (Limited, Disputed,
+ * Refuted, or No Known Disease Relationship). Database IDs and order values do
+ * not carry classification meaning.
  */
 class ConflictFinder
 {
@@ -25,11 +25,11 @@ class ConflictFinder
      *
      * The cached value is a nested array that Blade and Livewire destructure by
      * key, and the cache is not ephemeral: CACHE_DRIVER=file with storage/
-     * bind-mounted from the host, so entries survive a redeploy. If the shape of
-     * that array changes, run `php artisan conflicts:clear-cache` after deploying,
-     * or wait out CACHE_HOURS.
+     * bind-mounted from the host, so entries survive a redeploy. Advance this
+     * key when the array shape or membership rules change so stale data is not
+     * reused after deployment.
      */
-    const CACHE_KEY = 'conflict-viewer.triples.v7';
+    const CACHE_KEY = 'conflict-viewer.triples.v8';
 
     /** How long the computed conflict set stays cached. */
     const CACHE_HOURS = 6;
@@ -87,8 +87,8 @@ class ConflictFinder
     }
 
     /**
-     * Fold every live, published submission into gene/disease/MOI groups and keep
-     * the ones that hold both D/S/M and L/P/R/N assertions.
+     * Fold every live, published, non-deleted submission into gene/disease/MOI
+     * groups and keep the ones that hold both D/S/M and L/P/R/N assertions.
      *
      * Uses the query builder rather than Eloquent: App\Submission eager-loads six
      * relations via $with, which makes a 30k-row fetch unusable.
@@ -108,6 +108,7 @@ class ConflictFinder
             ->leftJoin('diseases as original_d', 'original_d.id', '=', 's.original_disease_id')
             ->where('s.is_live', true)
             ->where('s.status', Submission::STATUS_PUBLISHED)
+            ->whereNull('s.deleted_at')
             ->select(
                 's.gene_id',
                 's.disease_id',

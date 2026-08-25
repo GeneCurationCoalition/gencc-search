@@ -207,7 +207,7 @@ class ConflictViewerTest extends TestCase
     }
 
     /** @test */
-    public function unpublished_and_non_live_submissions_are_excluded()
+    public function unpublished_non_live_and_deleted_submissions_are_excluded()
     {
         $gene    = Gene::factory()->create();
         $disease = Disease::factory()->create();
@@ -235,6 +235,14 @@ class ConflictViewerTest extends TestCase
             'inheritance_id'    => $moi->id,
             'classification_id' => $this->classification('Refuted', 70)->id,
             'submitter_id'      => Submitter::factory()->create()->id,
+        ]);
+        $this->submission([
+            'gene_id'           => $gene->id,
+            'disease_id'        => $disease->id,
+            'inheritance_id'    => $moi->id,
+            'classification_id' => $this->classification('Disputed', 60)->id,
+            'submitter_id'      => Submitter::factory()->create()->id,
+            'deleted_at'        => now(),
         ]);
 
         $this->assertCount(0, ConflictFinder::conflicts());
@@ -300,6 +308,24 @@ class ConflictViewerTest extends TestCase
                 1,
                 $xpath->query('.//i[contains(concat(" ", normalize-space(@class), " "), " fas ") and contains(concat(" ", normalize-space(@class), " "), " fa-balance-scale-left ")]', $link)->length
             );
+        }
+    }
+
+    /** @test */
+    public function header_navigation_icons_use_a_consistent_color_on_desktop_and_mobile()
+    {
+        $document = new \DOMDocument();
+        $document->loadHTML(view('partials.navs.header-nav')->render(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+
+        foreach (['invisible', 'lg:hidden'] as $containerClass) {
+            $icons = $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " ' . $containerClass . ' ")]//a/i');
+
+            $this->assertNotCount(0, $icons);
+
+            foreach ($icons as $icon) {
+                $this->assertStringContainsString('text-gray-500', $icon->getAttribute('class'));
+            }
         }
     }
 

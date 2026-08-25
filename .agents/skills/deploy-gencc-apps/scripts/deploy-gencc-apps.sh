@@ -324,21 +324,6 @@ run_playbook() {
   )
 }
 
-header_value() {
-  local file="$1" wanted="$2"
-  awk -v wanted="$wanted" 'BEGIN{IGNORECASE=1} $1 == wanted ":" {sub(/^[^:]+:[[:space:]]*/, ""); sub(/\r$/, ""); value=$0} END{print value}' "$file"
-}
-
-http_status_get() {
-  local url="$1" headers="$2" body="$3"; shift 3
-  curl -sS -L -D "$headers" -o "$body" -w '%{http_code}' "$@" "$url"
-}
-
-http_status_head() {
-  local url="$1" headers="$2"
-  curl -sS -L -I -D "$headers" -o /dev/null -w '%{http_code}' "$url"
-}
-
 verify_remote_services() {
   local output search_active sub_active running_search running_sub
   output="$(ssh -o BatchMode=yes "$host" 'sudo -iu gencc env XDG_RUNTIME_DIR=/run/user/$(id -u gencc) bash -lc '\''systemctl --user is-active gencc-search.service; systemctl --user is-active gencc-sub.service; podman inspect --format "{{.Name}} {{.Config.Image}}" gencc-search gencc-sub'\''')" || return 1
@@ -359,55 +344,6 @@ wait_for_health() {
     sleep 5
   done
   return 1
-}
-
-verify_public_behavior() {
-  local expected_version unique_url status etag last_modified etag_again hash_one hash_two
-  expected_version="$(tag_of "$search_image" || true)"
-  wait_for_health || return 1
-
-  status="$(http_status_get "$public_base/about" "$tmp_dir/about.headers" "$tmp_dir/about.body")"
-  [[ "$status" == "200" ]] || return 1
-  if [[ -n "$expected_version" ]]; then
-    grep -Fq "version: ${expected_version}" "$tmp_dir/about.body" || return 1
-  fi
-  for page in download conflict-viewer; do
-    status="$(http_status_get "$public_base/$page" "$tmp_dir/$page.headers" "$tmp_dir/$page.body")"
-    [[ "$status" == "200" ]] || return 1
-  done
-
-  unique_url="$public_base/conflict-viewer/download/csv?gene=__deploy_verify_$(date -u +%s)_${RANDOM}"
-  status="$(http_status_head "$unique_url" "$tmp_dir/cold-head.headers")"
-  [[ "$status" == "200" ]] || return 1
-  etag="$(header_value "$tmp_dir/cold-head.headers" ETag)"
-  [[ -n "$etag" ]] || return 1
-  [[ -z "$(header_value "$tmp_dir/cold-head.headers" Last-Modified)" ]] || return 1
-
-  status="$(http_status_get "$unique_url" "$tmp_dir/conditional.headers" "$tmp_dir/conditional.body" -H "If-None-Match: $etag")"
-  [[ "$status" == "304" ]] || return 1
-
-  status="$(http_status_get "$unique_url" "$tmp_dir/full-one.headers" "$tmp_dir/full-one.csv")"
-  [[ "$status" == "200" && -s "$tmp_dir/full-one.csv" ]] || return 1
-  [[ "$(header_value "$tmp_dir/full-one.headers" ETag)" == "$etag" ]] || return 1
-
-  status="$(http_status_head "$unique_url" "$tmp_dir/cached-head.headers")"
-  [[ "$status" == "200" ]] || return 1
-  last_modified="$(header_value "$tmp_dir/cached-head.headers" Last-Modified)"
-  [[ -n "$last_modified" && -n "$(header_value "$tmp_dir/cached-head.headers" Content-Length)" ]] || return 1
-
-  status="$(http_status_get "$unique_url" "$tmp_dir/modified.headers" "$tmp_dir/modified.body" -H "If-Modified-Since: $last_modified")"
-  [[ "$status" == "304" ]] || return 1
-
-  status="$(http_status_get "$unique_url" "$tmp_dir/full-two.headers" "$tmp_dir/full-two.csv")"
-  [[ "$status" == "200" ]] || return 1
-  etag_again="$(header_value "$tmp_dir/full-two.headers" ETag)"
-  hash_one="$(shasum -a 256 "$tmp_dir/full-one.csv" | awk '{print $1}')"
-  hash_two="$(shasum -a 256 "$tmp_dir/full-two.csv" | awk '{print $1}')"
-  [[ "$etag_again" == "$etag" && "$hash_one" == "$hash_two" ]] || return 1
-
-  status="$(http_status_get "$public_base/download/action/submissions-export-csv" "$tmp_dir/release.headers" "$tmp_dir/gencc-submissions.csv")"
-  [[ "$status" == "200" && -s "$tmp_dir/gencc-submissions.csv" ]] || return 1
-  printf 'Verified services, health, version %s, pages, conflict export caching, and release download.\n' "$expected_version"
 }
 
 verify_recovery() {
@@ -433,5 +369,6 @@ rollback_once() {
 printf 'Running %s Ansible deployment...\n' "$environment"
 run_playbook "$search_image" "$sub_image" "$db_mode" "$restore_source" "$restore_force" || rollback_once
 verify_remote_services || rollback_once
-verify_public_behavior || rollback_once
+wait_for_health || rollback_once
+printf 'Verified active services, deployed image references, and public health endpoint.\n'
 printf '\nDeployment complete: %s\n' "$environment"

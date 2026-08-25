@@ -238,6 +238,7 @@ class ConflictViewerDownloadTest extends TestCase
         $this->submission($kept + ['sid' => 'BLOCK-M', 'classification_id' => $moderate->id, 'submitter_id' => $blocked->id]);
         $this->submission($kept + ['sid' => 'SUPPORT', 'classification_id' => $supportive->id, 'submitter_id' => $downloadable->id]);
         $this->submission($kept + ['sid' => 'UNKNOWN', 'classification_id' => $unknown->id, 'submitter_id' => $downloadable->id]);
+        $this->submission($kept + ['sid' => 'DELETED', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id, 'deleted_at' => now()]);
         Submission::factory()->unpublished()->create($kept + ['sid' => 'HIDDEN', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id]);
         Submission::factory()->historical()->create($kept + ['sid' => 'HISTORY', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id]);
 
@@ -263,6 +264,18 @@ class ConflictViewerDownloadTest extends TestCase
         // L/P/R/N side and it is no longer an exportable conflict.
         $this->assertSame(['KEEP-D', 'KEEP-L'], $ids);
         $this->assertNotContains('Blocked Lab', array_column($downloadRows, 14));
+    }
+
+    /** @test */
+    public function conflict_download_routes_do_not_set_session_cookies()
+    {
+        $this->basicConflict();
+
+        $response = $this->get('/conflict-viewer/download/csv')->assertOk();
+        $cookieNames = array_map(fn ($cookie) => $cookie->getName(), $response->headers->getCookies());
+
+        $this->assertNotContains('XSRF-TOKEN', $cookieNames);
+        $this->assertNotContains(config('session.cookie'), $cookieNames);
     }
 
     /** @test */
