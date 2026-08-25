@@ -56,7 +56,7 @@ class SubmitterClassificationChartLinksTest extends TestCase
             }
 
             $symbol = 'GENE' . self::IDS[$curie];
-            $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+            $gene = Gene::factory()->create(['symbol' => $symbol]);
             Submission::factory()->create([
                 'gene_id' => $gene->id,
                 'disease_id' => Disease::factory()->create()->id,

@@ -36,11 +36,11 @@ class SubmissionModelTest extends TestCase
     }
 
     /** @test */
-    public function submission_uuid_accessor_returns_uuid()
+    public function submission_uuid_accessor_returns_ident()
     {
-        $submission = Submission::factory()->create(['uuid' => 'test-uuid-456']);
+        $submission = Submission::factory()->create(['ident' => 'test-ident-456']);
 
-        $this->assertEquals('test-uuid-456', $submission->uuid);
+        $this->assertEquals('test-ident-456', $submission->uuid);
     }
 
     /** @test */
@@ -64,8 +64,7 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_belongs_to_disease()
     {
-        // Disease title accessor reads from title column first, then name
-        $disease = Disease::factory()->create(['title' => 'Test Disease', 'name' => 'Test Disease']);
+        $disease = Disease::factory()->create(['name' => 'Test Disease']);
         $submission = Submission::factory()->create(['disease_id' => $disease->id]);
 
         $this->assertEquals('Test Disease', $submission->disease->title);
@@ -140,8 +139,8 @@ class SubmissionModelTest extends TestCase
     /** @test */
     public function submission_can_have_disease_original()
     {
-        $originalDisease = Disease::factory()->create(['title' => 'Original Disease', 'name' => 'Original Disease']);
-        $mappedDisease = Disease::factory()->create(['title' => 'Mapped Disease', 'name' => 'Mapped Disease']);
+        $originalDisease = Disease::factory()->create(['name' => 'Original Disease']);
+        $mappedDisease = Disease::factory()->create(['name' => 'Mapped Disease']);
 
         $submission = Submission::factory()->create([
             'disease_id' => $mappedDisease->id,

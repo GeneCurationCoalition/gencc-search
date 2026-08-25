@@ -49,7 +49,7 @@ class GenesListingTest extends TestCase
         }
 
         $gene = Gene::factory()->create([
-            'title' => 'BRCA1',
+            'symbol' => 'BRCA1',
             'counts' => [
                 'definitive' => 1,
                 'strong' => 0,
@@ -107,8 +107,8 @@ class GenesListingTest extends TestCase
             'noknown' => 0,
             'supportive' => 0,
         ];
-        $gene1 = Gene::factory()->create(['title' => 'BRCA1', 'counts' => $counts]);
-        $gene2 = Gene::factory()->create(['title' => 'TP53', 'counts' => $counts]);
+        $gene1 = Gene::factory()->create(['symbol' => 'BRCA1', 'counts' => $counts]);
+        $gene2 = Gene::factory()->create(['symbol' => 'TP53', 'counts' => $counts]);
         $disease = Disease::factory()->create();
         $classification = $this->knownClassification();
         $submitter = Submitter::factory()->create();
@@ -305,8 +305,8 @@ class GenesListingTest extends TestCase
         $submitter2 = Submitter::factory()->create(['ident' => 'GENCC_TEST002']);
 
         // Create two genes - one for each submitter
-        $gene1 = Gene::factory()->create(['symbol' => 'TESTGENE1', 'title' => 'TESTGENE1']);
-        $gene2 = Gene::factory()->create(['symbol' => 'TESTGENE2', 'title' => 'TESTGENE2']);
+        $gene1 = Gene::factory()->create(['symbol' => 'TESTGENE1']);
+        $gene2 = Gene::factory()->create(['symbol' => 'TESTGENE2']);
 
         $disease = Disease::factory()->create();
         $classification = Classification::factory()->definitive()->create();
@@ -364,9 +364,9 @@ class GenesListingTest extends TestCase
         $submitter3 = Submitter::factory()->create(['ident' => 'GENCC_MULTI_003']);
 
         // Create three genes
-        $geneA = Gene::factory()->create(['symbol' => 'MULTIGENE_A', 'title' => 'MULTIGENE_A']);
-        $geneB = Gene::factory()->create(['symbol' => 'MULTIGENE_B', 'title' => 'MULTIGENE_B']);
-        $geneC = Gene::factory()->create(['symbol' => 'MULTIGENE_C', 'title' => 'MULTIGENE_C']);
+        $geneA = Gene::factory()->create(['symbol' => 'MULTIGENE_A']);
+        $geneB = Gene::factory()->create(['symbol' => 'MULTIGENE_B']);
+        $geneC = Gene::factory()->create(['symbol' => 'MULTIGENE_C']);
 
         $disease = Disease::factory()->create();
         $classification = Classification::factory()->definitive()->create();
@@ -543,11 +543,11 @@ class GenesListingTest extends TestCase
      */
     private function createGeneWithSubmission(string $symbol, string $diseaseName = null): Gene
     {
-        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+        $gene = Gene::factory()->create(['symbol' => $symbol]);
 
         $diseaseAttributes = $diseaseName === null
             ? []
-            : ['name' => $diseaseName, 'title' => $diseaseName];
+            : ['name' => $diseaseName];
 
         Submission::factory()->create([
             'gene_id' => $gene->id,

@@ -127,7 +127,7 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_can_be_member()
     {
-        $submitter = Submitter::factory()->create(['member' => true]);
+        $submitter = Submitter::factory()->create(['allow_submissions' => true]);
 
         $this->assertTrue($submitter->member);
     }

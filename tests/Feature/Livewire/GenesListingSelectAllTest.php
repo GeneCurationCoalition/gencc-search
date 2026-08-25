@@ -147,7 +147,7 @@ class GenesListingSelectAllTest extends TestCase
      */
     private function createGeneWithSubmission(string $symbol): Gene
     {
-        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+        $gene = Gene::factory()->create(['symbol' => $symbol]);
 
         $classification = Classification::first() ?: Classification::factory()->definitive()->create();
 

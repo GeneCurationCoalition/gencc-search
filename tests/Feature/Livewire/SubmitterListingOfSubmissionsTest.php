@@ -116,7 +116,6 @@ class SubmitterListingOfSubmissionsTest extends TestCase
     {
         $gene = Gene::factory()->create([
             'symbol' => 'RESETGENE',
-            'title' => 'RESETGENE',
         ]);
         $disease = Disease::factory()->create();
         $classification = Classification::factory()->definitive()->create();
@@ -238,8 +237,8 @@ class SubmitterListingOfSubmissionsTest extends TestCase
      */
     private function createSearchableSubmission(string $symbol, string $diseaseName): Submitter
     {
-        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
-        $disease = Disease::factory()->create(['name' => $diseaseName, 'title' => $diseaseName]);
+        $gene = Gene::factory()->create(['symbol' => $symbol]);
+        $disease = Disease::factory()->create(['name' => $diseaseName]);
         $classification = Classification::factory()->definitive()->create();
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->autosomalDominant()->create();

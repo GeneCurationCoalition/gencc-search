@@ -48,16 +48,11 @@ class GeneModelTest extends TestCase
     }
 
     /** @test */
-    public function gene_uuid_accessor_returns_uuid_or_ident()
+    public function gene_uuid_accessor_returns_ident()
     {
-        // Accessor returns uuid if set, otherwise ident
-        $gene = Gene::factory()->create(['uuid' => 'test-uuid-456', 'ident' => 'test-ident-456']);
+        $gene = Gene::factory()->create(['ident' => 'test-ident-456']);
 
-        $this->assertEquals('test-uuid-456', $gene->uuid);
-
-        // When uuid is null, returns ident
-        $gene2 = Gene::factory()->create(['uuid' => null, 'ident' => 'test-ident-789']);
-        $this->assertEquals('test-ident-789', $gene2->uuid);
+        $this->assertEquals('test-ident-456', $gene->uuid);
     }
 
     /** @test */
@@ -127,8 +122,7 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_alias_symbol_accessor_returns_alias_symbols()
     {
-        // gencc-sub uses 'alias_symbol' column (not alias_symbols)
-        $gene = Gene::factory()->create(['alias_symbol' => 'ABC,DEF']);
+        $gene = Gene::factory()->create(['alias_symbols' => ['ABC', 'DEF']]);
 
         $this->assertEquals(['ABC', 'DEF'], $gene->alias_symbol);
     }
@@ -136,7 +130,7 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_alias_symbol_accessor_returns_empty_array_when_null()
     {
-        $gene = Gene::factory()->create(['alias_symbol' => null]);
+        $gene = Gene::factory()->create(['alias_symbols' => null]);
 
         $this->assertEquals([], $gene->alias_symbol);
     }
@@ -144,8 +138,7 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_prev_symbol_accessor_returns_previous_symbols()
     {
-        // gencc-sub uses 'prev_symbol' column (not previous_symbols)
-        $gene = Gene::factory()->create(['prev_symbol' => 'OLD1,OLD2']);
+        $gene = Gene::factory()->create(['previous_symbols' => ['OLD1', 'OLD2']]);
 
         $this->assertEquals(['OLD1', 'OLD2'], $gene->prev_symbol);
     }
@@ -153,22 +146,21 @@ class GeneModelTest extends TestCase
     /** @test */
     public function gene_prev_symbol_accessor_returns_empty_array_when_null()
     {
-        $gene = Gene::factory()->create(['prev_symbol' => null]);
+        $gene = Gene::factory()->create(['previous_symbols' => null]);
 
         $this->assertEquals([], $gene->prev_symbol);
     }
 
     /** @test */
-    public function gene_curations_accessors_read_from_individual_columns()
+    public function gene_curations_accessors_read_from_release_counts_json()
     {
-        // gencc-sub uses individual columns (not JSON counts)
         $gene = Gene::factory()->create([
-            'curations_definitive' => 5,
-            'curations_strong' => 3,
-            'curations_moderate' => 2,
-            'curations_limited' => 1,
-            'curations_disputed' => 0,
-            'curations_refuted' => 0,
+            'counts' => ['total' => 11, 'by_classification' => [
+                'Definitive' => ['count' => 5],
+                'Strong' => ['count' => 3],
+                'Moderate' => ['count' => 2],
+                'Limited' => ['count' => 1],
+            ]],
         ]);
 
         $this->assertEquals(5, $gene->curations_definitive);
@@ -177,6 +169,20 @@ class GeneModelTest extends TestCase
         $this->assertEquals(1, $gene->curations_limited);
         $this->assertEquals(0, $gene->curations_disputed);
         $this->assertEquals(0, $gene->curations_refuted);
+    }
+
+    /** @test */
+    public function gene_aggregate_accessors_read_canonical_flat_counts_json()
+    {
+        $gene = Gene::factory()->create(['counts' => [
+            'count_submissions' => 9,
+            'count_unique_submitters' => 4,
+            'count_unique_diseases' => 6,
+        ]]);
+
+        $this->assertSame(9, $gene->count_submissions);
+        $this->assertSame(4, $gene->count_unique_submitters);
+        $this->assertSame(6, $gene->count_unique_diseases);
     }
 
     /** @test */

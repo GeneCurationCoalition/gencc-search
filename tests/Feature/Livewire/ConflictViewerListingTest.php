@@ -42,7 +42,6 @@ class ConflictViewerListingTest extends TestCase
         return Classification::factory()->create([
             'curie' => $curies[$name],
             'name'  => $name,
-            'title' => $name,
             'order' => $order,
         ]);
     }

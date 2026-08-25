@@ -94,7 +94,7 @@ class DiseaseFeatureTest extends TestCase
     public function disease_show_includes_submissions_with_gene_data()
     {
         // The disease show view requires submissions to be properly grouped by classification
-        // which requires the disease_submission pivot table and proper classification setup.
+        // through the canonical submissions.disease_id relationship.
         // This is tested indirectly by the disease_show_page_returns_200_for_valid_disease test.
         $this->assertTrue(true);
     }

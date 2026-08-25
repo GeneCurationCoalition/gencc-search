@@ -43,7 +43,6 @@ class GenesByClassificationChartTest extends TestCase
                 'id' => self::IDS[$curie],
                 'curie' => $curie,
                 'name' => $metadata['title'],
-                'title' => $metadata['title'],
             ]);
         }
     }
@@ -214,7 +213,7 @@ class GenesByClassificationChartTest extends TestCase
 
     private function gene(string $symbol): Gene
     {
-        return Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+        return Gene::factory()->create(['symbol' => $symbol]);
     }
 
     /**

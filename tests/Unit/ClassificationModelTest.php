@@ -114,7 +114,7 @@ class ClassificationModelTest extends TestCase
         $this->assertEquals('Definitive', $classification->title);
         $this->assertEquals('DEF', $classification->abbreviation);
         $this->assertEquals('definitive', $classification->slug);
-        $this->assertEquals(1, $classification->order);
+        $this->assertEquals(10, $classification->order);
     }
 
     /** @test */
@@ -125,7 +125,7 @@ class ClassificationModelTest extends TestCase
         $this->assertEquals('Strong', $classification->title);
         $this->assertEquals('STR', $classification->abbreviation);
         $this->assertEquals('strong', $classification->slug);
-        $this->assertEquals(2, $classification->order);
+        $this->assertEquals(20, $classification->order);
     }
 
     /** @test */
@@ -136,13 +136,13 @@ class ClassificationModelTest extends TestCase
             'name' => 'Definitive',
             'abbreviation' => 'DEF',
             'hex_color' => '#276749',
-            'css_class' => 'classification-definitive',
+            'curie' => 'GENCC:100001',
         ]);
 
         $this->assertEquals('Definitive', $classification->title);
         $this->assertEquals('DEF', $classification->abbreviation);
         $this->assertEquals('#276749', $classification->hex_color);
-        $this->assertEquals('classification-definitive', $classification->css_class);
+        $this->assertEquals('gencc-definitive', $classification->css_class);
     }
 
     /** @test */

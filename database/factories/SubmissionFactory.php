@@ -17,9 +17,14 @@ class SubmissionFactory extends Factory
     public function definition()
     {
         $disease = Disease::factory()->create();
+        $pmid = (string) $this->faker->numberBetween(10000000, 39999999);
+
         return [
-            'uuid' => $this->faker->uuid,
-            'order' => $this->faker->numberBetween(1, 1000),
+            'ident' => $this->faker->uuid,
+            'type' => 0,
+            'sid' => 'SGC-' . $this->faker->unique()->numberBetween(100000, 999999),
+            'job_id' => 1,
+            'user_id' => 1,
             'gene_id' => Gene::factory(),
             'disease_id' => $disease->id,
             'original_disease_id' => $disease->id,
@@ -29,12 +34,24 @@ class SubmissionFactory extends Factory
             'report_date' => $this->faker->date(),
             'report_url' => $this->faker->url,
             'evidence' => [
-                'pmids' => [(string) $this->faker->numberBetween(10000000, 39999999)],
+                'pmids' => [$pmid],
             ],
             'submission_data' => [
                 'notes' => ['display' => $this->faker->paragraph()],
             ],
+            'original_submission_data' => [
+                'gene' => ['id' => null, 'symbol' => null],
+                'disease' => ['id' => null, 'name' => null],
+                'moi' => ['id' => null, 'name' => null],
+                'classification' => ['id' => null, 'name' => null],
+                'additional_information' => ['submitter_curie' => null, 'submitter_title' => null],
+                'report' => ['ext_url' => null],
+                'criteria' => ['url' => null],
+                'notes' => ['display' => null],
+            ],
+            'normalized_pmids' => $pmid,
             'version_number' => 1,
+            'is_most_recent' => true,
             'is_live' => true,            // Most recent version
             'status' => 'published',      // Publicly visible
             'released_at' => now(),

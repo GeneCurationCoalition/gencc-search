@@ -53,7 +53,6 @@ class StatisticsChartLinksTest extends TestCase
                 'id' => self::IDS[$curie],
                 'curie' => $curie,
                 'name' => $metadata['title'],
-                'title' => $metadata['title'],
             ]);
         }
     }
@@ -266,7 +265,7 @@ class StatisticsChartLinksTest extends TestCase
 
     private function geneWithSubmission(string $symbol, string $classificationCurie): Gene
     {
-        $gene = Gene::factory()->create(['symbol' => $symbol, 'title' => $symbol]);
+        $gene = Gene::factory()->create(['symbol' => $symbol]);
 
         Submission::factory()->create([
             'gene_id' => $gene->id,
