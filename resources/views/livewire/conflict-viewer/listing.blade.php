@@ -37,7 +37,7 @@
             <input class="input input-text" wire:model.debounce.500ms="disease" type="text" placeholder="Filter by disease name...">
         </div>
 
-        <div class="col-span-12 xl:col-span-5 mt-3">
+        <div class="col-span-8 xl:col-span-3 mt-3">
             <div class="relative inline-block text-left w-full " x-data="{ open: false }">
                 <div @click="open = true">
                     <button type="button" class=" text-left inline-flex w-full border border-gray-300 px-4 py-2 bg-white leading-5 text-gray-700 input-text hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150" aria-haspopup="true" aria-expanded="true">
@@ -62,6 +62,38 @@
                                     @endif
                                     {{ $option['name'] }} ({{ number_format($option['count']) }})</button>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-4 xl:col-span-2 mt-3">
+            <div class="relative inline-block text-left w-full" x-data="{ open: false }">
+                <button type="button"
+                        @click="open = ! open"
+                        :aria-expanded="open.toString()"
+                        class="text-left inline-flex justify-between items-center w-full border border-gray-300 px-4 py-2 bg-white leading-5 text-gray-700 input-text hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150"
+                        aria-haspopup="true">
+                    <span>Download</span>
+                    <i class="fas fa-angle-down ml-1"></i>
+                </button>
+                <div x-show="open"
+                     @click.away="open = false"
+                     class="z-20 origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100"
+                     style="display: none;">
+                    <div class="py-1" role="menu" aria-orientation="vertical">
+                        <a href="{{ route('conflict-viewer-download', array_merge(['format' => 'csv'], $download_query)) }}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                           role="menuitem">CSV</a>
+                        <a href="{{ route('conflict-viewer-download', array_merge(['format' => 'tsv'], $download_query)) }}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                           role="menuitem">TSV</a>
+                        <a href="{{ route('conflict-viewer-download', array_merge(['format' => 'xlsx'], $download_query)) }}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                           role="menuitem">Excel (.xlsx)</a>
+                    </div>
+                    <div class="px-4 py-3 text-xs leading-4 text-gray-600">
+                        Downloads include only data from submitters that permit downloads.
                     </div>
                 </div>
             </div>

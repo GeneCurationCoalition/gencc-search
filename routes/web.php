@@ -52,6 +52,9 @@ Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');
 // Not linked from the navigation yet — reachable by URL only.
 Route::get('/conflict-viewer', 'ConflictViewerController@index')->name('conflict-viewer');
+Route::get('/conflict-viewer/download/{format}', 'ConflictViewerDownloadController')
+    ->where('format', 'csv|tsv|xlsx')
+    ->name('conflict-viewer-download');
 Route::get('/download', 'DownloadController@index')->name('download');
 // Download action routes — stateless file downloads, no session/cookie/CSRF needed.
 $downloadMiddlewareExclusions = [

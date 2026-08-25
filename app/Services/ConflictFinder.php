@@ -29,7 +29,7 @@ class ConflictFinder
      * that array changes, run `php artisan conflicts:clear-cache` after deploying,
      * or wait out CACHE_HOURS.
      */
-    const CACHE_KEY = 'conflict-viewer.triples.v5';
+    const CACHE_KEY = 'conflict-viewer.triples.v7';
 
     /** How long the computed conflict set stays cached. */
     const CACHE_HOURS = 6;
@@ -46,6 +46,34 @@ class ConflictFinder
             now()->addHours(self::CACHE_HOURS),
             fn () => self::compute()
         );
+    }
+
+    /**
+     * Return conflicts after removing submissions that cannot be downloaded.
+     *
+     * Eligibility is recomputed at the group level. A public conflict whose
+     * downloadable submissions all fall on one side is therefore not exposed
+     * by the download endpoint.
+     */
+    public static function downloadableConflicts(): Collection
+    {
+        $downloadableSubmitterIds = DB::table('submitters')
+            ->where('downloadable', true)
+            ->pluck('id')
+            ->mapWithKeys(fn ($id) => [(string) $id => true])
+            ->all();
+
+        return self::conflicts()
+            ->map(function ($group) use ($downloadableSubmitterIds) {
+                $submissions = collect($group['submissions'])
+                    ->filter(fn ($submission) => isset($downloadableSubmitterIds[(string) $submission['submitter_id']]))
+                    ->values()
+                    ->all();
+
+                return self::summarizeGroup($group, $submissions);
+            })
+            ->filter(fn ($group) => $group['strong_count'] > 0 && $group['other_count'] > 0)
+            ->values();
     }
 
     /**
@@ -77,20 +105,30 @@ class ConflictFinder
             ->join('classifications as c', 'c.id', '=', 's.classification_id')
             ->join('submitters as sub', 'sub.id', '=', 's.submitter_id')
             ->leftJoin('inheritances as i', 'i.id', '=', 's.inheritance_id')
+            ->leftJoin('diseases as original_d', 'original_d.id', '=', 's.original_disease_id')
             ->where('s.is_live', true)
             ->where('s.status', Submission::STATUS_PUBLISHED)
             ->select(
                 's.gene_id',
                 's.disease_id',
                 's.inheritance_id',
+                's.sid as sgc_id',
+                's.version_number',
+                's.report_date',
                 'g.symbol as gene_symbol',
+                'g.hgnc_id as gene_curie',
                 'g.hgnc_id',
                 'd.curie as disease_curie',
                 'd.name as disease_name',
-                'i.name as moi',
+                'original_d.curie as disease_original_curie',
+                'original_d.name as disease_original_name',
+                'i.curie as moi_curie',
+                'i.name as moi_title',
                 'c.curie as classification_curie',
                 'c.name as classification',
-                'sub.name as submitter'
+                'sub.curie as submitter_curie',
+                'sub.name as submitter',
+                'sub.id as submitter_id'
             )
             ->orderBy('s.id')
             ->cursor();
@@ -112,55 +150,92 @@ class ConflictFinder
                 $groups[$key] = [
                     'key'           => $key,
                     'gene_symbol'   => $row->gene_symbol,
+                    'gene_curie'    => $row->gene_curie,
                     'hgnc_id'       => $row->hgnc_id,
                     'disease_curie' => $row->disease_curie,
                     'disease_name'  => $row->disease_name,
-                    'moi'           => $row->moi ?: 'Unknown',
-                    'strong'        => [],
-                    'other'         => [],
-                    'submitter_slugs' => [],
-                    'strong_count'  => 0,
-                    'other_count'   => 0,
-                    'total_count'   => 0,
+                    'moi'           => $row->moi_title ?: 'Unknown',
+                    'moi_curie'     => $row->moi_curie,
+                    'submissions'   => [],
                 ];
             }
 
             $group = &$groups[$key];
             $submitter = $row->submitter ?: 'Unknown';
 
-            // Submitter => classification CURIE => presentation metadata, so a submitter
-            // appears once per side. The priority is carried so orderSide()
-            // can rank both the submitters and each submitter's own pills by strength;
-            // the stable CURIE prevents mutable display names from defining identity.
-            $group[$side][$submitter][$row->classification_curie] = [
-                'curie'     => $row->classification_curie,
-                'label'     => $row->classification,
-                'css_class' => $metadata['css_class'],
-                'priority'  => $metadata['priority'],
+            // Keep every participating submission. Display summaries are built
+            // from this list below, and downloads use it without collapsing
+            // legacy duplicates or normalization collisions.
+            $group['submissions'][] = [
+                'sgc_id'                    => $row->sgc_id,
+                'version_number'            => $row->version_number,
+                'gene_curie'                => $row->gene_curie,
+                'gene_symbol'               => $row->gene_symbol,
+                'disease_curie'             => $row->disease_curie,
+                'disease_title'             => $row->disease_name,
+                'disease_original_curie'    => $row->disease_original_curie,
+                'disease_original_title'    => $row->disease_original_name,
+                'moi_curie'                 => $row->moi_curie,
+                'moi_title'                 => $row->moi_title ?: 'Unknown',
+                'classification_group'      => $side === 'strong' ? 'D/S/M' : 'L/P/R/N',
+                'classification_curie'      => $row->classification_curie,
+                'classification_title'      => $row->classification,
+                'classification_priority'   => $metadata['priority'],
+                'classification_css_class'  => $metadata['css_class'],
+                'conflict_side'              => $side,
+                'submitter_curie'            => $row->submitter_curie,
+                'submitter_id'               => $row->submitter_id,
+                'submitter_title'            => $submitter,
+                'submitter_slug'             => Str::slug($submitter),
+                'submitted_as_date'          => $row->report_date,
             ];
-            $group[$side . '_count']++;
-            $group['total_count']++;
-
-            // Slug => name for the other-side submitters. The slug is the facet key:
-            // submitters.ident is a UUID, which would be unreadable in a shared URL
-            // and is not stable across database reloads.
-            if ($side === 'other') {
-                $group['submitter_slugs'][Str::slug($submitter)] = $submitter;
-            }
 
             unset($group);
         }
 
         return collect($groups)
+            ->map(fn ($group) => self::summarizeGroup($group, $group['submissions']))
             ->filter(fn ($group) => $group['strong_count'] > 0 && $group['other_count'] > 0)
-            ->map(function ($group) {
-                $group['strong']        = self::orderSide($group['strong']);
-                $group['other']         = self::orderSide($group['other']);
-
-                return $group;
-            })
             ->sortByDesc('total_count')
             ->values();
+    }
+
+    /** Build the viewer summary fields from a group of participating submissions. */
+    protected static function summarizeGroup(array $group, array $submissions): array
+    {
+        $strong = [];
+        $other = [];
+        $submitterSlugs = [];
+        $strongCount = 0;
+        $otherCount = 0;
+
+        foreach ($submissions as $submission) {
+            $side = $submission['conflict_side'];
+            $submitter = $submission['submitter_title'];
+            ${$side}[$submitter][$submission['classification_curie']] = [
+                'curie' => $submission['classification_curie'],
+                'label' => $submission['classification_title'],
+                'css_class' => $submission['classification_css_class'],
+                'priority' => $submission['classification_priority'],
+            ];
+
+            if ($side === 'strong') {
+                $strongCount++;
+            } else {
+                $otherCount++;
+                $submitterSlugs[$submission['submitter_slug']] = $submitter;
+            }
+        }
+
+        $group['submissions'] = array_values($submissions);
+        $group['strong'] = self::orderSide($strong);
+        $group['other'] = self::orderSide($other);
+        $group['submitter_slugs'] = $submitterSlugs;
+        $group['strong_count'] = $strongCount;
+        $group['other_count'] = $otherCount;
+        $group['total_count'] = $strongCount + $otherCount;
+
+        return $group;
     }
 
     /**

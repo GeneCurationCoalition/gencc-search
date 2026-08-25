@@ -3,18 +3,15 @@
 namespace App\Http\Livewire\ConflictViewer;
 
 use App\Services\ConflictFinder;
-use App\Traits\NormalizesSearchInput;
+use App\Services\ConflictViewerFilters;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Listing extends Component
 {
     use WithPagination;
-    use NormalizesSearchInput;
 
     const PER_PAGE = 25;
 
@@ -54,29 +51,9 @@ class Listing extends Component
         'disease',
     ];
 
-    /**
-     * Columns a user is allowed to sort by. Anything else is ignored.
-     *
-     * strong_count and other_count were deliberately left out: they sort on
-     * something other than what their cells render (submission counts against
-     * per-submitter blocks). The facet replaces them.
-     *
-     * Evidence strength is not sortable either. Within a row it is already the
-     * order of the D/S/M and L/P/R/N cells (see ConflictFinder::orderSide()), and
-     * across rows it takes too few distinct values to be a useful column sort.
-     *
-     * @var array
-     */
-    protected $sortableFields = [
-        'gene_symbol',
-        'disease_name',
-        'moi',
-        'total_count',
-    ];
-
     public function mount()
     {
-        $this->normalizeExclusionFilters(ConflictFinder::conflicts());
+        $this->normalizeState(ConflictFinder::conflicts());
     }
 
     public function updating($name, $value)
@@ -96,7 +73,7 @@ class Listing extends Component
      */
     public function sortBy($field)
     {
-        if (! in_array($field, $this->sortableFields, true)) {
+        if (! in_array($field, ConflictViewerFilters::SORTABLE_FIELDS, true)) {
             return;
         }
 
@@ -118,7 +95,9 @@ class Listing extends Component
      */
     public function toggleSubmitter($slug)
     {
-        if (! is_string($slug) || ! in_array($slug, $this->knownSubmitterSlugs(ConflictFinder::conflicts()), true)) {
+        $filters = new ConflictViewerFilters();
+
+        if (! is_string($slug) || ! in_array($slug, $filters->knownSubmitterSlugs(ConflictFinder::conflicts()), true)) {
             return;
         }
 
@@ -154,7 +133,7 @@ class Listing extends Component
      */
     protected function toggleCsv($csv, string $key): string
     {
-        $keys = $this->csvToArray($csv);
+        $keys = (new ConflictViewerFilters())->csvToArray($csv);
 
         $keys = in_array($key, $keys, true)
             ? array_values(array_diff($keys, [$key]))
@@ -165,220 +144,19 @@ class Listing extends Component
         return implode(',', $keys);
     }
 
-    /**
-     * Split a comma-separated exclusion list, dropping empties.
-     *
-     * @param  string  $csv
-     * @return array
-     */
-    protected function csvToArray($csv): array
-    {
-        if (! is_string($csv)) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            array_map('trim', explode(',', $csv)),
-            fn ($value) => $value !== ''
-        ));
-    }
-
-    /**
-     * Canonicalize the URL-facing exclusion list and discard invalid entries.
-     */
-    protected function normalizeExclusionFilters(Collection $all): void
-    {
-        $this->hideSubmitters = $this->normalizeCsv(
-            $this->hideSubmitters,
-            $this->knownSubmitterSlugs($all)
-        );
-    }
-
-    /**
-     * Accept only scalar CSV strings and return a sorted, unique known subset.
-     */
-    protected function normalizeCsv($value, array $known): string
-    {
-        if (! is_string($value)) {
-            $this->invalidUrlFiltersIgnored = true;
-
-            return '';
-        }
-
-        $valid = [];
-
-        foreach (explode(',', $value) as $part) {
-            $trimmed = trim($part);
-
-            if ($trimmed === '') {
-                if ($value !== '') {
-                    $this->invalidUrlFiltersIgnored = true;
-                }
-                continue;
-            }
-
-            if ($trimmed !== $part
-                || in_array($trimmed, $valid, true)
-                || ! in_array($trimmed, $known, true)) {
-                $this->invalidUrlFiltersIgnored = true;
-            }
-
-            if (in_array($trimmed, $known, true) && ! in_array($trimmed, $valid, true)) {
-                $valid[] = $trimmed;
-            }
-        }
-
-        sort($valid);
-
-        return implode(',', $valid);
-    }
-
-    /** Return every filterable submitter slug present in the unfiltered conflict set. */
-    protected function knownSubmitterSlugs(Collection $all): array
-    {
-        $slugs = [];
-
-        foreach ($all as $row) {
-            $slugs = array_merge($slugs, array_keys($row['submitter_slugs']));
-        }
-
-        $slugs = array_values(array_unique($slugs));
-        sort($slugs);
-
-        return $slugs;
-    }
-
-    /**
-     * Apply the gene and disease substring filters.
-     *
-     * @param  \Illuminate\Support\Collection  $rows
-     * @return \Illuminate\Support\Collection
-     */
-    protected function applyTextFilters(Collection $rows): Collection
-    {
-        $gene = $this->normalizeSearchTerm($this->gene);
-        $disease = $this->normalizeSearchTerm($this->disease);
-
-        if ($gene !== '') {
-            $rows = $rows->filter(fn ($row) => Str::contains(Str::lower((string) $row['gene_symbol']), Str::lower($gene)));
-        }
-
-        if ($disease !== '') {
-            $rows = $rows->filter(fn ($row) => Str::contains(Str::lower((string) $row['disease_name']), Str::lower($disease)));
-        }
-
-        return $rows;
-    }
-
-    /**
-     * Keep a row when ANY other-side submitter is still visible.
-     *
-     * OR semantics, so hiding one submitter only removes the rows where that
-     * submitter is the only other-side submitter. Rows with another visible
-     * submitter are retained, and the hidden submitter's pill still renders —
-     * the facet filters rows, not cells.
-     *
-     * @param  \Illuminate\Support\Collection  $rows
-     * @param  array  $hidden
-     * @return \Illuminate\Support\Collection
-     */
-    protected function applySubmitters(Collection $rows, array $hidden): Collection
-    {
-        if (empty($hidden)) {
-            return $rows;
-        }
-
-        return $rows->filter(function ($row) use ($hidden) {
-            foreach (array_keys($row['submitter_slugs']) as $slug) {
-                if (! in_array($slug, $hidden, true)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-    }
-
-    /**
-     * Residual conflict count per filterable submitter, keyed by slug.
-     *
-     * @param  \Illuminate\Support\Collection  $rows
-     * @return array
-     */
-    protected function countSubmitters(Collection $rows): array
-    {
-        $counts = [];
-
-        foreach ($rows as $row) {
-            foreach (array_keys($row['submitter_slugs']) as $slug) {
-                $counts[$slug] = ($counts[$slug] ?? 0) + 1;
-            }
-        }
-
-        return $counts;
-    }
-
-    /**
-     * The submitter facet options.
-     *
-     * Option *existence* comes from the unfiltered set so an option never
-     * disappears mid-interaction and becomes unrecoverable; only the counts move,
-     * and a zero count renders as 0. Sorted by count descending, then by name.
-     *
-     * @param  \Illuminate\Support\Collection  $all
-     * @param  array  $counts
-     * @return array
-     */
-    protected function submitterOptions(Collection $all, array $counts): array
-    {
-        $names = [];
-
-        foreach ($all as $row) {
-            foreach ($row['submitter_slugs'] as $slug => $name) {
-                $names[$slug] = $name;
-            }
-        }
-
-        $options = [];
-
-        foreach ($names as $slug => $name) {
-            $options[] = [
-                'slug'  => $slug,
-                'name'  => $name,
-                'count' => (int) ($counts[$slug] ?? 0),
-            ];
-        }
-
-        usort($options, function ($a, $b) {
-            return $b['count'] <=> $a['count'] ?: strcasecmp($a['name'], $b['name']);
-        });
-
-        return $options;
-    }
-
     public function render()
     {
+        $filters = new ConflictViewerFilters();
         $all  = ConflictFinder::conflicts();
-        $this->normalizeExclusionFilters($all);
-        $base = $this->applyTextFilters($all);
-
-        $hiddenSubmitters = $this->csvToArray($this->hideSubmitters);
+        $state = $this->normalizeState($all);
+        $base = $filters->applyTextFilters($all, $state['gene'], $state['disease']);
+        $hiddenSubmitters = $state['hiddenSubmitters'];
 
         // The facet's residual counts ignore its own exclusions but respect the
         // active text filters.
-        $submitterCounts  = $this->countSubmitters($base);
-        $submitterOptions = $this->submitterOptions($all, $submitterCounts);
-
-        $rows = $this->applySubmitters($base, $hiddenSubmitters);
-
-        // A URL can carry a sortField that is no longer sortable; fall back quietly.
-        $field = in_array($this->sortField, $this->sortableFields, true) ? $this->sortField : 'total_count';
-
-        $rows = $this->sortDirection === 'asc'
-            ? $rows->sortBy($field)
-            : $rows->sortByDesc($field);
-
-        $rows = $rows->values();
+        $submitterCounts  = $filters->countSubmitters($base);
+        $submitterOptions = $filters->submitterOptions($all, $submitterCounts);
+        $rows = $filters->apply($all, $state);
         $page = $this->resolveValidPage();
 
         $conflicts = new LengthAwarePaginator(
@@ -397,7 +175,29 @@ class Listing extends Component
             'submitter_options' => $submitterOptions,
             'hidden_submitters' => $hiddenSubmitters,
             'active_filters'    => $activeFilters,
+            'download_query'    => $filters->downloadQuery($state),
         ]);
+    }
+
+    /** Normalize component state with the same rules used by downloads. */
+    protected function normalizeState($all): array
+    {
+        $state = (new ConflictViewerFilters())->normalize($all, [
+            'gene' => $this->gene,
+            'disease' => $this->disease,
+            'hideSubmitters' => $this->hideSubmitters,
+            'sortField' => $this->sortField,
+            'sortDirection' => $this->sortDirection,
+        ]);
+
+        $this->gene = $state['gene'];
+        $this->disease = $state['disease'];
+        $this->hideSubmitters = $state['hideSubmitters'];
+        $this->sortField = $state['sortField'];
+        $this->sortDirection = $state['sortDirection'];
+        $this->invalidUrlFiltersIgnored = $this->invalidUrlFiltersIgnored || $state['invalid'];
+
+        return $state;
     }
 
     /** Resolve one canonical positive integer for slicing and pagination. */
@@ -431,13 +231,14 @@ class Listing extends Component
      */
     protected function activeFilterLabels(array $hiddenSubmitters, array $submitterOptions): array
     {
+        $filters = new ConflictViewerFilters();
         $labels = [];
 
-        if (is_string($this->gene) && $this->normalizeSearchTerm($this->gene) !== '') {
+        if (is_string($this->gene) && $filters->normalizedSearchTerm($this->gene) !== '') {
             $labels[] = 'gene matches “' . $this->gene . '”';
         }
 
-        if (is_string($this->disease) && $this->normalizeSearchTerm($this->disease) !== '') {
+        if (is_string($this->disease) && $filters->normalizedSearchTerm($this->disease) !== '') {
             $labels[] = 'disease matches “' . $this->disease . '”';
         }
 
