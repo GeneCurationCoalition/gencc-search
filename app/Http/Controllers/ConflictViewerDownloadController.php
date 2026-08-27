@@ -24,7 +24,10 @@ class ConflictViewerDownloadController extends Controller
         abort_unless(isset(self::MIME_TYPES[$format]), 404);
 
         $filters = new ConflictViewerFilters();
-        $all = ConflictFinder::downloadableConflicts();
+        // Deliberately unfiltered: the conflict page and gencc-sub's release
+        // export both publish every live, published submission regardless of the
+        // submitter's downloadable flag, and this file is a subset of that one.
+        $all = ConflictFinder::conflicts();
         $state = $filters->normalize($all, $request->only([
             'gene',
             'disease',

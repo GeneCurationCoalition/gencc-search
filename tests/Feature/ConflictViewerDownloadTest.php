@@ -100,6 +100,17 @@ class ConflictViewerDownloadTest extends TestCase
             ->toArray('', true, true, false);
     }
 
+    /** Every SGC id ConflictFinder::downloadableConflicts() still exposes, sorted. */
+    protected function downloadableSids(): array
+    {
+        $sids = ConflictFinder::downloadableConflicts()
+            ->flatMap(fn ($group) => array_column($group['submissions'], 'sgc_id'))
+            ->all();
+        sort($sids);
+
+        return $sids;
+    }
+
     protected function basicConflict(string $prefix = 'BASIC'): void
     {
         $base = [
@@ -195,7 +206,46 @@ class ConflictViewerDownloadTest extends TestCase
 
         $this->assertSame($csvRows, $tsvRows);
         $this->assertSame($csvRows, $xlsxRows);
-        $this->assertSame(ConflictSubmissionExport::HEADINGS, $csvRows[0]);
+        $expectedHeadings = [
+            'sgc_id',
+            'version_number',
+            'gene_curie',
+            'gene_symbol',
+            'disease_curie',
+            'disease_title',
+            'disease_original_curie',
+            'disease_original_title',
+            'classification_group',
+            'classification_curie',
+            'classification_title',
+            'moi_curie',
+            'moi_title',
+            'submitter_curie',
+            'submitter_title',
+            'submitted_as_date',
+        ];
+        $this->assertSame($expectedHeadings, ConflictSubmissionExport::HEADINGS);
+        $this->assertSame($expectedHeadings, $csvRows[0]);
+
+        // Dropping the conflict-viewer-only column leaves gencc-sub's release
+        // heading order exactly, so the two published files read side by side.
+        $this->assertSame([
+            'sgc_id',
+            'version_number',
+            'gene_curie',
+            'gene_symbol',
+            'disease_curie',
+            'disease_title',
+            'disease_original_curie',
+            'disease_original_title',
+            'classification_curie',
+            'classification_title',
+            'moi_curie',
+            'moi_title',
+            'submitter_curie',
+            'submitter_title',
+            'submitted_as_date',
+        ], array_values(array_diff($expectedHeadings, ['classification_group'])));
         $this->assertSame(['SGC-001', 'SGC-002', 'SGC-003'], array_column(array_slice($csvRows, 1), 0));
         $this->assertSame(['HGNC:1100', 'HGNC:1100', 'HGNC:1100'], array_column(array_slice($csvRows, 1), 2));
         $this->assertSame(['OMIM:100001', 'OMIM:100001', 'Orphanet:2'], array_column(array_slice($csvRows, 1), 6));
@@ -207,7 +257,7 @@ class ConflictViewerDownloadTest extends TestCase
     }
 
     /** @test */
-    public function non_downloadable_submitter_is_visible_in_viewer_but_has_no_rows_in_any_download()
+    public function downloads_carry_every_participating_submission_regardless_of_download_permission()
     {
         $definitive = $this->classification('GENCC:100001', 'Definitive');
         $moderate = $this->classification('GENCC:100003', 'Moderate');
@@ -215,7 +265,7 @@ class ConflictViewerDownloadTest extends TestCase
         $supportive = $this->classification('GENCC:100009', 'Supportive');
         $unknown = $this->classification('GENCC:199999', 'Future term');
         $downloadable = Submitter::factory()->create(['name' => 'Download Lab', 'downloadable' => true]);
-        $blocked = Submitter::factory()->create(['name' => 'Blocked Lab', 'downloadable' => false]);
+        $flagged = Submitter::factory()->create(['name' => 'Flagged Lab', 'downloadable' => false]);
         $moi = Inheritance::factory()->create();
 
         $makeGroup = function (string $symbol) use ($moi) {
@@ -226,27 +276,26 @@ class ConflictViewerDownloadTest extends TestCase
             ];
         };
 
-        // Loses the weak side after the blocked submitter is removed.
-        $lost = $makeGroup('LOST');
-        $this->submission($lost + ['sid' => 'LOST-D', 'classification_id' => $definitive->id, 'submitter_id' => $downloadable->id]);
-        $this->submission($lost + ['sid' => 'LOST-L', 'classification_id' => $limited->id, 'submitter_id' => $blocked->id]);
+        // Only conflicting because of the flagged submitter's weak assertion.
+        $sole = $makeGroup('SOLE');
+        $this->submission($sole + ['sid' => 'SOLE-D', 'classification_id' => $definitive->id, 'submitter_id' => $downloadable->id]);
+        $this->submission($sole + ['sid' => 'SOLE-L', 'classification_id' => $limited->id, 'submitter_id' => $flagged->id]);
 
-        // Retains both sides, but exports none of the blocked or excluded rows.
+        // Conflicting on its own, and holds every kind of non-participating row.
         $kept = $makeGroup('KEPT');
         $this->submission($kept + ['sid' => 'KEEP-D', 'classification_id' => $definitive->id, 'submitter_id' => $downloadable->id]);
         $this->submission($kept + ['sid' => 'KEEP-L', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id]);
-        $this->submission($kept + ['sid' => 'BLOCK-M', 'classification_id' => $moderate->id, 'submitter_id' => $blocked->id]);
+        $this->submission($kept + ['sid' => 'FLAG-M', 'classification_id' => $moderate->id, 'submitter_id' => $flagged->id]);
         $this->submission($kept + ['sid' => 'SUPPORT', 'classification_id' => $supportive->id, 'submitter_id' => $downloadable->id]);
         $this->submission($kept + ['sid' => 'UNKNOWN', 'classification_id' => $unknown->id, 'submitter_id' => $downloadable->id]);
         $this->submission($kept + ['sid' => 'DELETED', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id, 'deleted_at' => now()]);
         Submission::factory()->unpublished()->create($kept + ['sid' => 'HIDDEN', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id]);
         Submission::factory()->historical()->create($kept + ['sid' => 'HISTORY', 'classification_id' => $limited->id, 'submitter_id' => $downloadable->id]);
 
-        // Download permission does not affect the public viewer.
         $this->get('/conflict-viewer')
             ->assertOk()
-            ->assertSee('Blocked Lab')
-            ->assertSee('LOST')
+            ->assertSee('Flagged Lab')
+            ->assertSee('SOLE')
             ->assertSee('KEPT');
 
         $csv = $this->delimitedRows($this->get('/conflict-viewer/download/csv')->assertOk(), ',');
@@ -259,11 +308,12 @@ class ConflictViewerDownloadTest extends TestCase
         $downloadRows = array_slice($csv, 1);
         $ids = array_column($downloadRows, 0);
 
-        // BLOCK-M is redacted row-for-row. LOST-D is permitted by itself, but
-        // its whole group is omitted because redacting LOST-L removes the only
-        // L/P/R/N side and it is no longer an exportable conflict.
-        $this->assertSame(['KEEP-D', 'KEEP-L'], $ids);
-        $this->assertNotContains('Blocked Lab', array_column($downloadRows, 14));
+        // Supportive, unrecognized, deleted, unpublished, and historical rows do
+        // not participate. The downloadable flag is not consulted, so FLAG-M and
+        // the SOLE group both export, matching the public page and the release
+        // export. Larger group first, then strongest classification first.
+        $this->assertSame(['KEEP-D', 'FLAG-M', 'KEEP-L', 'SOLE-D', 'SOLE-L'], $ids);
+        $this->assertContains('Flagged Lab', array_column($downloadRows, 14));
     }
 
     /** @test */
@@ -278,8 +328,14 @@ class ConflictViewerDownloadTest extends TestCase
         $this->assertNotContains(config('session.cookie'), $cookieNames);
     }
 
-    /** @test */
-    public function revoking_download_permission_takes_effect_without_flushing_the_six_hour_cache()
+    /**
+     * @test
+     *
+     * No endpoint calls download filtering any more. These two cover
+     * ConflictFinder::downloadableConflicts() directly so the retained
+     * implementation keeps its coverage until it is wired back in.
+     */
+    public function revoking_permission_redacts_rows_and_drops_one_sided_groups_without_flushing_the_six_hour_cache()
     {
         $definitive = $this->classification('GENCC:100001', 'Definitive');
         $limited = $this->classification('GENCC:100004', 'Limited');
@@ -297,20 +353,22 @@ class ConflictViewerDownloadTest extends TestCase
         $this->submission($kept + ['sid' => 'DROP-L', 'classification_id' => $limited->id, 'submitter_id' => $revoked->id]);
 
         $this->assertCount(2, ConflictFinder::conflicts());
-        $before = $this->get('/conflict-viewer/download/csv')->assertOk();
-        $beforeRows = $this->delimitedRows($before, ',');
-        $this->assertContains('DROP-L', array_column(array_slice($beforeRows, 1), 0));
+        $this->assertSame(['DROP-L', 'KEEP-D', 'KEEP-L', 'LOST-D', 'LOST-L'], $this->downloadableSids());
+
         $revoked->update(['downloadable' => false]);
 
-        $after = $this->get('/conflict-viewer/download/csv')->assertOk();
-        $rows = $this->delimitedRows($after, ',');
+        // DROP-L is redacted row-for-row. LOST-D is permitted by itself, but its
+        // whole group goes because redacting LOST-L removes the only L/P/R/N
+        // side and it is no longer an exportable conflict.
+        $this->assertCount(1, ConflictFinder::downloadableConflicts());
+        $this->assertSame(['KEEP-D', 'KEEP-L'], $this->downloadableSids());
 
-        $this->assertSame(['KEEP-D', 'KEEP-L'], array_column(array_slice($rows, 1), 0));
-        $this->assertNotSame($before->headers->get('ETag'), $after->headers->get('ETag'));
+        // Permission is read live, off the still-cached conflict set.
+        $this->assertCount(2, ConflictFinder::conflicts());
     }
 
     /** @test */
-    public function granting_download_permission_takes_effect_without_flushing_the_six_hour_cache()
+    public function granting_permission_restores_a_conflict_without_flushing_the_six_hour_cache()
     {
         $definitive = $this->classification('GENCC:100001', 'Definitive');
         $limited = $this->classification('GENCC:100004', 'Limited');
@@ -327,15 +385,12 @@ class ConflictViewerDownloadTest extends TestCase
 
         $this->assertCount(1, ConflictFinder::conflicts());
         $this->assertCount(0, ConflictFinder::downloadableConflicts());
-        $before = $this->get('/conflict-viewer/download/csv')->assertOk();
-        $this->assertCount(1, $this->delimitedRows($before, ','));
+
         $newlyAllowed->update(['downloadable' => true]);
 
-        $after = $this->get('/conflict-viewer/download/csv')->assertOk();
-        $rows = $this->delimitedRows($after, ',');
-
-        $this->assertSame(['GRANT-D', 'GRANT-L'], array_column(array_slice($rows, 1), 0));
-        $this->assertNotSame($before->headers->get('ETag'), $after->headers->get('ETag'));
+        $this->assertCount(1, ConflictFinder::downloadableConflicts());
+        $this->assertSame(['GRANT-D', 'GRANT-L'], $this->downloadableSids());
+        $this->assertCount(1, ConflictFinder::conflicts());
     }
 
     /** @test */
@@ -554,7 +609,7 @@ class ConflictViewerDownloadTest extends TestCase
             $page->assertSee(e(route('conflict-viewer-download', ['format' => $format] + $expectedQuery)), false);
         }
         $page->assertSee('Excel (.xlsx)')
-            ->assertSee('Downloads include only data from submitters that permit downloads.');
+            ->assertSee('Downloads include every submission shown on this page.');
 
         $this->get('/conflict-viewer/download/pdf')->assertNotFound();
     }

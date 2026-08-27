@@ -52,8 +52,14 @@ class ConflictFinder
      * Return conflicts after removing submissions that cannot be downloaded.
      *
      * Eligibility is recomputed at the group level. A public conflict whose
-     * downloadable submissions all fall on one side is therefore not exposed
-     * by the download endpoint.
+     * downloadable submissions all fall on one side is therefore no longer a
+     * conflict and is dropped entirely.
+     *
+     * Currently uncalled. The conflict download stopped filtering on
+     * `downloadable` so that it matches both the public conflict page and
+     * gencc-sub's release export, neither of which honours the flag. This method
+     * is retained as the reference implementation for the pending work that
+     * applies the flag consistently across both exports.
      */
     public static function downloadableConflicts(): Collection
     {

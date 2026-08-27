@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -24,6 +25,16 @@ class ConflictSubmissionExport implements
     WithStyles,
     ShouldAutoSize
 {
+    /**
+     * Export columns, ordered as a subset of the release export's schema.
+     *
+     * The conflict export intentionally omits the release file's submitted_as_*
+     * family: it carries conflict-relevant information rather than a full data
+     * dump. The columns it does share appear in the same relative order as
+     * gencc-sub's ReleaseSubmissionExport::headings() so the two files can be
+     * read side by side. classification_group is conflict-viewer-specific and
+     * sits with the other classification columns.
+     */
     public const HEADINGS = [
         'sgc_id',
         'version_number',
@@ -33,11 +44,11 @@ class ConflictSubmissionExport implements
         'disease_title',
         'disease_original_curie',
         'disease_original_title',
-        'moi_curie',
-        'moi_title',
         'classification_group',
         'classification_curie',
         'classification_title',
+        'moi_curie',
+        'moi_title',
         'submitter_curie',
         'submitter_title',
         'submitted_as_date',
@@ -127,8 +138,12 @@ class ConflictSubmissionExport implements
             return [];
         }
 
+        // Derived from HEADINGS so adding a column cannot silently leave it
+        // outside the filter range.
+        $lastColumn = Coordinate::stringFromColumnIndex(count(self::HEADINGS));
+
         $sheet->freezePane('A2');
-        $sheet->setAutoFilter('A1:P' . max(1, $sheet->getHighestRow()));
+        $sheet->setAutoFilter('A1:' . $lastColumn . max(1, $sheet->getHighestRow()));
 
         return [
             1 => ['font' => ['bold' => true]],

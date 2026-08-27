@@ -93,7 +93,7 @@
                            role="menuitem">Excel (.xlsx)</a>
                     </div>
                     <div class="px-4 py-3 text-xs leading-4 text-gray-600">
-                        Downloads include only data from submitters that permit downloads.
+                        Downloads include every submission shown on this page.
                     </div>
                 </div>
             </div>

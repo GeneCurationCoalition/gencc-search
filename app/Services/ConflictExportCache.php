@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Facades\Excel as ExcelFacade;
 /** Private, content-addressed cache for conflict-viewer export files. */
 class ConflictExportCache
 {
-    public const VERSION = 'conflict-export-v1';
+    public const VERSION = 'conflict-export-v2';
 
     public function identity(string $format, array $state, array $rows): array
     {
