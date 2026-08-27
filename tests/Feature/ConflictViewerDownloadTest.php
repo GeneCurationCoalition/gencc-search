@@ -609,7 +609,7 @@ class ConflictViewerDownloadTest extends TestCase
             $page->assertSee(e(route('conflict-viewer-download', ['format' => $format] + $expectedQuery)), false);
         }
         $page->assertSee('Excel (.xlsx)')
-            ->assertSee('Downloads include every submission shown on this page.');
+            ->assertSee('Current filters apply to downloads.');
 
         $this->get('/conflict-viewer/download/pdf')->assertNotFound();
     }
