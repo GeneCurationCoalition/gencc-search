@@ -298,6 +298,10 @@ build_and_push() {
     die "refusing to overwrite GHCR tag created during the build: $ref"
   fi
   podman push "$ref"
+  # GHCR can briefly 404 a just-pushed config blob. Wait before verifying so a
+  # good push is not reported as a failed deployment. Replace with a retry loop
+  # if this proves insufficient.
+  sleep 5
   verify_remote_image "$ref" "$source" "$revision" "$version"
   printf 'Verified remote linux/amd64 image and OCI labels: %s\n' "$ref"
 }
