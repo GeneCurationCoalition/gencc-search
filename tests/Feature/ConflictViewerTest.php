@@ -290,16 +290,16 @@ class ConflictViewerTest extends TestCase
         $document = new \DOMDocument();
         $document->loadHTML(view('partials.navs.header-nav')->render(), LIBXML_NOERROR | LIBXML_NOWARNING);
         $xpath = new \DOMXPath($document);
-        $links = $xpath->query('//a[normalize-space(.) = "Conflicts"]');
+        $links = $xpath->query('//a[normalize-space(.) = "Conflict Viewer"]');
 
         $this->assertCount(2, $links);
         $this->assertSame(
             1,
-            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " invisible ")]//a[normalize-space(.) = "Conflicts"]')->length
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " invisible ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
         );
         $this->assertSame(
             1,
-            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " lg:hidden ")]//a[normalize-space(.) = "Conflicts"]')->length
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " lg:hidden ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
         );
 
         foreach ($links as $link) {

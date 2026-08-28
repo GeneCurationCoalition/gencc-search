@@ -29,7 +29,7 @@
 						</a>
 
 						<a href="{{ route('conflict-viewer')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="fas fa-balance-scale-left text-gray-500"></i> Conflicts
+							<i class="fas fa-balance-scale-left text-gray-500"></i> Conflict Viewer
 						</a>
 
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
@@ -103,7 +103,7 @@
 												<i class="fas fa-chart-bar text-gray-500"></i> Statistics
 											</a>
 											<a href="{{ route('conflict-viewer')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-balance-scale-left text-gray-500"></i> Conflicts
+												<i class="fas fa-balance-scale-left text-gray-500"></i> Conflict Viewer
 											</a>
 											<a href="{{ route('download')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-file-code text-gray-500"></i> Download
