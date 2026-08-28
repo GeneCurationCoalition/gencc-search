@@ -118,7 +118,8 @@ class ListingByClassification extends Component
     {
 
         $gene_id = $this->gene_id;
-        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get()->sortBy('classification.order');
+        $records = Submission::where('gene_id', '=', $gene_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->get()
+            ->sortBy(fn ($submission) => Classification::priority($submission->classification->curie) ?? PHP_INT_MAX);
 
         $count_submissions = $records->count();
         $this->filter = [
@@ -224,7 +225,8 @@ class ListingByClassification extends Component
                 })
                 ->where('is_live', '=', true)
                 ->where('status', '=', Submission::STATUS_PUBLISHED)
-                ->get();
+                ->get()
+                ->sortBy(fn ($submission) => Classification::priority($submission->classification->curie) ?? PHP_INT_MAX);
         }
 
         // $posts = App\Models\Post::whereHas('comments', function (Builder $query) {

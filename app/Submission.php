@@ -107,7 +107,7 @@ class Submission extends Model
      */
     public function getUuidAttribute()
     {
-        return $this->attributes['uuid'] ?? null;
+        return $this->attributes['ident'] ?? null;
     }
 
     /**
@@ -290,15 +290,6 @@ class Submission extends Model
     // Query Scopes
     // =========================================================================
 
-    public function scopeCurie($query, $id)
-    {
-        // is_live = most recent version, status = 'published' for publicly visible
-        return $query->where('curie', '=', $id)
-            ->where('is_live', '=', true)
-            ->where('status', '=', self::STATUS_PUBLISHED)
-            ->orderBy('updated_at', 'asc');
-    }
-
     /**
      * Scope by sid (submission ID field).
      * Note: The actual database column is 'sid' in gencc-sub.
@@ -430,7 +421,7 @@ class Submission extends Model
      */
     public function getDisplayIdAttribute(): string
     {
-        $id = $this->attributes['sid'] ?? $this->attributes['uuid'] ?? '';
+        $id = $this->attributes['sid'] ?? $this->attributes['ident'] ?? '';
         return $id . '.' . ($this->version_number ?? 1);
     }
 
@@ -462,24 +453,22 @@ class Submission extends Model
         'submission_data' => 'array',
         'original_submission_data' => 'array',
         'evidence' => 'array',
+        'pmid_issues' => 'array',
+        'submission_errors' => 'array',
+        'history' => 'array',
+        'tags' => 'array',
     ];
 
     protected $with = ['gene', 'disease', 'disease_original', 'classification', 'inheritance', 'submitter'];
 
     protected $fillable = [
-        'uuid',
-        'sid',
-        'version_number',
-        'is_live',
-        'status',
-        'released_at',
-        'order',
-        'submission_data',
-        'evidence',
-        'report_date',
-        'report_url',
-        'original_disease_id',
-        'inheritance_id',
-        'private_notes'
+        'ident', 'type', 'sid', 'version_number', 'is_most_recent', 'is_live',
+        'local_key', 'friendly', 'job_id', 'document_id', 'gene_id',
+        'disease_id', 'original_disease_id', 'inheritance_id', 'submitter_id',
+        'classification_id', 'mechanism_id', 'user_id', 'evidence',
+        'normalized_pmids', 'pmid_issues', 'publish_date', 'posted_date',
+        'report_date', 'report_url', 'submission_data', 'original_submission_data',
+        'submission_errors', 'history', 'tags', 'status', 'action', 'origin_state',
+        'released_at', 'submitted_at', 'last_edited_by',
     ];
 }

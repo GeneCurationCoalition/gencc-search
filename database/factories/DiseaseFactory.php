@@ -17,26 +17,16 @@ class DiseaseFactory extends Factory
         return [
             'curie' => 'MONDO:' . str_pad($mondoId, 7, '0', STR_PAD_LEFT),
             'ident' => 'MONDO_' . str_pad($mondoId, 7, '0', STR_PAD_LEFT),
-            'uuid' => $this->faker->uuid,
-            'type' => 'MONDO',
-            'title' => $name,
+            'type' => 1,
             'name' => $name,
             'description' => $this->faker->sentence(),
-            'status' => 'active',
-            // Individual count columns (not JSON)
-            'count_submissions' => 0,
-            'count_unique_genes' => 0,
-            'count_unique_submitters' => 0,
-            'curations_definitive' => 0,
-            'curations_strong' => 0,
-            'curations_moderate' => 0,
-            'curations_limited' => 0,
-            'curations_disputed' => 0,
-            'curations_refuted' => 0,
-            'curations_animal' => 0,
-            'curations_noknown' => 0,
-            'curations_supportive' => 0,
-            'curations_nul' => 0,
+            'synonyms' => [],
+            'xrefs' => [],
+            'scores' => [],
+            'counts' => ['total' => 0, 'by_classification' => []],
+            'activity' => [],
+            'events' => [],
+            'status' => 1,
         ];
     }
 
@@ -47,7 +37,7 @@ class DiseaseFactory extends Factory
             return [
                 'curie' => 'OMIM:' . $omimId,
                 'ident' => 'OMIM_' . $omimId,
-                'type' => 'OMIM',
+                'type' => Disease::TYPE_OMIM,
             ];
         });
     }
@@ -59,7 +49,7 @@ class DiseaseFactory extends Factory
             return [
                 'curie' => 'Orphanet:' . $orphaId,
                 'ident' => 'Orphanet_' . $orphaId,
-                'type' => 'Orphanet',
+                'type' => Disease::TYPE_ORPHANET,
             ];
         });
     }

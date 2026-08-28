@@ -95,7 +95,7 @@ class SubmissionFeatureTest extends TestCase
     {
         // Gene title accessor reads from symbol, Disease title reads from title first
         $gene = Gene::factory()->create(['symbol' => 'BRCA1']);
-        $disease = Disease::factory()->create(['title' => 'Breast Cancer', 'name' => 'Breast Cancer']);
+        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
         $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $inheritance = Inheritance::factory()->create();
@@ -127,7 +127,7 @@ class SubmissionFeatureTest extends TestCase
     {
         // Gene title accessor reads from symbol
         $gene = Gene::factory()->create(['symbol' => 'BRCA1']);
-        $disease = Disease::factory()->create(['title' => 'Breast Cancer', 'name' => 'Breast Cancer']);
+        $disease = Disease::factory()->create(['name' => 'Breast Cancer']);
         $classification = Classification::factory()->create();
         $submitter = Submitter::factory()->create(['name' => 'Test Lab']);
         $inheritance = Inheritance::factory()->create(['name' => 'Autosomal dominant']);

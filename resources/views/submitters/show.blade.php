@@ -69,28 +69,28 @@
     @foreach ($classifications as $item)
     @if($item->curie != "GENCC:000000")
       @php
-        $classificationCount = (int) $classificationCounts->get($item->id, 0);
+        $classificationCount = (int) $classificationCountsByCurie->get($item->curie, 0);
         $classificationPercent = $submitterSubmissionsCount > 0
             ? ($classificationCount / $submitterSubmissionsCount) * 100
             : 0;
       @endphp
       <div class="col-span-3 border-r-2 border-gray-300 py-1 px-2">
         <div class="rounded-full py-1 px-1 text-right  leading-tight">
-          <a href="{{ route('genes') }}?{{ $item->href }}=1">
+          <a href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             {{ $item->title }}
           </a>
         </div>
       </div>
       <div class="col-span-9 py-1 px-2">
         @if($classificationCount != 0)
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-1 text-white {{ $item->css_class }}" style="width:{{ $classificationPercent }}%">
+        <a href="{{ route('genes') }}?{{ $item->only_filter_query }}" class="inline-block rounded-full px-3 text-right py-1 text-white {{ $item->css_class }}" style="width:{{ $classificationPercent }}%">
           &nbsp;
         </a>
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
+        <a href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             <span class="font-bold">{{ $classificationCount }}</span> Submissions
           </a>
         @else
-        <a class="pt-1 inline-block" href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
+        <a class="pt-1 inline-block" href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             <span class="font-bold">{{ $classificationCount }} </span> Submissions
           </a>
         @endif

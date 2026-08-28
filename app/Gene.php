@@ -61,18 +61,11 @@ class Gene extends Model
      * @var array
      */
     protected $fillable = [
-        'curie', 'type', 'title', 'description', 'status', 'date_modified', 'ident', 'uuid',
-        'hgnc_id', 'hgnc_uuid', 'symbol', 'name', 'location', 'locus_group', 'locus_type',
-        'date_symbol_changed', 'lsdb', 'curation_status',
-        'function', 'notes', 'date_last_curated', 'is_acmgsf3', 'is_morbid',
-        'prev_symbol', 'alias_symbol', 'chr', 'grch37', 'grch38', 'chm13',
-        'mane_select', 'mane_plus', 'date_approved_reserved',
-        'ensembl_gene_id', 'entrez_id', 'ucsc_id', 'omim_id', 'gene_group',
-        'pli', 'loeuf', 'hi', 'haplo', 'triplo', 'nstatus',
-        'count_submissions', 'count_unique_submitters', 'count_unique_diseases',
-        'curations_definitive', 'curations_strong', 'curations_moderate', 'curations_limited',
-        'curations_disputed', 'curations_refuted', 'curations_animal', 'curations_noknown',
-        'curations_supportive', 'curations_nul'
+        'ident', 'type', 'hgnc_id', 'symbol', 'name', 'description',
+        'alias_symbols', 'previous_symbols', 'alias_names', 'previous_names',
+        'date_symbol_changed', 'date_name_changed', 'locus_group', 'locus_type',
+        'gene_group_id', 'gene_group', 'location', 'coordinates', 'xrefs',
+        'scores', 'counts', 'activity', 'events', 'notes', 'status',
     ];
 
     public const STATUS_INITIALIZED = 0;
@@ -115,38 +108,20 @@ class Gene extends Model
 
     /**
      * Get prev_symbol - returns array of previous symbols.
-     * First checks JSON array column (gencc-sub), falls back to parsing text column.
+     * Derived from gencc-sub's canonical previous_symbols JSON column.
      */
     public function getPrevSymbolAttribute()
     {
-        // First check for JSON array column (gencc-sub schema)
-        if (!empty($this->previous_symbols)) {
-            return $this->previous_symbols;
-        }
-        // Fall back to parsing text column (test/legacy schema)
-        $text = $this->attributes['prev_symbol'] ?? null;
-        if (empty($text)) {
-            return [];
-        }
-        return array_filter(array_map('trim', explode(',', $text)));
+        return $this->previous_symbols ?? [];
     }
 
     /**
      * Get alias_symbol - returns array of alias symbols.
-     * First checks JSON array column (gencc-sub), falls back to parsing text column.
+     * Derived from gencc-sub's canonical alias_symbols JSON column.
      */
     public function getAliasSymbolAttribute()
     {
-        // First check for JSON array column (gencc-sub schema)
-        if (!empty($this->alias_symbols)) {
-            return $this->alias_symbols;
-        }
-        // Fall back to parsing text column (test/legacy schema)
-        $text = $this->attributes['alias_symbol'] ?? null;
-        if (empty($text)) {
-            return [];
-        }
-        return array_filter(array_map('trim', explode(',', $text)));
+        return $this->alias_symbols ?? [];
     }
 
     /**
@@ -168,11 +143,11 @@ class Gene extends Model
     }
 
     /**
-     * Get uuid attribute - actual column in gencc-sub.
+     * Get the legacy uuid alias from gencc-sub's canonical ident column.
      */
     public function getUuidAttribute()
     {
-        return $this->attributes['uuid'] ?? $this->attributes['ident'] ?? null;
+        return $this->attributes['ident'] ?? null;
     }
 
     // Curation count accessors provided by HasCurationCounts trait
@@ -182,11 +157,11 @@ class Gene extends Model
      */
     public function getCountSubmissionsAttribute()
     {
-        if (isset($this->attributes['count_submissions'])) {
-            return (int) $this->attributes['count_submissions'];
+        if (isset($this->counts['total'])) {
+            return (int) $this->counts['total'];
         }
-        if (!empty($this->counts['submissions'])) {
-            return $this->counts['submissions'];
+        if (isset($this->counts['count_submissions'])) {
+            return (int) $this->counts['count_submissions'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->count()
@@ -198,11 +173,11 @@ class Gene extends Model
      */
     public function getCountUniqueSubmittersAttribute()
     {
-        if (isset($this->attributes['count_unique_submitters'])) {
-            return (int) $this->attributes['count_unique_submitters'];
+        if (isset($this->counts['count_unique_submitters'])) {
+            return (int) $this->counts['count_unique_submitters'];
         }
-        if (!empty($this->counts['unique_submitters'])) {
-            return $this->counts['unique_submitters'];
+        if (isset($this->counts['unique_submitters'])) {
+            return (int) $this->counts['unique_submitters'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->pluck('submitter_id')->unique()->count()
@@ -214,11 +189,11 @@ class Gene extends Model
      */
     public function getCountUniqueDiseasesAttribute()
     {
-        if (isset($this->attributes['count_unique_diseases'])) {
-            return (int) $this->attributes['count_unique_diseases'];
+        if (isset($this->counts['count_unique_diseases'])) {
+            return (int) $this->counts['count_unique_diseases'];
         }
-        if (!empty($this->counts['unique_diseases'])) {
-            return $this->counts['unique_diseases'];
+        if (isset($this->counts['unique_diseases'])) {
+            return (int) $this->counts['unique_diseases'];
         }
         return $this->relationLoaded('submissions')
             ? $this->submissions->pluck('disease_id')->unique()->count()

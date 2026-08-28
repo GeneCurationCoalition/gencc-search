@@ -16,33 +16,17 @@ class SubmitterFactory extends Factory
         return [
             'curie' => 'GENCC:' . str_pad($this->faker->unique()->numberBetween(1, 999), 6, '0', STR_PAD_LEFT),
             'ident' => $ident,
-            'uuid' => $ident,
+            'type' => 0,
             'name' => $title,
-            'title' => $title,
             'website' => $this->faker->url,
             'description' => $this->faker->paragraph(),
             'assertion' => $this->faker->sentence(),
-            'text_descriptions' => $this->faker->paragraph(),
-            'text_assertions' => $this->faker->sentence(),
-            'text_contact' => $this->faker->email,
             'status' => 1,
             'allow_submissions' => true,
             'downloadable' => true,
-            'member' => true,
-            // Individual count columns
-            'count_submissions' => 0,
-            'count_unique_genes' => 0,
-            'count_unique_diseases' => 0,
-            'curations_definitive' => 0,
-            'curations_strong' => 0,
-            'curations_moderate' => 0,
-            'curations_limited' => 0,
-            'curations_disputed' => 0,
-            'curations_refuted' => 0,
-            'curations_animal' => 0,
-            'curations_noknown' => 0,
-            'curations_supportive' => 0,
-            'curations_nul' => 0,
+            'counts' => ['total' => 0, 'by_classification' => []],
+            'activity' => [],
+            'contacts' => [],
         ];
     }
 
@@ -53,6 +37,6 @@ class SubmitterFactory extends Factory
 
     public function nonMember()
     {
-        return $this->state(fn () => ['member' => false]);
+        return $this->state(fn () => ['allow_submissions' => false]);
     }
 }

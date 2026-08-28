@@ -114,7 +114,7 @@ class ClassificationModelTest extends TestCase
         $this->assertEquals('Definitive', $classification->title);
         $this->assertEquals('DEF', $classification->abbreviation);
         $this->assertEquals('definitive', $classification->slug);
-        $this->assertEquals(1, $classification->order);
+        $this->assertEquals(10, $classification->order);
     }
 
     /** @test */
@@ -125,7 +125,7 @@ class ClassificationModelTest extends TestCase
         $this->assertEquals('Strong', $classification->title);
         $this->assertEquals('STR', $classification->abbreviation);
         $this->assertEquals('strong', $classification->slug);
-        $this->assertEquals(2, $classification->order);
+        $this->assertEquals(20, $classification->order);
     }
 
     /** @test */
@@ -136,13 +136,62 @@ class ClassificationModelTest extends TestCase
             'name' => 'Definitive',
             'abbreviation' => 'DEF',
             'hex_color' => '#276749',
-            'css_class' => 'classification-definitive',
+            'curie' => 'GENCC:100001',
         ]);
 
         $this->assertEquals('Definitive', $classification->title);
         $this->assertEquals('DEF', $classification->abbreviation);
         $this->assertEquals('#276749', $classification->hex_color);
-        $this->assertEquals('classification-definitive', $classification->css_class);
+        $this->assertEquals('gencc-definitive', $classification->css_class);
+    }
+
+    /** @test */
+    public function known_classification_metadata_is_derived_from_its_curie_not_its_database_id()
+    {
+        $classification = Classification::factory()->create([
+            'id' => 814,
+            'curie' => 'GENCC:100009',
+            'slug' => null,
+            'css_class' => null,
+            'href' => null,
+        ]);
+
+        $this->assertSame('supportive', $classification->slug);
+        $this->assertSame('gencc-supportive', $classification->css_class);
+        $this->assertSame('curations_supportive', $classification->href);
+        $this->assertSame('supportive', $classification->filter_param);
+
+        parse_str($classification->only_filter_query, $params);
+        $this->assertSame('1', $params['supportive']);
+        $this->assertSame('0', $params['limited']);
+        $this->assertCount(9, $params);
+    }
+
+    /** @test */
+    public function conflict_sides_are_explicitly_mapped_by_curie()
+    {
+        foreach (['GENCC:100001', 'GENCC:100002', 'GENCC:100003'] as $curie) {
+            $this->assertSame('strong', Classification::conflictSide($curie));
+        }
+
+        foreach (['GENCC:100004', 'GENCC:100005', 'GENCC:100006', 'GENCC:100008'] as $curie) {
+            $this->assertSame('other', Classification::conflictSide($curie));
+        }
+
+        foreach (['GENCC:100009', 'GENCC:100007', 'GENCC:199999'] as $curie) {
+            $this->assertNull(Classification::conflictSide($curie));
+        }
+    }
+
+    /** @test */
+    public function statistics_bar_width_is_scaled_but_always_bounded()
+    {
+        $classification = new Classification();
+
+        $this->assertSame(0, $classification->displayStatChartBarPercent(0, 10));
+        $this->assertSame(35.0, $classification->displayStatChartBarPercent(100, 25));
+        $this->assertSame(100, $classification->displayStatChartBarPercent(140, 100));
+        $this->assertSame(100, $classification->displayStatChartBarPercent(100, 80));
     }
 
     /** @test */

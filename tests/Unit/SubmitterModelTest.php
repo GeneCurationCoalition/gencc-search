@@ -10,6 +10,7 @@ use App\Classification;
 use App\Submitter;
 use App\Submission;
 use App\Inheritance;
+use Illuminate\Support\Facades\DB;
 
 class SubmitterModelTest extends TestCase
 {
@@ -126,7 +127,7 @@ class SubmitterModelTest extends TestCase
     /** @test */
     public function submitter_can_be_member()
     {
-        $submitter = Submitter::factory()->create(['member' => true]);
+        $submitter = Submitter::factory()->create(['allow_submissions' => true]);
 
         $this->assertTrue($submitter->member);
     }
@@ -195,8 +196,8 @@ class SubmitterModelTest extends TestCase
         $summary = $submitter->releaseSubmissionCountSummary();
 
         $this->assertSame(12, $summary['total']);
-        $this->assertSame(8, (int) $summary['classificationCounts']->get(1));
-        $this->assertSame(4, (int) $summary['classificationCounts']->get(2));
+        $this->assertSame(8, (int) $summary['classificationCountsByCurie']->get('GENCC:100001'));
+        $this->assertSame(4, (int) $summary['classificationCountsByCurie']->get('GENCC:100002'));
         $this->assertSame(8, $summary['displayCounts']['definitive']);
         $this->assertSame(4, $summary['displayCounts']['strong']);
     }
@@ -211,8 +212,31 @@ class SubmitterModelTest extends TestCase
         $summary = $submitter->releaseSubmissionCountSummary();
 
         $this->assertSame(0, $summary['total']);
-        $this->assertSame(0, (int) $summary['classificationCounts']->get(1));
+        $this->assertSame(0, (int) $summary['classificationCountsByCurie']->get('GENCC:100001'));
         $this->assertSame(0, $summary['displayCounts']['definitive']);
+    }
+
+    /** @test */
+    public function submitter_release_count_summaries_do_not_query_classifications()
+    {
+        $submitters = Submitter::factory()->count(2)->create([
+            'counts' => [
+                'total' => 1,
+                'by_classification' => [
+                    'Definitive' => ['count' => 1, 'abbreviation' => 'DEF'],
+                ],
+            ],
+        ]);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        Submitter::submissionCountSummariesFor($submitters);
+
+        $classificationQueries = collect(DB::getQueryLog())
+            ->filter(fn ($query) => str_contains($query['query'], 'classifications'));
+
+        $this->assertCount(0, $classificationQueries);
     }
 
     /** @test */

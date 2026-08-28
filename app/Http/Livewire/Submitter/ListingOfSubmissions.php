@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Submitter;
 
 use App\Classification;
 use App\Submission;
+use App\Traits\NormalizesSearchInput;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -14,6 +15,7 @@ class ListingOfSubmissions extends Component
 {
 
     use WithPagination;
+    use NormalizesSearchInput;
 
     public $count = 0;
     public $submitter_id;
@@ -175,9 +177,11 @@ class ListingOfSubmissions extends Component
 
         // Get distinct classifications (only ~9 possible, safe to load)
         $classificationIds = (clone $baseQuery)->distinct()->pluck('classification_id');
-        $classifications = Classification::whereIn('id', $classificationIds)
-            ->select('id', 'ident', 'name')
-            ->get();
+        $classifications = Classification::orderCollection(
+            Classification::whereIn('id', $classificationIds)
+                ->select('id', 'ident', 'curie', 'name')
+                ->get()
+        );
         foreach ($classifications as $classification) {
             $this->filter['classifications'][$classification->ident] = [
                 'title' => $classification->name,
@@ -267,6 +271,23 @@ class ListingOfSubmissions extends Component
             //dd($filter);
             $has_records = Submission::where('submitter_id', '=', $submitter_id)->where('is_live', '=', true)->where('status', '=', Submission::STATUS_PUBLISHED)->count();
             //dd($has_records);
+            $idsByCurie = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
+                ->pluck('id', 'curie');
+            $whens = '';
+
+            foreach (Classification::VOCABULARY as $curie => $metadata) {
+                if ($idsByCurie->has($curie)) {
+                    $whens .= ' WHEN ' . (int) $idsByCurie->get($curie)
+                        . ' THEN ' . (int) $metadata['priority'];
+                }
+            }
+
+            // A CASE with no WHEN clauses is a SQL syntax error. With nothing
+            // ranked every row ties, leaving report_date to order the page.
+            $classificationOrder = $whens === ''
+                ? '99'
+                : 'CASE classification_id' . $whens . ' ELSE 99 END';
+
             $records = Submission::where('submitter_id', '=', $submitter_id)
                 ->whereHas('classification', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['classifications'] as $key => $item) {
@@ -279,8 +300,9 @@ class ListingOfSubmissions extends Component
                         //dd($filter_set['classifications']);
                         //$query->whereNotIn('id', $filter_set['diseases']);
                     //}
-                    if (!empty($this->query_disease)) {
-                        $query->where('name', 'like', '%' . $this->query_disease . '%');
+                    $query_disease = $this->normalizeSearchTerm($this->query_disease);
+                    if (!empty($query_disease)) {
+                        $query->where('name', 'like', '%' . $query_disease . '%');
                     }
                 })->whereHas('inheritance', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['inheritances'] as $key => $item) {
@@ -292,8 +314,9 @@ class ListingOfSubmissions extends Component
                         //dd($filter_set['classifications']);
                         //$query->whereNotIn('id', $filter_set['genes']);
                     //}
-                    if (!empty($this->query_gene)) {
-                        $query->where('symbol', 'like', '%' . $this->query_gene . '%');
+                    $query_gene = $this->normalizeSearchTerm($this->query_gene);
+                    if (!empty($query_gene)) {
+                        $query->where('symbol', 'like', '%' . $query_gene . '%');
                     }
                 })->whereHas('submitter', function (Builder $query) use ($filter, $filter_set) {
                     //foreach ($filter['submitters'] as $key => $item) {
@@ -306,7 +329,7 @@ class ListingOfSubmissions extends Component
                 //     }])
                 ->where('is_live', '=', true)
                 ->where('status', '=', Submission::STATUS_PUBLISHED)
-                ->orderBy('classification_id', 'ASC')
+                ->orderByRaw($classificationOrder)
                 ->orderBy('report_date', 'DESC')
                 ->paginate(20);
         // }

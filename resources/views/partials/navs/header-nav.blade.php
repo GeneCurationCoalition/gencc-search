@@ -15,34 +15,38 @@
 					<div class="relative text-sm  invisible lg:visible">
 
 						<a href="{{ route('genes')}}" class="no-underline hover:underline text-gray-800 p-2">
-						<i class="fas fa-dna text-gray-400"></i> 	Genes
+						<i class="fas fa-dna text-gray-500"></i> 	Genes
 						</a>
 					{{-- <a href="{{ route('diseases')}}" class="no-underline hover:underline text-gray-800 p-2">
 							<i class="far fa-disease text-gray-400"></i> Diseases
 						</a> --}}
 						<a href="{{ route('members')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="far fa-building text-gray-400"></i> GenCC Members
+							<i class="far fa-building text-gray-500"></i> GenCC Members
 						</a>
 
 						<a href="{{ route('statistics')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="fas fa-chart-bar"></i> Statistics
+							<i class="fas fa-chart-bar text-gray-500"></i> Statistics
+						</a>
+
+						<a href="{{ route('conflict-viewer')}}" class="no-underline hover:underline text-gray-800 p-2">
+							<i class="fas fa-balance-scale-left text-gray-500"></i> Conflict Viewer
 						</a>
 
 						<a href="{{ route('download')}}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="fas fa-file-code"></i> Download
+							<i class="fas fa-file-code text-gray-500"></i> Download
 						</a>
 
 <a href="{{ route('faq') }}" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
-							<i class="far fa-question-circle"></i> FAQ
+							<i class="far fa-question-circle text-gray-500"></i> FAQ
 						</a>
 						<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="far fa-comment"></i> Contact
+							<i class="far fa-comment text-gray-500"></i> Contact
 						</a>
 						<a href="{{ route('about') }}" class="no-underline hover:underline text-gray-800 p-1">
-							<i class="fas fa-info-circle"></i> About
+							<i class="fas fa-info-circle text-gray-500"></i> About
 						</a>
 						<a id="click-signup" href="https://creationproject.us7.list-manage.com/subscribe?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
-							<i class="fas fa-mail-bulk"></i> Stay Informed
+							<i class="fas fa-mail-bulk text-gray-500"></i> Stay Informed
 						</a>
 
 						{{-- <a href="{{ route('statistics')}}" class="no-underline hover:underline text-gray-800 p-2">
@@ -63,7 +67,7 @@
 									<a href="{{ route('logout') }}"
 											class="no-underline hover:underline text-gray-800"
 											onclick="event.preventDefault();
-													document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i>
+													document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt text-gray-500"></i>
 												</a>
 									<form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
 											{{ csrf_field() }}
@@ -86,34 +90,37 @@
                 	<div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
 
 										<a href="{{ route('genes')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-											<i class="fas fa-dna text-gray-400"></i> 	Genes
+											<i class="fas fa-dna text-gray-500"></i> 	Genes
 											</a>
 										{{-- <a href="{{ route('diseases')}}" class="no-underline hover:underline text-gray-800 p-2">
 												<i class="far fa-disease text-gray-400"></i> Diseases
 											</a> --}}
 											<a href="{{ route('members')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-building text-gray-400"></i> GenCC Members
+												<i class="far fa-building text-gray-500"></i> GenCC Members
 											</a>
 
 											<a href="{{ route('statistics')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-chart-bar"></i> Statistics
+												<i class="fas fa-chart-bar text-gray-500"></i> Statistics
+											</a>
+											<a href="{{ route('conflict-viewer')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="fas fa-balance-scale-left text-gray-500"></i> Conflict Viewer
 											</a>
 											<a href="{{ route('download')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-file-code"></i> Download
+												<i class="fas fa-file-code text-gray-500"></i> Download
 											</a>
 
 											<a href="{{ route('faq') }}" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-question-circle"></i> FAQ
+												<i class="far fa-question-circle text-gray-500"></i> FAQ
 											</a>
 											<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-comment"></i> Contact
+												<i class="far fa-comment text-gray-500"></i> Contact
 											</a>
 											<a href="{{ route('about') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-info-circle"></i> About
+												<i class="fas fa-info-circle text-gray-500"></i> About
 											</a>
 
 											<a id="click-signup" href="https://creaationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-mail-bulk"></i> Stay Informed
+												<i class="fas fa-mail-bulk text-gray-500"></i> Stay Informed
 											</a>
 
                 	</div>

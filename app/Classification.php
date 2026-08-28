@@ -14,6 +14,165 @@ class Classification extends Model
     use DisplayTransform;
 
     /**
+     * The application vocabulary for GenCC classifications, strongest first.
+     *
+     * CURIEs, unlike database IDs, retain their meaning when rows are imported
+     * in a different order. Keep filtering, presentation, URL generation, and
+     * canonical ranking and conflict participation together here so those
+     * concerns cannot drift.
+     */
+    const VOCABULARY = [
+        'GENCC:100001' => [
+            'title' => 'Definitive',
+            'property' => 'curations_definitive',
+            'query' => 'definitive',
+            'slug' => 'definitive',
+            'css_class' => 'gencc-definitive',
+            'priority' => 1,
+            'conflict_side' => 'strong',
+        ],
+        'GENCC:100002' => [
+            'title' => 'Strong',
+            'property' => 'curations_strong',
+            'query' => 'strong',
+            'slug' => 'strong',
+            'css_class' => 'gencc-strong',
+            'priority' => 2,
+            'conflict_side' => 'strong',
+        ],
+        'GENCC:100003' => [
+            'title' => 'Moderate',
+            'property' => 'curations_moderate',
+            'query' => 'moderate',
+            'slug' => 'moderate',
+            'css_class' => 'gencc-moderate',
+            'priority' => 3,
+            'conflict_side' => 'strong',
+        ],
+        'GENCC:100009' => [
+            'title' => 'Supportive',
+            'property' => 'curations_supportive',
+            'query' => 'supportive',
+            'slug' => 'supportive',
+            'css_class' => 'gencc-supportive',
+            'priority' => 4,
+            'conflict_side' => null,
+        ],
+        'GENCC:100004' => [
+            'title' => 'Limited',
+            'property' => 'curations_limited',
+            'query' => 'limited',
+            'slug' => 'limited',
+            'css_class' => 'gencc-limited',
+            'priority' => 5,
+            'conflict_side' => 'other',
+        ],
+        'GENCC:100005' => [
+            'title' => 'Disputed Evidence',
+            'property' => 'curations_disputed',
+            'query' => 'disputed',
+            'slug' => 'disputed',
+            'css_class' => 'gencc-disputedevidence',
+            'priority' => 6,
+            'conflict_side' => 'other',
+        ],
+        'GENCC:100007' => [
+            'title' => 'Animal Model Only',
+            'property' => 'curations_animal',
+            'query' => 'animal',
+            'slug' => 'animal-model-only',
+            'css_class' => 'gencc-animalmodelonly',
+            'priority' => 7,
+            'conflict_side' => null,
+        ],
+        'GENCC:100006' => [
+            'title' => 'Refuted Evidence',
+            'property' => 'curations_refuted',
+            'query' => 'refuted',
+            'slug' => 'refuted',
+            'css_class' => 'gencc-refutedevidence',
+            'priority' => 8,
+            'conflict_side' => 'other',
+        ],
+        'GENCC:100008' => [
+            'title' => 'No Known Disease Relationship',
+            'property' => 'curations_noknown',
+            'query' => 'noknown',
+            'slug' => 'no-known',
+            'css_class' => 'gencc-noknowndiseaserelationship',
+            'priority' => 9,
+            'conflict_side' => 'other',
+        ],
+    ];
+
+    public static function filterProperties(): array
+    {
+        return array_column(self::VOCABULARY, 'property');
+    }
+
+    public static function filterParams(): array
+    {
+        return array_column(self::VOCABULARY, 'query');
+    }
+
+    public static function validityRanks(): array
+    {
+        $ranks = [];
+
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            $ranks[$curie] = $metadata['priority'];
+        }
+
+        return $ranks;
+    }
+
+    /**
+     * Return the conflict-viewer side for a participating classification CURIE.
+     */
+    public static function conflictSide(string $curie): ?string
+    {
+        return self::VOCABULARY[$curie]['conflict_side'] ?? null;
+    }
+
+    /** Return the canonical display priority for a known CURIE. */
+    public static function priority(string $curie): ?int
+    {
+        return self::VOCABULARY[$curie]['priority'] ?? null;
+    }
+
+    public static function queryStringBindings(): array
+    {
+        $bindings = [];
+
+        foreach (self::VOCABULARY as $metadata) {
+            $bindings[$metadata['property']] = [
+                'except' => '1',
+                'as' => $metadata['query'],
+            ];
+        }
+
+        return $bindings;
+    }
+
+    /**
+     * Return known classification models in canonical vocabulary order.
+     */
+    public static function orderCollection($classifications)
+    {
+        $byCurie = $classifications->keyBy('curie');
+
+        return collect(array_keys(self::VOCABULARY))
+            ->map(fn ($curie) => $byCurie->get($curie))
+            ->filter()
+            ->values();
+    }
+
+    public function vocabularyMetadata(): ?array
+    {
+        return self::VOCABULARY[$this->curie] ?? null;
+    }
+
+    /**
      * Get all the live published (publicly visible) submissions for this classification.
      * Filters by is_live=true (most recent version) AND status='published'.
      */
@@ -31,7 +190,13 @@ class Classification extends Model
 
     public function scopeSlug($query, $id)
     {
-        return $query->where('slug', '=', $id)->orderBy('updated_at', 'asc');
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            if ($metadata['slug'] === $id) {
+                return $query->where('curie', $curie)->orderBy('updated_at', 'asc');
+            }
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     // =========================================================================
@@ -55,98 +220,70 @@ class Classification extends Model
     }
 
     /**
-     * Get slug attribute - computed from classification ID if not in database.
-     * Maps classification IDs to slug names for color lookups.
+     * Get slug attribute for color lookups.
      */
     public function getSlugAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['slug'])) {
-            return $this->attributes['slug'];
-        }
-
-        // Compute from classification ID
-        $slugMap = [
-            1 => 'definitive',
-            2 => 'strong',
-            3 => 'moderate',
-            4 => 'supportive',
-            5 => 'limited',
-            6 => 'disputed',
-            7 => 'refuted',
-            8 => 'animal-model-only',
-            9 => 'no-known',
-        ];
-
-        return $slugMap[$this->id] ?? '';
+        return $this->vocabularyMetadata()['slug']
+            ?? ($this->attributes['slug'] ?? '');
     }
 
     /**
-     * Get href attribute - computed from classification ID if not in database.
-     * Maps classification IDs to filter parameter names.
+     * Get the legacy long filter property name.
      */
     public function getHrefAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['href'])) {
-            return $this->attributes['href'];
-        }
-
-        // Compute from classification ID
-        $hrefMap = [
-            1 => 'curations_definitive',
-            2 => 'curations_strong',
-            3 => 'curations_moderate',
-            4 => 'curations_supportive',
-            5 => 'curations_limited',
-            6 => 'curations_disputed',
-            7 => 'curations_refuted',
-            8 => 'curations_animal',
-            9 => 'curations_noknown',
-        ];
-
-        return $hrefMap[$this->id] ?? '';
+        return $this->vocabularyMetadata()['property']
+            ?? ($this->attributes['href'] ?? '');
     }
 
     /**
-     * Get css_class attribute - computed from classification ID if not in database.
-     * Maps classification IDs to CSS class names for color bars.
+     * Get filter_param attribute - the name this classification's toggle goes by
+     * in the genes listing query string.
+     *
+     * The href attribute above is the legacy 'curations_definitive' spelling,
+     * which the listing no longer binds to; this is the short alias it does.
+     */
+    public function getFilterParamAttribute()
+    {
+        return $this->vocabularyMetadata()['query'] ?? '';
+    }
+
+    /**
+     * Get only_filter_query attribute - a genes listing query string selecting
+     * this classification and nothing else.
+     *
+     * All nine toggles default to on, so naming only this one ('?definitive=1')
+     * would leave the other eight enabled and filter nothing at all. The other
+     * eight have to be switched off explicitly.
+     */
+    public function getOnlyFilterQueryAttribute()
+    {
+        if (!$this->vocabularyMetadata()) {
+            return '';
+        }
+
+        $pairs = [];
+
+        foreach (self::VOCABULARY as $curie => $metadata) {
+            $pairs[] = $metadata['query'] . '=' . ($curie === $this->curie ? '1' : '0');
+        }
+
+        return implode('&', $pairs);
+    }
+
+    /**
+     * Get css_class attribute for color bars.
      */
     public function getCssClassAttribute()
     {
-        // Return database value if exists
-        if (!empty($this->attributes['css_class'])) {
-            return $this->attributes['css_class'];
-        }
-
-        // Compute from classification ID
-        $cssMap = [
-            1 => 'gencc-definitive',
-            2 => 'gencc-strong',
-            3 => 'gencc-moderate',
-            4 => 'gencc-supportive',
-            5 => 'gencc-limited',
-            6 => 'gencc-disputedevidence',
-            7 => 'gencc-refutedevidence',
-            8 => 'gencc-animalmodelonly',
-            9 => 'gencc-noknowndiseaserelationship',
-        ];
-
-        return $cssMap[$this->id] ?? 'gencc-nul';
+        return $this->vocabularyMetadata()['css_class']
+            ?? ($this->attributes['css_class'] ?? 'gencc-nul');
     }
 
     protected $fillable = [
-        'curie',
-        'uuid',
-        'title',
-        'description',
-        'abbreviation',
-        'hex_color',
-        'css_class',
-        'slug',
-        'order',
-        'href',
-        'info_text',
-        'status'
+        'ident', 'type', 'curie', 'name', 'description', 'abbreviation',
+        'informational', 'style_class', 'hex_color', 'css_class', 'slug',
+        'href', 'order', 'status',
     ];
 }

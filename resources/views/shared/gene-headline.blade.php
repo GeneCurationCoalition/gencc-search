@@ -8,10 +8,14 @@
           </form>
         </div>
         <script>
+          // Trimming here keeps the ?title= we put in the address bar tidy; it
+          // is not the safeguard. Genes\Listing normalizes the term server-side
+          // when it builds the LIKE pattern, which is what covers the URLs that
+          // never pass through this function.
           function searchGenes(event) {
             event.preventDefault();
-            const searchTerm = document.getElementById('gene-search').value;
-            if (searchTerm.trim()) {
+            const searchTerm = document.getElementById('gene-search').value.trim();
+            if (searchTerm) {
               window.location.href = '{{ route("genes") }}?title=' + encodeURIComponent(searchTerm);
             } else {
               window.location.href = '{{ route("genes") }}';

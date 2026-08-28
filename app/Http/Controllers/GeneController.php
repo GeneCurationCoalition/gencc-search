@@ -27,9 +27,9 @@ class GeneController extends Controller
     public function show($id)
     {
         $item = Gene::curie($id)->firstOrFail();
-        $records = Classification::with(['submissions' => function ($query) use ($item) {
+        $records = Classification::orderCollection(Classification::with(['submissions' => function ($query) use ($item) {
             return $query->where('gene_id', '=', $item->id);
-        }])->get();
+        }])->get());
         $page_meta['seo']['title'] = $item->title . " gene with submissions organized by classifications";
         return view('genes.show', ['gene' => $item, 'records' => $records, 'page' => 'show', 'page_meta' => $page_meta]);
     }
@@ -43,9 +43,9 @@ class GeneController extends Controller
     public function disease($id)
     {
         $item = Gene::curie($id)->firstOrFail();
-        $records = Classification::with(['submissions' => function ($query) use ($item) {
+        $records = Classification::orderCollection(Classification::with(['submissions' => function ($query) use ($item) {
             return $query->where('gene_id', '=', $item->id);
-        }])->get();
+        }])->get());
         $page_meta['seo']['title'] = $item->title . " gene with submissions organized by disease";
         return view('genes.disease', ['gene' => $item, 'records' => $records, 'page' => 'disease', 'page_meta' => $page_meta]);
     }
@@ -59,9 +59,9 @@ class GeneController extends Controller
     public function submitter($id)
     {
         $item = Gene::curie($id)->firstOrFail();
-        $records = Classification::with(['submissions' => function ($query) use ($item) {
+        $records = Classification::orderCollection(Classification::with(['submissions' => function ($query) use ($item) {
             return $query->where('gene_id', '=', $item->id);
-        }])->get();
+        }])->get());
         $page_meta['seo']['title'] = $item->title . " gene with submissions organized by submitter";
         return view('genes.submitter', ['gene' => $item, 'records' => $records, 'page' => 'submitter', 'page_meta' => $page_meta]);
     }

@@ -25,10 +25,9 @@ class InheritanceFactory extends Factory
 
         return [
             'curie' => 'HP:' . str_pad($this->faker->unique()->numberBetween(1, 999999), 7, '0', STR_PAD_LEFT),
-            'uuid' => 'moi-' . $this->faker->uuid(),
             'ident' => 'moi-' . $this->faker->uuid(),
+            'type' => 0,
             'name' => $inheritance['title'],
-            'title' => $inheritance['title'],
             'abbreviation' => $inheritance['abbreviation'],
             'description' => $this->faker->sentence(),
             'status' => 1,
@@ -39,7 +38,6 @@ class InheritanceFactory extends Factory
     {
         return $this->state(fn () => [
             'name' => 'Autosomal dominant',
-            'title' => 'Autosomal dominant',
             'abbreviation' => 'AD',
         ]);
     }
@@ -48,7 +46,6 @@ class InheritanceFactory extends Factory
     {
         return $this->state(fn () => [
             'name' => 'Autosomal recessive',
-            'title' => 'Autosomal recessive',
             'abbreviation' => 'AR',
         ]);
     }

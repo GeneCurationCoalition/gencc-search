@@ -16,7 +16,10 @@
         <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
             <li><a href="#common-questions" class="text-blue-600 hover:text-blue-800">Common Questions</a></li>
             <li><a href="#website-pages-faq" class="text-blue-600 hover:text-blue-800">Website Pages FAQ</a></li>
-            <li><a href="#validity-termsdelphi-survey" class="text-blue-600 hover:text-blue-800">Validity terms/Delphi Survey</a></li>
+            {{-- Anchor kept as-is despite the retitle: it is linked from the genes
+                 listing and from bookmarks we cannot update. --}}
+            <li><a href="#validity-termsdelphi-survey" class="text-blue-600 hover:text-blue-800">Standardized Clinical Validity terms</a></li>
+            <li><a href="#gencc-publications" class="text-blue-600 hover:text-blue-800">GenCC Publications</a></li>
         </ul>
 
         <h1 id="common-questions" class="my-3">Common Questions</h1>
@@ -272,12 +275,10 @@
 
         <div class="col-12 mt-10"><hr /></div>
 
-        <h1 id="validity-termsdelphi-survey" class="my-3">Validity terms/Delphi Survey</h1>
+        <h1 id="validity-termsdelphi-survey" class="my-3">Standardized Clinical Validity terms</h1>
         <p class="mb-4">
-        To enable comparison of gene-disease validity curations across resources, we drafted harmonized definitions for differing levels of gene-disease clinical validity and then a Delphi survey approach was performed. In the first round, members of the GenCC took the survey and chose from term sets already in use by current efforts or suggested new terms. In the second round, all previous and suggested terms were incorporated, and the survey was sent out to the extended staff and members of each of the GenCC groups. In the third round, the survey was then sent to the larger international genetics community (e.g. American College of Medical Genetics Membership, American Society of Human Genetics Membership, the Global Alliance for Genomic Health Membership) with a 10 minute introductory video for context. Responses from the community were used to further narrow the term list, and the final harmonized term set with definitions are provided below. This set is used to map all other terms used by each curation effort participating in the GenCC and displayed on this curation site. Mapping exceptions include situations where a resource did not curate to the same level of granularity as the harmonized list and therefore a broader category of “Supportive” was used to represent a basic level of evidence for gene-disease association such as that used by OMIM and Orphanet.
+        The GenCC harmonized term set with definitions are provided below. This set is used to map all other terms used by each curation effort participating in the GenCC and displayed on this curation site.
         </p>
-
-        <img src="{{ asset('img/faq/delphi.png') }}" alt="GenCC FAQ Delphi" class="w-full h-auto rounded shadow-md my-3 mb-3">
 
         <p class="mb-4">
         Preferred terms set and definitions*:
@@ -300,6 +301,11 @@
         <h3>Moderate</h3>
         <p class="mb-4">
           There is moderate evidence in humans to support a causal role for this gene in this disease with no contradictory evidence. The body of evidence is not large (e.g. possibly only one key paper) but appears convincing enough that the gene-disease pair is likely to be validated with additional evidence in the near future.
+        </p>
+
+        <h3>Supportive</h3>
+        <p class="mb-4">
+          This term is used in situations where a resource did not curate to the same level of granularity required to designate the other clinical validity terms and therefore a broader category was used to represent a basic level of evidence for gene-disease association such as that used by OMIM and Orphanet.
         </p>
 
         <h3>Limited</h3>
@@ -326,6 +332,25 @@
         <p class="mb-4">
           No disease claim in any organism has ever been made.
         </p>
+
+        <div class="col-12 mt-10 mb-8"><hr /></div>
+
+        <h1 id="gencc-publications" class="my-3">GenCC Publications</h1>
+
+        <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
+            <li>
+                <a href="https://www.gimjournal.org/article/S1098-3600(22)00746-8/fulltext" target="_blank" class="text-blue-600 hover:text-blue-800">
+                    The Gene Curation Coalition: A global effort to harmonize gene-disease evidence resources
+                </a>
+                — <em>Genetics in Medicine</em>, 2022; PMID 35507016; DOI 10.1016/j.gim.2022.04.017. The GenCC marker paper.
+            </li>
+            <li>
+                <a href="https://www.gimjournal.org/article/S1098-3600(23)01045-6/fulltext" target="_blank" class="text-blue-600 hover:text-blue-800">
+                    Toward robust clinical genome interpretation: Developing a consistent terminology to characterize Mendelian disease-gene relationships&mdash;allelic requirement, inheritance modes, and disease mechanisms
+                </a>
+                — <em>Genetics in Medicine</em>, 2024; PMID 37982373; DOI 10.1016/j.gim.2023.101029.
+            </li>
+        </ul>
 
     </div>
 </div>

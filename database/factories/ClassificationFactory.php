@@ -12,27 +12,26 @@ class ClassificationFactory extends Factory
     public function definition()
     {
         $classifications = [
-            ['title' => 'Definitive', 'abbreviation' => 'DEF', 'slug' => 'definitive', 'order' => 1, 'hex_color' => '#276749', 'css_class' => 'classification-definitive'],
-            ['title' => 'Strong', 'abbreviation' => 'STR', 'slug' => 'strong', 'order' => 2, 'hex_color' => '#38a169', 'css_class' => 'classification-strong'],
-            ['title' => 'Moderate', 'abbreviation' => 'MOD', 'slug' => 'moderate', 'order' => 3, 'hex_color' => '#68d391', 'css_class' => 'classification-moderate'],
-            ['title' => 'Limited', 'abbreviation' => 'LIM', 'slug' => 'limited', 'order' => 4, 'hex_color' => '#f6e05e', 'css_class' => 'classification-limited'],
-            ['title' => 'Disputed', 'abbreviation' => 'DIS', 'slug' => 'disputed', 'order' => 5, 'hex_color' => '#ed8936', 'css_class' => 'classification-disputed'],
-            ['title' => 'Refuted', 'abbreviation' => 'REF', 'slug' => 'refuted', 'order' => 6, 'hex_color' => '#e53e3e', 'css_class' => 'classification-refuted'],
+            ['curie' => 'GENCC:100001', 'name' => 'Definitive', 'abbreviation' => 'DEF', 'order' => 10],
+            ['curie' => 'GENCC:100002', 'name' => 'Strong', 'abbreviation' => 'STR', 'order' => 20],
+            ['curie' => 'GENCC:100003', 'name' => 'Moderate', 'abbreviation' => 'MOD', 'order' => 30],
+            ['curie' => 'GENCC:100009', 'name' => 'Supportive', 'abbreviation' => 'SUP', 'order' => 40],
+            ['curie' => 'GENCC:100004', 'name' => 'Limited', 'abbreviation' => 'LIM', 'order' => 50],
+            ['curie' => 'GENCC:100005', 'name' => 'Disputed Evidence', 'abbreviation' => 'DIS', 'order' => 60],
+            ['curie' => 'GENCC:100006', 'name' => 'Refuted Evidence', 'abbreviation' => 'REF', 'order' => 70],
+            ['curie' => 'GENCC:100007', 'name' => 'Animal Model Only', 'abbreviation' => 'ANI', 'order' => 80],
+            ['curie' => 'GENCC:100008', 'name' => 'No Known Disease Relationship', 'abbreviation' => 'NOK', 'order' => 90],
         ];
 
         $classification = $this->faker->randomElement($classifications);
 
         return [
-            'curie' => 'GENCC:' . str_pad($this->faker->unique()->numberBetween(1, 999999), 7, '0', STR_PAD_LEFT),
-            'uuid' => 'class-' . $this->faker->uuid(),
             'ident' => 'class-' . $this->faker->uuid(),
-            'name' => $classification['title'],
-            'title' => $classification['title'],
+            'type' => 0,
+            'curie' => $classification['curie'],
+            'name' => $classification['name'],
             'abbreviation' => $classification['abbreviation'],
-            'slug' => $classification['slug'],
             'order' => $classification['order'],
-            'hex_color' => $classification['hex_color'],
-            'css_class' => $classification['css_class'],
             'description' => $this->faker->sentence(),
             'status' => 1,
         ];
@@ -41,22 +40,20 @@ class ClassificationFactory extends Factory
     public function definitive()
     {
         return $this->state(fn () => [
+            'curie' => 'GENCC:100001',
             'name' => 'Definitive',
-            'title' => 'Definitive',
             'abbreviation' => 'DEF',
-            'slug' => 'definitive',
-            'order' => 1,
+            'order' => 10,
         ]);
     }
 
     public function strong()
     {
         return $this->state(fn () => [
+            'curie' => 'GENCC:100002',
             'name' => 'Strong',
-            'title' => 'Strong',
             'abbreviation' => 'STR',
-            'slug' => 'strong',
-            'order' => 2,
+            'order' => 20,
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DownloadQuota;
 use Google\Cloud\Storage\StorageClient;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -101,17 +101,12 @@ class DownloadController extends Controller
             return $response;
         }
 
-        // 5. Enforce quota only before serving a full GET body.
+        // 5. Atomically reserve quota only before serving a full GET body.
         if (!$isHead) {
-            $quotaResponse = $this->enforceDownloadQuota();
-            if ($quotaResponse) {
-                return $quotaResponse;
+            $quota = app(DownloadQuota::class);
+            if (!$quota->reserve(DownloadQuota::RELEASE, request()->ip())) {
+                return $quota->rejectionResponse();
             }
-        }
-
-        // 6. Full download — count against quota after successful response.
-        if (!$isHead) {
-            $this->incrementDownloadQuota();
         }
 
         return $response;
@@ -180,47 +175,6 @@ class DownloadController extends Controller
             $headers['Last-Modified'] = $meta['source_last_modified'];
         }
         return response('', 304, $headers);
-    }
-
-    // ─── Daily per-IP download quota ─────────────────────────────────
-
-    private function downloadQuotaKey(): string
-    {
-        return 'download-quota:' . request()->ip() . ':' . date('Y-m-d');
-    }
-
-    private function enforceDownloadQuota(): ?Response
-    {
-        $dailyQuota = config('downloads.daily_quota');
-        $key = $this->downloadQuotaKey();
-        $count = Cache::get($key, 0);
-
-        if ($count >= $dailyQuota) {
-            return response(
-                "Daily download limit reached ({$dailyQuota} per day per IP).\n"
-                . "This data is updated weekly. Please reduce your polling frequency.\n"
-                . "Tip: use a HEAD request and If-None-Match or If-Modified-Since headers to\n"
-                . "check for changes without counting against this limit.\n",
-                429,
-                [
-                    'Content-Type' => 'text/plain',
-                    'Retry-After' => (string) (strtotime('tomorrow') - time()),
-                ]
-            );
-        }
-
-        return null;
-    }
-
-    private function incrementDownloadQuota(): void
-    {
-        $key = $this->downloadQuotaKey();
-
-        if (Cache::add($key, 1, now()->endOfDay())) {
-            return; // Key was new, add() set it to 1
-        }
-
-        Cache::increment($key);
     }
 
     // ─── Local file caching ──────────────────────────────────────────

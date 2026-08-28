@@ -46,11 +46,11 @@ class DiseaseModelTest extends TestCase
     }
 
     /** @test */
-    public function disease_uuid_accessor_returns_uuid()
+    public function disease_uuid_accessor_returns_ident()
     {
-        $disease = Disease::factory()->create(['uuid' => 'test-uuid-789']);
+        $disease = Disease::factory()->create(['ident' => 'test-ident-789']);
 
-        $this->assertEquals('test-uuid-789', $disease->uuid);
+        $this->assertEquals('test-ident-789', $disease->uuid);
     }
 
     /** @test */
@@ -58,7 +58,7 @@ class DiseaseModelTest extends TestCase
     {
         $disease = Disease::factory()->create();
 
-        $this->assertEquals('MONDO', $disease->type);
+        $this->assertEquals(Disease::TYPE_MONDO, $disease->type);
         $this->assertStringStartsWith('MONDO:', $disease->curie);
     }
 
@@ -67,7 +67,7 @@ class DiseaseModelTest extends TestCase
     {
         $disease = Disease::factory()->omim()->create();
 
-        $this->assertEquals('OMIM', $disease->type);
+        $this->assertEquals(Disease::TYPE_OMIM, $disease->type);
         $this->assertStringStartsWith('OMIM:', $disease->curie);
     }
 
@@ -76,7 +76,7 @@ class DiseaseModelTest extends TestCase
     {
         $disease = Disease::factory()->orphanet()->create();
 
-        $this->assertEquals('Orphanet', $disease->type);
+        $this->assertEquals(Disease::TYPE_ORPHANET, $disease->type);
         $this->assertStringStartsWith('Orphanet:', $disease->curie);
     }
 
@@ -102,12 +102,25 @@ class DiseaseModelTest extends TestCase
     }
 
     /** @test */
-    public function disease_title_accessor_returns_title_field()
+    public function disease_title_accessor_returns_name_field()
     {
-        // gencc-sub uses 'title' column directly
-        $disease = Disease::factory()->create(['title' => 'Test Disease']);
+        $disease = Disease::factory()->create(['name' => 'Test Disease']);
 
         $this->assertEquals('Test Disease', $disease->title);
+    }
+
+    /** @test */
+    public function disease_aggregate_accessors_read_canonical_counts_json()
+    {
+        $disease = Disease::factory()->create(['counts' => [
+            'count_submissions' => 8,
+            'count_unique_submitters' => 3,
+            'count_unique_genes' => 5,
+        ]]);
+
+        $this->assertSame(8, $disease->count_submissions);
+        $this->assertSame(3, $disease->count_unique_submitters);
+        $this->assertSame(5, $disease->count_unique_genes);
     }
 
     /** @test */
@@ -127,9 +140,9 @@ class DiseaseModelTest extends TestCase
         $parentDisease = Disease::factory()->create(['curie' => 'MONDO:0000001']);
         $childDisease = Disease::factory()->create([
             'curie' => 'OMIM:123456',
-            'mondo_parent_id' => $parentDisease->id,
+            'mondo_id' => $parentDisease->id,
         ]);
 
-        $this->assertEquals($parentDisease->id, $childDisease->mondo_parent_id);
+        $this->assertEquals($parentDisease->id, $childDisease->mondo_id);
     }
 }

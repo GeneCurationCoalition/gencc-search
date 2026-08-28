@@ -1,4 +1,26 @@
 <div class="">
+    @if($invalidUrlFiltersIgnored)
+        <div role="alert" class="flex items-center justify-between bg-yellow-100 border border-yellow-400 text-yellow-900 rounded px-4 py-2 mb-3 text-sm">
+            <span>Invalid URL filters were ignored.</span>
+            <a href="{{ route('genes') }}" class="font-semibold hover:underline whitespace-no-wrap">
+                Reset filters
+            </a>
+        </div>
+    @endif
+    @if($this->hasActiveFilters)
+        {{-- Filters now survive in the URL, so a bookmarked or shared link can
+             arrive pre-filtered. Say so plainly rather than letting the user
+             wonder why rows are missing (#204). --}}
+        <div class="flex items-center justify-between bg-blue-100 border border-blue-300 text-blue-900 rounded px-4 py-2 mb-3 text-sm">
+            <div>
+                <i class="fas fa-filter"></i>
+                Filters are active — this is a partial view of the data.
+            </div>
+            <button wire:click="clearAllFilters" class="font-semibold hover:underline focus:outline-none whitespace-no-wrap">
+                Clear all filters
+            </button>
+        </div>
+    @endif
     <div class=" text-xl text-gray-600 mb-2"><span class=" font-bold ">{{ $genes->total()  }}</span> {{ $tableHeading }}</div>
     <div class="grid grid-cols-12 gap-1 mb-3">
         <div class="col-span-4 xl:col-span-2 mt-3">
@@ -26,6 +48,13 @@
             </div>
             <div x-show="open" @click.away="open = false" class="z-20 origin-top-right absolute left-0 mt-2 rounded-md shadow-lg" style="display: none;">
                 <div class="rounded-md bg-white shadow-xs">
+                <div class="flex border-b border-gray-200 px-4 py-2 text-sm leading-5">
+                    <button wire:click="selectAllSubmitters"
+                        class="text-blue-800 hover:underline focus:outline-none">Select all</button>
+                    <span class="px-2 text-gray-400">|</span>
+                    <button wire:click="selectNoSubmitters"
+                        class="text-blue-800 hover:underline focus:outline-none">Select none</button>
+                </div>
                 <div class="py-2" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                     @foreach ($submitters as $submitter)
 {{-- wire:click="addTodo({{ $todo->id }}, '{{ $todo->name }}')" --}}
@@ -153,6 +182,13 @@
                 @endif
 
             </div>
+            <div class="flex text-xs mt-2 ml-3">
+                <button wire:click="selectAllClassifications"
+                    class="text-blue-800 hover:underline focus:outline-none">Select all</button>
+                <span class="px-2 text-gray-400">|</span>
+                <button wire:click="selectNoClassifications"
+                    class="text-blue-800 hover:underline focus:outline-none">Select none</button>
+            </div>
         </div>
             <div class="hidden xl:inline-block xl:visible text-blue-800 pl-0 text-xs mt-6 leading-tight"> <i class="far fa-question-circle"></i><a class="hover:underline" target="_blank" href="{{ route('faq') }}#validity-termsdelphi-survey"> About GenCC<div class="ml-4">Classifications</div></a></div>
     </div>
@@ -210,9 +246,9 @@
                         <div class='grid grid-cols-5 gap-1'>
                             {!! $item->displayCurationCountPill($item->curations_limited, "limited", route('gene-show', $item->curie)) !!}
                             {!! $item->displayCurationCountPill($item->curations_disputed, "disputed", route('gene-show', $item->curie)) !!}
-                            {!! $item->displayCurationCountPill($item->curations_refuted, "refuted", route('gene-show', $item->curie)) !!}
                             {!! $item->displayCurationCountPill($item->curations_animal, "animal-model-only", route('gene-show', $item->curie)) !!}
-                            {!! $item->displayCurationCountPill($item->curations_noknown, "no-known-disease-relationship", route('gene-show', $item->curie)) !!}
+                            {!! $item->displayCurationCountPill($item->curations_refuted, "refuted", route('gene-show', $item->curie)) !!}
+                            {!! $item->displayCurationCountPill($item->curations_noknown, "no-known", route('gene-show', $item->curie)) !!}
                         </div>
                     </div>
                     {{-- {!! $item->displayCurationCountPill($item->curations_nul, "nul", route('gene-show', $item->curie)) !!} --}}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deploy GenCC Apps"
+  short_description: "Safely build and deploy GenCC containers"
+  default_prompt: "Use $deploy-gencc-apps to preview a staging deployment with an explicit build target."
+policy:
+  allow_implicit_invocation: true

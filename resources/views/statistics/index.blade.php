@@ -38,26 +38,57 @@
     @if($item->curie != "GENCC:000000")
       <div class="col-span-4 xl:col-span-2 border-r-2 border-gray-300 py-2 px-2">
         <div class="rounded-full py-1 px-1 text-right  leading-tight">
-          <a href="{{ route('genes') }}?{{ $item->href }}=1">
+          <a href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             {{ $item->title }}
           </a>
         </div>
       </div>
       <div class="col-span-8 xl:col-span-9 py-1 px-2">
         @if( $item->displayStatChartBarPercent($submissionsCount, $item->submissions_count) != 0)
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0" class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($submissionsCount, $item->submissions_count) }}%">
+        <a href="{{ route('genes') }}?{{ $item->only_filter_query }}" class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($submissionsCount, $item->submissions_count) }}%">
           &nbsp;
         </a>
-        <a href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
+        <a href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             <span class="font-bold">{{ $item->submissions_count }} </span> Submissions
           </a>
         @else
-        <a class="pt-1 inline-block" href="{{ route('genes') }}?curations_definitive=1&curations_strong=1&curations_moderate=1&curations_limited=1&curations_disputed=1&curations_refuted=1&curations_animal=1&curations_noknown=1&{{ $item->href }}=0">
+        <a class="pt-1 inline-block" href="{{ route('genes') }}?{{ $item->only_filter_query }}">
             <span class="font-bold">{{ $item->submissions_count }} </span> Submissions
           </a>
         @endif
       </div>
       @endif
+    @endforeach
+  </div>
+</div>
+<div class="col-12 mt-10"><hr /></div>
+<div class="mt-10">
+  <h2 class="my-3">Classifications Visualized by Gene</h2>
+  <p class="mb-4 text-sm text-gray-600">
+    Each gene is counted once, in the bucket for its strongest assertion. A gene
+    with Definitive, Strong and Moderate assertions appears only under Definitive.
+  </p>
+  {{-- A future strongest-classification genes-list mode must define whether
+       strength is global or recalculated after submitter and disease filters. --}}
+  <div class="grid grid-cols-12 gap-0">
+    @foreach ($genesByClassification as $row)
+      @php($item = $row['classification'])
+      @php($geneCount = $row['genes_count'])
+        <div class="col-span-4 xl:col-span-2 border-r-2 border-gray-300 py-2 px-2">
+          <div class="rounded-full py-1 px-1 text-right leading-tight">
+            {{ $item->title }}
+          </div>
+        </div>
+        <div class="col-span-8 xl:col-span-9 py-1 px-2">
+          @if($geneCount != 0)
+            <span class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($genesByClassificationTotal, $geneCount) }}%">
+              &nbsp;
+            </span>
+          @endif
+          <span @class(['pt-1 inline-block' => $geneCount == 0])>
+            <span class="font-bold">{{ $geneCount }} </span> Genes
+          </span>
+        </div>
     @endforeach
   </div>
 </div>

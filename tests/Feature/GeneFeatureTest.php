@@ -55,6 +55,26 @@ class GeneFeatureTest extends TestCase
     }
 
     /** @test */
+    public function gene_classification_collection_uses_canonical_order_not_database_order()
+    {
+        $gene = Gene::factory()->create(['hgnc_id' => 'HGNC:54321']);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100006',
+            'name' => 'Refuted Evidence',
+            'order' => 1,
+        ]);
+        Classification::factory()->create([
+            'curie' => 'GENCC:100007',
+            'name' => 'Animal Model Only',
+            'order' => 999,
+        ]);
+
+        $titles = $this->get('/genes/HGNC:54321')->viewData('records')->pluck('title')->all();
+
+        $this->assertSame(['Animal Model Only', 'Refuted Evidence'], $titles);
+    }
+
+    /** @test */
     public function gene_disease_page_returns_200_for_valid_gene()
     {
         // Gene curie scope looks up by hgnc_id column

@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Classification;
 use Illuminate\Database\Eloquent\Collection;
 
 trait DisplayTransform
@@ -98,7 +99,8 @@ trait DisplayTransform
     //dd($item);
     //$item = Gene::curie($curie)->firstOrFail();
 
-    $submission_objects = $item->submissions->sortBy('classification.order');
+    $submission_objects = $item->submissions
+      ->sortBy(fn ($submission) => Classification::priority($submission->classification->curie) ?? PHP_INT_MAX);
     $submitter_submissions = $submission_objects->groupBy([
       'submitter.title',
       function ($item) {

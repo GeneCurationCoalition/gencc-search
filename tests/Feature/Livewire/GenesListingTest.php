@@ -10,6 +10,7 @@ use App\Submission;
 use App\Inheritance;
 use App\Http\Livewire\Genes\Listing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -48,7 +49,7 @@ class GenesListingTest extends TestCase
         }
 
         $gene = Gene::factory()->create([
-            'title' => 'BRCA1',
+            'symbol' => 'BRCA1',
             'counts' => [
                 'definitive' => 1,
                 'strong' => 0,
@@ -106,10 +107,10 @@ class GenesListingTest extends TestCase
             'noknown' => 0,
             'supportive' => 0,
         ];
-        $gene1 = Gene::factory()->create(['title' => 'BRCA1', 'counts' => $counts]);
-        $gene2 = Gene::factory()->create(['title' => 'TP53', 'counts' => $counts]);
+        $gene1 = Gene::factory()->create(['symbol' => 'BRCA1', 'counts' => $counts]);
+        $gene2 = Gene::factory()->create(['symbol' => 'TP53', 'counts' => $counts]);
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
@@ -178,7 +179,7 @@ class GenesListingTest extends TestCase
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         Submission::factory()->create([
@@ -209,7 +210,7 @@ class GenesListingTest extends TestCase
         $submitter2 = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         // Create submissions for both submitters
@@ -242,7 +243,7 @@ class GenesListingTest extends TestCase
     }
 
     /** @test */
-    public function genes_listing_resets_curation_filters_when_all_off()
+    public function genes_listing_honours_an_explicit_all_off_classification_selection()
     {
         // Skip this test when using SQLite (uses REGEXP_SUBSTR for ordering)
         if (config('database.default') === 'sqlite') {
@@ -252,7 +253,7 @@ class GenesListingTest extends TestCase
         $submitter = Submitter::factory()->create();
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $inheritance = Inheritance::factory()->create();
 
         Submission::factory()->create([
@@ -275,9 +276,13 @@ class GenesListingTest extends TestCase
             ->set('curations_noknown', 0)
             ->set('curations_supportive', 0);
 
-        // After render, filters should be reset to 1
-        $this->assertEquals(1, $component->get('curations_definitive'));
-        $this->assertEquals(1, $component->get('curations_strong'));
+        // An explicit all-off selection is now honoured rather than reset (#203),
+        // so the toggles stay off and the listing shows nothing. Defaulting to
+        // all-on still happens, but only on a fresh load — see
+        // GenesListingSelectAllTest::fresh_load_defaults_every_classification_on.
+        $this->assertEquals(0, $component->get('curations_definitive'));
+        $this->assertEquals(0, $component->get('curations_strong'));
+        $this->assertCount(0, $component->viewData('genes'));
     }
 
     /**
@@ -300,8 +305,8 @@ class GenesListingTest extends TestCase
         $submitter2 = Submitter::factory()->create(['ident' => 'GENCC_TEST002']);
 
         // Create two genes - one for each submitter
-        $gene1 = Gene::factory()->create(['symbol' => 'TESTGENE1', 'title' => 'TESTGENE1']);
-        $gene2 = Gene::factory()->create(['symbol' => 'TESTGENE2', 'title' => 'TESTGENE2']);
+        $gene1 = Gene::factory()->create(['symbol' => 'TESTGENE1']);
+        $gene2 = Gene::factory()->create(['symbol' => 'TESTGENE2']);
 
         $disease = Disease::factory()->create();
         $classification = Classification::factory()->definitive()->create();
@@ -359,9 +364,9 @@ class GenesListingTest extends TestCase
         $submitter3 = Submitter::factory()->create(['ident' => 'GENCC_MULTI_003']);
 
         // Create three genes
-        $geneA = Gene::factory()->create(['symbol' => 'MULTIGENE_A', 'title' => 'MULTIGENE_A']);
-        $geneB = Gene::factory()->create(['symbol' => 'MULTIGENE_B', 'title' => 'MULTIGENE_B']);
-        $geneC = Gene::factory()->create(['symbol' => 'MULTIGENE_C', 'title' => 'MULTIGENE_C']);
+        $geneA = Gene::factory()->create(['symbol' => 'MULTIGENE_A']);
+        $geneB = Gene::factory()->create(['symbol' => 'MULTIGENE_B']);
+        $geneC = Gene::factory()->create(['symbol' => 'MULTIGENE_C']);
 
         $disease = Disease::factory()->create();
         $classification = Classification::factory()->definitive()->create();
@@ -412,13 +417,201 @@ class GenesListingTest extends TestCase
     }
 
     /**
+     * @test
+     * @dataProvider paddedTitleProvider
+     *
+     * Regression for #207, covering the gene-symbol filter on /genes.
+     *
+     * Two entry points reach the same LIKE pattern and both are asserted here:
+     * the Livewire-bound filter box (`set('title', ...)`) and the `?title=`
+     * query parameter that `mount()` copies onto the component. The `?title=`
+     * form is the one the search box in gene-headline.blade.php builds, and
+     * while that Blade template now trims client-side, a bookmarked, shared, or
+     * hand-edited URL skips the JavaScript entirely — server-side
+     * normalization in render() is the only thing left protecting it.
+     */
+    public function genes_listing_ignores_surrounding_whitespace_in_title($pad)
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+
+        // Entry point 1: term typed or pasted into the filter box.
+        $fromFilterBox = Livewire::test(Listing::class)
+            ->set('title', $pad . 'GJB2' . $pad);
+
+        $this->assertCount(1, $fromFilterBox->viewData('genes'));
+        $fromFilterBox->assertSee('GJB2')->assertDontSee('BRCA1');
+
+        // Entry point 2: same term arriving as ?title=, which mount() reads.
+        $fromUrl = Livewire::withQueryParams(['title' => $pad . 'GJB2' . $pad])
+            ->test(Listing::class);
+
+        $this->assertCount(1, $fromUrl->viewData('genes'));
+        $fromUrl->assertSee('GJB2')->assertDontSee('BRCA1');
+    }
+
+    /**
+     * @test
+     * @dataProvider paddedTitleProvider
+     *
+     * Regression for #207, covering the submitted-disease filter on /genes.
+     *
+     * The sibling of the gene-symbol case above: the disease term reaches its
+     * own LIKE pattern one line earlier in render(), through the nested
+     * whereHas on diseases.name. Both entry points are asserted here too — the
+     * Livewire-bound filter box and the ?hasDisease= parameter mount() reads.
+     */
+    public function genes_listing_ignores_surrounding_whitespace_in_has_disease($pad)
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2', 'hearing loss');
+        $this->createGeneWithSubmission('BRCA1', 'breast cancer');
+
+        // Entry point 1: term typed or pasted into the filter box.
+        $fromFilterBox = Livewire::test(Listing::class)
+            ->set('hasDisease', $pad . 'hearing loss' . $pad);
+
+        $this->assertCount(1, $fromFilterBox->viewData('genes'));
+        $fromFilterBox->assertSee('GJB2')->assertDontSee('BRCA1');
+
+        // Entry point 2: same term arriving as ?hasDisease=, which mount() reads.
+        $fromUrl = Livewire::withQueryParams(['hasDisease' => $pad . 'hearing loss' . $pad])
+            ->test(Listing::class);
+
+        $this->assertCount(1, $fromUrl->viewData('genes'));
+        $fromUrl->assertSee('GJB2')->assertDontSee('BRCA1');
+    }
+
+    public function paddedTitleProvider(): array
+    {
+        return [
+            'space'        => [' '],
+            'tab'          => ["\t"],
+            'newline'      => ["\n"],
+            'non-breaking' => ["\u{00A0}"],
+        ];
+    }
+
+    /**
+     * @test
+     *
+     * Normalizing the term must not widen the match: a padded term that does
+     * not exist should still return nothing, rather than collapsing to an
+     * empty pattern that matches every gene.
+     */
+    public function genes_listing_still_excludes_non_matching_title()
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+
+        $component = Livewire::test(Listing::class)
+            ->set('title', ' NOSUCHGENE ');
+
+        $this->assertCount(0, $component->viewData('genes'));
+    }
+
+    /**
+     * @test
+     *
+     * A whitespace-only term normalizes to '', which builds the pattern '%%'
+     * and is intended to behave as "no filter" rather than "no results".
+     */
+    public function genes_listing_treats_whitespace_only_title_as_no_filter()
+    {
+        $this->shimRegexpSubstrForSqlite();
+
+        $this->createGeneWithSubmission('GJB2');
+        $this->createGeneWithSubmission('BRCA1');
+
+        $component = Livewire::test(Listing::class)
+            ->set('title', "  \t ");
+
+        $this->assertCount(2, $component->viewData('genes'));
+    }
+
+    /**
+     * Create a gene with a known symbol plus one submission, so it survives the
+     * component's whereHas('submissions') filter.
+     *
+     * Pass $diseaseName when the test filters on the disease term as well; the
+     * factory derives both name and title from it, and only `name` is what the
+     * component's nested whereHas matches on.
+     */
+    private function createGeneWithSubmission(string $symbol, string $diseaseName = null): Gene
+    {
+        $gene = Gene::factory()->create(['symbol' => $symbol]);
+
+        $diseaseAttributes = $diseaseName === null
+            ? []
+            : ['name' => $diseaseName];
+
+        Submission::factory()->create([
+            'gene_id' => $gene->id,
+            'disease_id' => Disease::factory()->create($diseaseAttributes)->id,
+            'classification_id' => $this->knownClassification()->id,
+            'submitter_id' => Submitter::factory()->create()->id,
+            'inheritance_id' => Inheritance::factory()->create()->id,
+        ]);
+
+        return $gene;
+    }
+
+    /**
+     * render() uses REGEXP_SUBSTR in one place only: the orderByRaw that
+     * natural-sorts gene symbols, so GJB2 precedes GJB10. MySQL has that
+     * function and SQLite does not, which is why the rendering tests above skip
+     * themselves on SQLite — but CI runs SQLite only (.github/workflows/
+     * tests.yaml), so skipping means never running. Register a PHP equivalent
+     * so the query can execute; the assertions here are about which rows come
+     * back, not what order they come back in.
+     *
+     * Ports the MySQL signature REGEXP_SUBSTR(subject, pattern[, position[,
+     * occurrence]]) — 1-indexed character position (hence mb_substr), NULL when
+     * the Nth occurrence is absent. The 5th match_type argument is unused by
+     * this query and not implemented.
+     *
+     * This alone does not reproduce production row order, since ORDER BY still
+     * collates differently on the two engines. A test that asserts on ordering
+     * needs further SQLite patching to match MySQL, or should be restricted to
+     * MySQL and skipped here like the tests above.
+     */
+    private function shimRegexpSubstrForSqlite(): void
+    {
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            return;
+        }
+
+        DB::connection()->getPdo()->sqliteCreateFunction(
+            'REGEXP_SUBSTR',
+            function ($subject, $pattern, $position = 1, $occurrence = 1) {
+                if ($subject === null || $pattern === null) {
+                    return null;
+                }
+
+                $offset = max(0, ((int) $position) - 1);
+                $haystack = mb_substr((string) $subject, $offset);
+
+                if (!preg_match_all('/' . $pattern . '/u', $haystack, $matches)) {
+                    return null;
+                }
+
+                return $matches[0][((int) $occurrence) - 1] ?? null;
+            }
+        );
+    }
+
+    /**
      * Helper to create a complete test submission
      */
     private function createTestSubmission(): Submission
     {
         $gene = Gene::factory()->create();
         $disease = Disease::factory()->create();
-        $classification = Classification::factory()->create();
+        $classification = $this->knownClassification();
         $submitter = Submitter::factory()->create();
         $inheritance = Inheritance::factory()->create();
 
@@ -429,5 +622,11 @@ class GenesListingTest extends TestCase
             'submitter_id' => $submitter->id,
             'inheritance_id' => $inheritance->id,
         ]);
+    }
+
+    private function knownClassification(): Classification
+    {
+        return Classification::curie('GENCC:100001')->first()
+            ?: Classification::factory()->definitive()->create();
     }
 }
