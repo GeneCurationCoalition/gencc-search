@@ -41,6 +41,11 @@ Route::group(['prefix' => 'members'], function () {
   Route::get('/{id?}', 'SubmitterController@show')->name('member-show');
 });
 
+// Throwaway layout preview for issue #219, removed once a variant is chosen.
+Route::get('/members-{variant}', 'SubmitterController@preview')
+  ->where('variant', '[0-3]')
+  ->name('members-preview');
+
 Route::group(['prefix' => 'disease'], function () {
   Route::get('/', 'DiseaseController@index')->name('diseases');
   Route::get('/{id?}', 'DiseaseController@show')->name('disease-show');

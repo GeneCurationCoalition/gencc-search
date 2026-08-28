@@ -26,6 +26,34 @@ class SubmitterController extends Controller
     }
 
 
+    /**
+     * Throwaway side-by-side preview of the candidate members list layouts.
+     *
+     * Removed once a variant is chosen for issue #219.
+     *
+     * @param  string  $variant
+     * @return \Illuminate\Http\Response
+     */
+    public function preview($variant)
+    {
+        $submitters = Submitter::where('status', 1)->paginate(25);
+        $submitterCountSummaries = Submitter::submissionCountSummariesFor($submitters->getCollection());
+        $partials = [
+            '0' => 'partials.submitter.submitter-grid',
+            '1' => 'partials.submitter.list-variants.variant-a',
+            '2' => 'partials.submitter.list-variants.variant-b',
+            '3' => 'partials.submitter.list-variants.variant-c',
+        ];
+        $page_meta['seo']['title'] = "GenCC Members";
+        return view('submitters.preview', [
+            'submitters' => $submitters,
+            'submitterCountSummaries' => $submitterCountSummaries,
+            'variant' => $variant,
+            'variantPartial' => $partials[$variant],
+            'page' => 'submitter',
+            'page_meta' => $page_meta,
+        ]);
+    }
 
     /**
      * Display the specified resource.

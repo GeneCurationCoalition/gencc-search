@@ -302,14 +302,20 @@ class Submitter extends Model
      */
     protected function getNoLogoPlaceholder(): string
     {
+        return 'data:image/svg+xml;base64,' . base64_encode($this->logoPlaceholderSvg());
+    }
+
+    /**
+     * The placeholder SVG markup used when a submitter has no logo.
+     */
+    public function logoPlaceholderSvg(): string
+    {
         $name = htmlspecialchars($this->attributes['name'] ?? 'Unknown', ENT_XML1, 'UTF-8');
 
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
             . '<rect width="400" height="200" fill="#f3f4f6"/>'
             . '<text x="200" y="100" font-family="Arial, sans-serif" font-size="20" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">' . $name . '</text>'
             . '</svg>';
-
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     // Curation count accessors provided by HasCurationCounts trait

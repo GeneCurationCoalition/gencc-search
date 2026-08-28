@@ -36,6 +36,14 @@ class LogoController extends Controller
             if (file_exists($defaultLogo)) {
                 return response()->file($defaultLogo);
             }
+
+            // Match the named placeholder the logo accessor renders inline.
+            if ($submitter) {
+                return response($submitter->logoPlaceholderSvg())
+                    ->header('Content-Type', 'image/svg+xml')
+                    ->header('Cache-Control', 'public, max-age=86400');
+            }
+
             // Return a 404 if no default logo exists
             abort(404);
         }
@@ -43,7 +51,14 @@ class LogoController extends Controller
         // Determine content type
         $contentType = $submitter->logo_mime_type ?? 'image/png';
 
-        return response($submitter->logo_contents)
+        // logo_contents holds base64-encoded image data; older rows may hold raw
+        // binary, which strict decoding rejects and we then pass through as-is.
+        $contents = base64_decode($submitter->logo_contents, true);
+        if ($contents === false) {
+            $contents = $submitter->logo_contents;
+        }
+
+        return response($contents)
             ->header('Content-Type', $contentType)
             ->header('Cache-Control', 'public, max-age=86400');
     }
