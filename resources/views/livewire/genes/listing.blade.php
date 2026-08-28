@@ -248,7 +248,7 @@
                             {!! $item->displayCurationCountPill($item->curations_disputed, "disputed", route('gene-show', $item->curie)) !!}
                             {!! $item->displayCurationCountPill($item->curations_animal, "animal-model-only", route('gene-show', $item->curie)) !!}
                             {!! $item->displayCurationCountPill($item->curations_refuted, "refuted", route('gene-show', $item->curie)) !!}
-                            {!! $item->displayCurationCountPill($item->curations_noknown, "no-known-disease-relationship", route('gene-show', $item->curie)) !!}
+                            {!! $item->displayCurationCountPill($item->curations_noknown, "no-known", route('gene-show', $item->curie)) !!}
                         </div>
                     </div>
                     {{-- {!! $item->displayCurationCountPill($item->curations_nul, "nul", route('gene-show', $item->curie)) !!} --}}

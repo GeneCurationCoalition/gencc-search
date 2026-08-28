@@ -273,16 +273,20 @@ class ListingOfSubmissions extends Component
             //dd($has_records);
             $idsByCurie = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
                 ->pluck('id', 'curie');
-            $classificationOrder = 'CASE classification_id';
+            $whens = '';
 
             foreach (Classification::VOCABULARY as $curie => $metadata) {
                 if ($idsByCurie->has($curie)) {
-                    $classificationOrder .= ' WHEN ' . (int) $idsByCurie->get($curie)
+                    $whens .= ' WHEN ' . (int) $idsByCurie->get($curie)
                         . ' THEN ' . (int) $metadata['priority'];
                 }
             }
 
-            $classificationOrder .= ' ELSE 99 END';
+            // A CASE with no WHEN clauses is a SQL syntax error. With nothing
+            // ranked every row ties, leaving report_date to order the page.
+            $classificationOrder = $whens === ''
+                ? '99'
+                : 'CASE classification_id' . $whens . ' ELSE 99 END';
 
             $records = Submission::where('submitter_id', '=', $submitter_id)
                 ->whereHas('classification', function (Builder $query) use ($filter, $filter_set) {

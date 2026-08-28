@@ -15,9 +15,9 @@
                     {!! $item->displayCurationCountPill($item->curations_moderate, "moderate", route('gene-show', $item->curie)) !!}
                     {!! $item->displayCurationCountPill($item->curations_limited, "limited", route('gene-show', $item->curie)) !!}
                     {!! $item->displayCurationCountPill($item->curations_disputed, "disputed", route('gene-show', $item->curie)) !!}
-                    {!! $item->displayCurationCountPill($item->curations_animal, "animal", route('gene-show', $item->curie)) !!}
+                    {!! $item->displayCurationCountPill($item->curations_animal, "animal-model-only", route('gene-show', $item->curie)) !!}
                     {!! $item->displayCurationCountPill($item->curations_refuted, "refuted", route('gene-show', $item->curie)) !!}
-                    {!! $item->displayCurationCountPill($item->curations_noknown, "noknown", route('gene-show', $item->curie)) !!}
+                    {!! $item->displayCurationCountPill($item->curations_noknown, "no-known", route('gene-show', $item->curie)) !!}
                     {!! $item->displayCurationCountPill($item->curations_nul, "nul", route('gene-show', $item->curie)) !!}
                 </div>
             </div>
