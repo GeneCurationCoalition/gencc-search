@@ -65,8 +65,10 @@
 <div class="mt-10">
   <h2 class="my-3">Classifications Visualized by Gene</h2>
   <p class="mb-4 text-sm text-gray-600">
-    Each gene is counted once, in the bucket for its strongest assertion. A gene
-    with Definitive, Strong and Moderate assertions appears only under Definitive.
+    Each gene is counted once, in the bucket for its strongest assertion. For example,
+    a gene with both Definitive and Limited assertions is counted only under Definitive.
+    Genes are always counted in a classified category rather than in Orphanet’s
+    unclassified “Supportive” bucket.
   </p>
   {{-- A future strongest-classification genes-list mode must define whether
        strength is global or recalculated after submitter and disease filters. --}}

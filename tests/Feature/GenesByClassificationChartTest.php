@@ -95,18 +95,30 @@ class GenesByClassificationChartTest extends TestCase
     /**
      * @test
      *
-     * Supportive ranks above Limited.
+     * @dataProvider classifiedCategoriesBelowSupportive
      */
-    public function supportive_outranks_limited()
+    public function classified_categories_take_precedence_over_supportive(string $curie, string $title)
     {
         $gene = $this->gene('GENEC');
-        $this->submission($gene, 'GENCC:100004');
+        $this->submission($gene, $curie);
         $this->submission($gene, 'GENCC:100009');
 
         $counts = $this->chartCounts();
 
-        $this->assertSame(0, $counts['Limited']);
-        $this->assertSame(1, $counts['Supportive']);
+        $this->assertSame(1, $counts[$title]);
+        $this->assertSame(0, $counts['Supportive']);
+        $this->assertSame(1, array_sum($counts));
+    }
+
+    public function classifiedCategoriesBelowSupportive(): array
+    {
+        return [
+            ['GENCC:100004', 'Limited'],
+            ['GENCC:100005', 'Disputed Evidence'],
+            ['GENCC:100007', 'Animal Model Only'],
+            ['GENCC:100006', 'Refuted Evidence'],
+            ['GENCC:100008', 'No Known Disease Relationship'],
+        ];
     }
 
     /** @test */
@@ -140,6 +152,7 @@ class GenesByClassificationChartTest extends TestCase
         $this->assertSame(1, $counts['Limited']);
         $this->assertSame(1, $counts['Supportive']);
         $this->assertSame(0, $counts['Strong']);
+        $this->assertSame(3, array_sum($counts));
     }
 
     /**
@@ -176,11 +189,14 @@ class GenesByClassificationChartTest extends TestCase
         );
     }
 
-    /** @test */
-    public function unknown_classifications_do_not_change_a_known_strongest_bucket()
+    /**
+     * @test
+     * @dataProvider knownBuckets
+     */
+    public function unknown_classifications_do_not_change_a_known_strongest_bucket(string $curie, string $title)
     {
         $gene = $this->gene('GENEUNKNOWN');
-        $this->submission($gene, 'GENCC:100004');
+        $this->submission($gene, $curie);
         $unknown = Classification::factory()->create(['curie' => 'GENCC:199999', 'name' => 'Future term']);
 
         Submission::factory()->create([
@@ -191,7 +207,14 @@ class GenesByClassificationChartTest extends TestCase
             'inheritance_id' => Inheritance::factory()->create()->id,
         ]);
 
-        $this->assertSame(1, $this->chartCounts()['Limited']);
+        $counts = $this->chartCounts();
+        $this->assertSame(1, $counts[$title]);
+        $this->assertSame(1, array_sum($counts));
+    }
+
+    public function knownBuckets(): array
+    {
+        return [['GENCC:100004', 'Limited'], ['GENCC:100009', 'Supportive']];
     }
 
     /**

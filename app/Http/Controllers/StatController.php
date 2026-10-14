@@ -50,7 +50,7 @@ class StatController extends Controller
     }
 
     /**
-     * Pair each ranked classification with its gene count, strongest first, so the
+     * Pair each ranked classification with its gene count, in canonical display order, so the
      * view can render the bars without knowing the ranking. Unranked terms — the
      * GENCC:000000 placeholder, or a tenth term added later — are dropped.
      *
@@ -79,20 +79,23 @@ class StatController extends Controller
      *
      * A gene with Definitive, Strong and Moderate assertions counts only towards
      * Definitive; a gene with three Limited assertions counts once towards
-     * Limited. Supportive ranks between Moderate and Limited.
+     * Limited. Any recognized classified category takes precedence over the
+     * unclassified Supportive bucket for this chart only.
      *
      * Aggregated in SQL rather than in PHP: the submissions table runs to tens of
      * thousands of rows and this page is public, so loading them to group in
      * memory is not an option.
      *
-     * @return array classification CURIE => number of genes, strongest first
+     * @return array classification CURIE => number of genes, in canonical display order
      */
     private function genesByStrongestClassification()
     {
         $idsByCurie = Classification::whereIn('curie', array_keys(Classification::VOCABULARY))
             ->pluck('id', 'curie')
             ->all();
-        $rankCase = $this->validityRankCaseExpression($idsByCurie);
+        $ranks = Classification::validityRanks();
+        $ranks['GENCC:100009'] = max($ranks) + 1;
+        $rankCase = $this->validityRankCaseExpression($idsByCurie, $ranks);
 
         $strongestPerGene = DB::table('submissions')
             ->selectRaw("gene_id, MIN({$rankCase}) as best_rank")
@@ -107,27 +110,26 @@ class StatController extends Controller
             ->pluck('genes_count', 'best_rank')
             ->toArray();
 
-        // Back from rank to stable CURIE, preserving strongest-first order.
+        // Back from chart-specific rank to stable CURIE, preserving display order.
         $counts = [];
 
-        foreach (Classification::VOCABULARY as $curie => $metadata) {
-            $counts[$curie] = (int) ($countsByRank[$metadata['priority']] ?? 0);
+        foreach ($ranks as $curie => $rank) {
+            $counts[$curie] = (int) ($countsByRank[$rank] ?? 0);
         }
 
         return $counts;
     }
 
     /**
-     * A CASE expression mapping classification_id to its validity rank, so the
-     * ranking lives in one place rather than being duplicated in SQL.
+     * A CASE expression mapping classification_id to its chart-specific rank.
      */
-    private function validityRankCaseExpression(array $idsByCurie)
+    private function validityRankCaseExpression(array $idsByCurie, array $ranks)
     {
         $whens = '';
 
-        foreach (Classification::VOCABULARY as $curie => $metadata) {
+        foreach ($ranks as $curie => $rank) {
             if (isset($idsByCurie[$curie])) {
-                $whens .= ' WHEN ' . (int) $idsByCurie[$curie] . ' THEN ' . (int) $metadata['priority'];
+                $whens .= ' WHEN ' . (int) $idsByCurie[$curie] . ' THEN ' . (int) $rank;
             }
         }
 
