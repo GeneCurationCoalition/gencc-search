@@ -93,7 +93,7 @@ class Disease extends Model
      * @var array
      */
     protected $fillable = [
-        'mondo_id', 'ident', 'type', 'curie', 'name', 'deprecated_name',
+        'ident', 'type', 'curie', 'name', 'deprecated_name',
         'description', 'synonyms', 'xrefs', 'scores', 'counts', 'activity',
         'events', 'notes', 'status',
     ];
@@ -121,23 +121,6 @@ class Disease extends Model
         return $this->hasMany('App\Submission', 'disease_id')
             ->where('is_live', '=', true)
             ->where('status', '=', Submission::STATUS_PUBLISHED);
-    }
-
-    /**
-     * Get the canonical MONDO disease for this disease
-     * (null for MONDO diseases themselves)
-     */
-    public function mondoDisease()
-    {
-        return $this->belongsTo('App\Disease', 'mondo_id');
-    }
-
-    /**
-     * Get all OMIM/Orphanet diseases that map to this MONDO disease
-     */
-    public function equivalentDiseases()
-    {
-        return $this->hasMany('App\Disease', 'mondo_id');
     }
 
     // =========================================================================

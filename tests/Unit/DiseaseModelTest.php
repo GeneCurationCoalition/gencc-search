@@ -134,15 +134,4 @@ class DiseaseModelTest extends TestCase
         $this->assertSoftDeleted('diseases', ['id' => $diseaseId]);
     }
 
-    /** @test */
-    public function disease_can_have_mondo_parent()
-    {
-        $parentDisease = Disease::factory()->create(['curie' => 'MONDO:0000001']);
-        $childDisease = Disease::factory()->create([
-            'curie' => 'OMIM:123456',
-            'mondo_id' => $parentDisease->id,
-        ]);
-
-        $this->assertEquals($parentDisease->id, $childDisease->mondo_id);
-    }
 }

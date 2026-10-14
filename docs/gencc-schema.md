@@ -93,7 +93,6 @@ Stores disease information from MONDO, OMIM, and Orphanet.
 | Column | Type | Null | Key | Default | Description |
 |--------|------|------|-----|---------|-------------|
 | id | bigint unsigned | NO | PRI | NULL | Primary key |
-| mondo_id | bigint unsigned | YES | MUL | NULL | Reference to parent MONDO disease |
 | ident | varchar(255) | NO | UNI | NULL | Unique identifier (UUID) |
 | type | tinyint | NO | | 0 | Disease type (1=MONDO, 2=OMIM, 3=ORPHA) |
 | curie | varchar(255) | NO | MUL | NULL | CURIE (e.g., "MONDO:0000001") |

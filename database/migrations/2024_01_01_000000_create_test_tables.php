@@ -84,7 +84,6 @@ return new class extends Migration
 
         Schema::create('diseases', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('mondo_id')->nullable();
             $table->string('ident')->unique();
             $table->tinyInteger('type')->default(0);
             $table->string('curie');
