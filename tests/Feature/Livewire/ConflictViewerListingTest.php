@@ -96,6 +96,17 @@ class ConflictViewerListingTest extends TestCase
     }
 
     /** @test */
+    public function disease_links_open_the_gene_detail_page_like_the_gene_listing()
+    {
+        $this->conflict('AGL', 'glycogen storage disease III', ['Orphanet' => ['Limited', 50]]);
+        $gene = Gene::where('symbol', 'AGL')->firstOrFail();
+
+        Livewire::test(Listing::class)
+            ->assertSee('<a href="' . route('gene-show', $gene->curie) . '" class="list-link">', false)
+            ->assertDontSee('/disease/', false);
+    }
+
+    /** @test */
     public function hiding_a_submitter_only_drops_rows_where_it_is_the_only_other_side_submitter()
     {
         // ATM has two other-side submitters; KCNQ1 has only Orphanet.

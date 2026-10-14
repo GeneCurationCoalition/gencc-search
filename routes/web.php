@@ -41,12 +41,6 @@ Route::group(['prefix' => 'members'], function () {
   Route::get('/{id?}', 'SubmitterController@show')->name('member-show');
 });
 
-Route::group(['prefix' => 'disease'], function () {
-  Route::get('/', 'DiseaseController@index')->name('diseases');
-  Route::get('/{id?}', 'DiseaseController@show')->name('disease-show');
-});
-
-
 Route::get('/', 'GeneController@index')->name('home');
 Route::get('/home', 'GeneController@index');
 Route::get('/statistics', 'StatController@index')->name('statistics');

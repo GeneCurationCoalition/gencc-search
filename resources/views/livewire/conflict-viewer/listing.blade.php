@@ -146,7 +146,7 @@
                     </a>
                 </div>
                 <div class="col-span-3 pr-2">
-                    <a href="{{ route('disease-show', $item['disease_curie']) }}" class="list-link">
+                    <a href="{{ route('gene-show', $item['hgnc_id']) }}" class="list-link">
                         {{ $item['disease_name'] }}
                         <div class="list-text-desc">{{ $item['disease_curie'] }}</div>
                     </a>
