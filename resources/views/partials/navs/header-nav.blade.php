@@ -12,7 +12,7 @@
 			<div class="w-1/2 md:w-3/4 pr-0">
 				<div class="flex relative inline-block float-right">
 
-					<div class="relative text-sm  invisible lg:visible">
+					<div class="relative text-sm hidden xl:block">
 
 						<a href="{{ route('genes')}}" class="no-underline hover:underline text-gray-800 p-2">
 						<i class="fas fa-dna text-gray-500"></i> 	Genes
@@ -45,7 +45,7 @@
 						<a href="{{ route('about') }}" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="fas fa-info-circle text-gray-500"></i> About
 						</a>
-						<a id="click-signup" href="https://creationproject.us7.list-manage.com/subscribe?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
+						<a id="click-signup" href="https://creationproject.us7.list-manage.com/subscribe?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="inline-block whitespace-no-wrap no-underline hover:underline text-blue-800 bg-blue-100 rounded-full text-xs py-1 pl-2 pr-1 leading-tight border-2 border-blue-800 ">
 							<i class="fas fa-mail-bulk text-gray-500"></i> Stay Informed
 						</a>
 
@@ -76,7 +76,7 @@
 					</div>
 
 
-					<div class="block lg:hidden pr-4"  x-data="{ open: false }">
+					<div class="block xl:hidden pr-4"  x-data="{ open: false }">
 						<div  @click="open = true">
 						<button id="nav-toggle" class="flex items-center px-3 py-2 border rounded text-gray-500 border-gray-600 hover:text-gray-900 hover:border-teal-500 appearance-none focus:outline-none">
 							<svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -119,7 +119,7 @@
 												<i class="fas fa-info-circle text-gray-500"></i> About
 											</a>
 
-											<a id="click-signup" href="https://creaationproject.us7.list-manage.com/subscribe/post?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+											<a id="click-signup" href="https://creationproject.us7.list-manage.com/subscribe?u=47520fb4e4a2c9edfc44a61af&id=7ccf9c9b09" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-mail-bulk text-gray-500"></i> Stay Informed
 											</a>
 
