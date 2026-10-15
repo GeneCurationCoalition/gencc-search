@@ -295,11 +295,11 @@ class ConflictViewerTest extends TestCase
         $this->assertCount(2, $links);
         $this->assertSame(
             1,
-            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " invisible ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " xl:block ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
         );
         $this->assertSame(
             1,
-            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " lg:hidden ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
+            $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " xl:hidden ")]//a[normalize-space(.) = "Conflict Viewer"]')->length
         );
 
         foreach ($links as $link) {
@@ -318,7 +318,7 @@ class ConflictViewerTest extends TestCase
         $document->loadHTML(view('partials.navs.header-nav')->render(), LIBXML_NOERROR | LIBXML_NOWARNING);
         $xpath = new \DOMXPath($document);
 
-        foreach (['invisible', 'lg:hidden'] as $containerClass) {
+        foreach (['xl:block', 'xl:hidden'] as $containerClass) {
             $icons = $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " ' . $containerClass . ' ")]//a/i');
 
             $this->assertNotCount(0, $icons);
