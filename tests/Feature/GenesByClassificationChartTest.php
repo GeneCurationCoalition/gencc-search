@@ -187,6 +187,7 @@ class GenesByClassificationChartTest extends TestCase
             array_search('Refuted Evidence', $titles, true),
             array_search('Animal Model Only', $titles, true)
         );
+        $this->assertSame('Supportive', end($titles));
     }
 
     /**

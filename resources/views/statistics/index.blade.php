@@ -76,12 +76,15 @@
     @foreach ($genesByClassification as $row)
       @php($item = $row['classification'])
       @php($geneCount = $row['genes_count'])
-        <div class="col-span-4 xl:col-span-2 border-r-2 border-gray-300 py-2 px-2">
+        <div @class(['col-span-4 xl:col-span-2 border-r-2 border-gray-300 py-2 px-2', 'mt-2' => $item->curie === 'GENCC:100009'])>
           <div class="rounded-full py-1 px-1 text-right leading-tight">
             {{ $item->title }}
+            @if($item->curie === 'GENCC:100009')
+              <div class="mt-1 text-xs text-gray-500">No other classification reported.</div>
+            @endif
           </div>
         </div>
-        <div class="col-span-8 xl:col-span-9 py-1 px-2">
+        <div @class(['col-span-8 xl:col-span-9 py-1 px-2', 'mt-2' => $item->curie === 'GENCC:100009'])>
           @if($geneCount != 0)
             <span class="inline-block rounded-full px-3 text-right py-0 text-white {{ $item->css_class }}" style="width:{{ $item->displayStatChartBarPercent($genesByClassificationTotal, $geneCount) }}%">
               &nbsp;

@@ -50,7 +50,7 @@ class StatController extends Controller
     }
 
     /**
-     * Pair each ranked classification with its gene count, in canonical display order, so the
+     * Pair each ranked classification with its gene count, with Supportive last, so the
      * view can render the bars without knowing the ranking. Unranked terms — the
      * GENCC:000000 placeholder, or a tenth term added later — are dropped.
      *
@@ -63,7 +63,9 @@ class StatController extends Controller
         foreach ($classifications as $classification) {
             $metadata = $classification->vocabularyMetadata();
 
-            $rows[$metadata['priority']] = [
+            $priority = $classification->curie === 'GENCC:100009' ? PHP_INT_MAX : $metadata['priority'];
+
+            $rows[$priority] = [
                 'classification' => $classification,
                 'genes_count' => $geneCounts[$classification->curie] ?? 0,
             ];
