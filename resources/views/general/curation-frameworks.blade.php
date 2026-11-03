@@ -23,19 +23,19 @@
 
         <ul class="space-y-2 ml-4 pl-4 mb-4" style="list-style-type: disc !important; list-style-position: outside !important;">
             <li>
-                <a href="{{ asset('docs/curation-frameworks/gencc-lof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">LOF Framework</a>
+                <a href="{{ asset('docs/curation-frameworks/gencc-lof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">Gene Curation Coalition (GenCC) Recommendation for Loss of Function Mechanism Curation - Version 1.0, November 2026</a>
                 <span class="text-gray-600 text-sm">(PDF)</span>
             </li>
             <li>
-                <a href="{{ asset('docs/curation-frameworks/gencc-gof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">GOF Framework</a>
+                <a href="{{ asset('docs/curation-frameworks/gencc-gof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">Gene Curation Coalition (GenCC) Recommendation for Gain of Function Mechanism Curation - Version 1.0, November 2026</a>
                 <span class="text-gray-600 text-sm">(PDF)</span>
             </li>
             <li>
-                <a href="{{ asset('docs/curation-frameworks/gencc-dn-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">DN Framework</a>
+                <a href="{{ asset('docs/curation-frameworks/gencc-dn-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">Gene Curation Coalition (GenCC) Recommendation for Dominant Negative Mechanism Curation - Version 1.0, November 2026</a>
                 <span class="text-gray-600 text-sm">(PDF)</span>
             </li>
             <li>
-                <a href="{{ asset('docs/curation-frameworks/gencc-not-lof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">Not LOF Framework</a>
+                <a href="{{ asset('docs/curation-frameworks/gencc-not-lof-framework-v1.0.pdf') }}" target="_blank" class="text-blue-600 hover:text-blue-800">Gene Curation Coalition (GenCC) Recommendation for NOT Loss of Function Mechanism Curation - Version 1.0, November 2026</a>
                 <span class="text-gray-600 text-sm">(PDF)</span>
             </li>
         </ul>
