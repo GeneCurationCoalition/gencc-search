@@ -3,13 +3,13 @@
 
 		<div class="w-full container mx-auto flex flex-wrap items-center mt-0 pt-3 pb-3 md:pb-0">
 
-			<div class="w-1/2 md:w-1/4 pl-2 mb-4 md:pl-0">
+			<div class="w-1/2 md:w-1/4 xl:w-auto xl:flex-none pl-2 mb-4 md:pl-0">
 				<!--<img src="/brand/icons/beta.png" class=" hover:scale-150  transition duration-200 ease-in-out transform  absolute w-10 ml-40 mt-1" />-->
 				<a class="text-gray-900 text-base xl:text-xl no-underline hover:no-underline font-bold" href="{{ url('/') }}">
 				 <img src="/brand/logo/genecc-logo.jpg" class=" h-16" />
 				</a>
 			</div>
-			<div class="w-1/2 md:w-3/4 pr-0">
+			<div class="w-1/2 md:w-3/4 xl:w-auto xl:flex-1 pr-0">
 				<div class="flex relative inline-block float-right">
 
 					<div class="relative text-sm hidden xl:block">
@@ -36,11 +36,12 @@
 							<i class="fas fa-file-code text-gray-500"></i> Download
 						</a>
 
+						<a href="{{ route('mechanism-frameworks') }}" class="no-underline hover:underline text-gray-800 p-2">
+							<i class="fas fa-clipboard-list text-gray-500"></i> Mechanism Frameworks
+						</a>
+
 <a href="{{ route('faq') }}" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="far fa-question-circle text-gray-500"></i> FAQ
-						</a>
-						<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="far fa-comment text-gray-500"></i> Contact
 						</a>
 						<a href="{{ route('about') }}" class="no-underline hover:underline text-gray-800 p-1">
 							<i class="fas fa-info-circle text-gray-500"></i> About
@@ -108,12 +109,12 @@
 											<a href="{{ route('download')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-file-code text-gray-500"></i> Download
 											</a>
+											<a href="{{ route('mechanism-frameworks') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="fas fa-clipboard-list text-gray-500"></i> Mechanism Frameworks
+											</a>
 
 											<a href="{{ route('faq') }}" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="far fa-question-circle text-gray-500"></i> FAQ
-											</a>
-											<a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="far fa-comment text-gray-500"></i> Contact
 											</a>
 											<a href="{{ route('about') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-info-circle text-gray-500"></i> About

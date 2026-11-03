@@ -15,6 +15,14 @@
     <!-- Left column: Why and Goals -->
     <div>
         @include('partials.general.about-why-goals')
+
+        <div class="col-12 mt-10 mb-8"><hr /></div>
+
+        <h2 id="contact" class="my-3">Contact</h2>
+
+        <p class="mb-4">
+            Questions about the GenCC or this website can be sent to <a href="mailto:&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;" class="text-blue-600 hover:text-blue-800">&#103;&#101;&#110;&#099;&#099;&#064;&#116;&#104;&#101;&#103;&#101;&#110;&#099;&#099;&#046;&#111;&#114;&#103;</a>.
+        </p>
     </div>
 
     <!-- Right column: Steering Committee -->

@@ -25,3 +25,7 @@ DATA/en_product1.xml
 DATA/mimTitles.txt
 DATA/mondo-with-equivalents.json
 .claude/settings.json
+/public/css/app.css
+/public/js/app.js
+/public/js/app.js.LICENSE.txt
+/public/mix-manifest.json

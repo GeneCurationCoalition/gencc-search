@@ -35,6 +35,43 @@ class StaticPagesFeatureTest extends TestCase
     }
 
     /** @test */
+    public function mechanism_frameworks_page_returns_200()
+    {
+        $response = $this->get('/mechanism-frameworks');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('general.mechanism-frameworks');
+    }
+
+    /** @test */
+    public function mechanism_frameworks_page_links_only_to_framework_pdfs_that_exist()
+    {
+        $html = $this->get('/mechanism-frameworks')->getContent();
+
+        preg_match_all('#href="' . preg_quote(asset('docs/mechanism-frameworks/'), '#') . '([^"]+)"#', $html, $matches);
+
+        $this->assertCount(4, $matches[1]);
+        foreach ($matches[1] as $file) {
+            $this->assertFileExists(public_path('docs/mechanism-frameworks/' . $file));
+        }
+    }
+
+    /** @test */
+    public function header_navigation_links_to_mechanism_frameworks_on_desktop_and_mobile()
+    {
+        $document = new \DOMDocument();
+        $document->loadHTML(view('partials.navs.header-nav')->render(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+
+        foreach (['xl:block', 'xl:hidden'] as $containerClass) {
+            $links = $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " ' . $containerClass . ' ")]//a[normalize-space(.) = "Mechanism Frameworks"]');
+
+            $this->assertCount(1, $links);
+            $this->assertSame(route('mechanism-frameworks'), $links->item(0)->getAttribute('href'));
+        }
+    }
+
+    /** @test */
     public function privacy_page_returns_200()
     {
         $response = $this->get('/privacy');
