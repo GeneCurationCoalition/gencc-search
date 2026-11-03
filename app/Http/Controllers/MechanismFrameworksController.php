@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-class CurationFrameworksController extends Controller
+class MechanismFrameworksController extends Controller
 {
     /**
      * Display the mechanism curation frameworks page.
@@ -11,8 +11,8 @@ class CurationFrameworksController extends Controller
      */
     public function index()
     {
-        $page_meta['seo']['title'] = "GenCC Curation Frameworks";
+        $page_meta['seo']['title'] = "GenCC Mechanism Frameworks";
 
-        return view('general.curation-frameworks', ['page_meta' => $page_meta]);
+        return view('general.mechanism-frameworks', ['page_meta' => $page_meta]);
     }
 }

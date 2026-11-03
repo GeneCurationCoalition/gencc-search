@@ -36,8 +36,8 @@
 							<i class="fas fa-file-code text-gray-500"></i> Download
 						</a>
 
-						<a href="{{ route('curation-frameworks') }}" class="no-underline hover:underline text-gray-800 p-2">
-							<i class="fas fa-clipboard-list text-gray-500"></i> Curation Frameworks
+						<a href="{{ route('mechanism-frameworks') }}" class="no-underline hover:underline text-gray-800 p-2">
+							<i class="fas fa-clipboard-list text-gray-500"></i> Mechanism Frameworks
 						</a>
 
 <a href="{{ route('faq') }}" target="_blank" class="no-underline hover:underline text-gray-800 p-1">
@@ -109,8 +109,8 @@
 											<a href="{{ route('download')}}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
 												<i class="fas fa-file-code text-gray-500"></i> Download
 											</a>
-											<a href="{{ route('curation-frameworks') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
-												<i class="fas fa-clipboard-list text-gray-500"></i> Curation Frameworks
+											<a href="{{ route('mechanism-frameworks') }}" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
+												<i class="fas fa-clipboard-list text-gray-500"></i> Mechanism Frameworks
 											</a>
 
 											<a href="{{ route('faq') }}" target="_blank" class="whitespace-no-wrap block px-4 py-2 text-sm leading-5 text-gray-700">
